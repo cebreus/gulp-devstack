@@ -1,0 +1,31 @@
+plugins:
+  #  - stylelint-prettier
+  - stylelint-scss
+  - stylelint-selector-bem-pattern
+
+extends:
+  - "@visionappscz/stylelint-config-visionapps"
+  - "@visionappscz/stylelint-config-visionapps-order"
+
+rules:
+  unit-whitelist: ["px", "rem", "%", "s", "deg"]
+
+  # defined in Prettier
+  indentation: null
+  max-line-length: null
+  color-hex-case: null
+  no-extra-semicolons: null
+
+  # reset for visionapps
+  selector-nested-pattern: null
+  max-nesting-depth: 3
+  at-rule-no-unknown: null
+  scss/at-rule-no-unknown: true
+
+  # load Prettier rules
+  #prettier/prettier: true
+
+  plugin/selector-bem-pattern:
+    componentName: "(([a-z0-9]+(?!-$)-?)+)"
+    componentSelectors:
+      initial: "\\.{componentName}(((__|--)(([a-z0-9\\[\\]'=]+(?!-$)-?)+))+)?$"
