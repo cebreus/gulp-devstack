@@ -1,0 +1,30 @@
+{
+  "name": "gulp-dev-stack",
+  "version": "0.0.0",
+  "description": "Basic Gulp dev stack for basic front-end development with customized Bootsrap.",
+  "main": "index.js",
+  "scripts": {},
+  "dependencies": {
+    "bootstrap": "^4.3.1"
+  },
+  "devDependencies": {
+    "gulp": "^4.0.2"
+  },
+  "engines": {
+    "node": ">=10.0.0"
+  },
+  "repository": "https://cebreus@bitbucket.org/cebreus/gulp-dev-stack.git",
+  "homepage": "https://bitbucket.org/cebreus/gulp-dev-stack#readme",
+  "bugs": {
+    "url": "https://bitbucket.org/cebreus/gulp-dev-stack/issues",
+    "email": "cebreus69@gmail.com"
+  },
+  "author": "Jaroslav Vrána <cebreus69@gmail.com>",
+  "private": true,
+  "license": "UNLICENSED",
+  "keywords": [
+    "dev stack",
+    "gulp",
+    "bootstrap"
+  ]
+}
