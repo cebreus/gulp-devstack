@@ -1,0 +1,27 @@
+printWidth: 80
+singleQuote: true
+bracketSpacing: true
+semi: true
+tabWidth: 4
+arrowParens: always
+useTabs: false
+
+overrides:
+    - files:
+          - '*.tpl'
+          - '*.html'
+      options:
+          parser: html
+          printWidth: 120
+          htmlWhitespaceSensitivity: ignore
+    - files:
+          - '*.yml'
+          - 'package.json'
+          - '.browserslistrc'
+      options:
+          indentSize: 2
+          insertFinalNewline: false
+    - files:
+          - '*.scss'
+      options:
+          printWidth: 240

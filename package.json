@@ -1,38 +1,62 @@
 {
-  "name": "gulp-dev-stack",
-  "version": "0.0.0",
-  "description": "Basic Gulp dev stack for basic front-end development with customized Bootsrap.",
-  "main": "index.js",
-  "scripts": {},
-  "dependencies": {
-    "bootstrap": "^4.3.1"
-  },
-  "devDependencies": {
-    "@commitlint/cli": "^8.0.0",
-    "@commitlint/config-conventional": "^8.0.0",
-    "gulp": "^4.0.2",
-    "husky": "^2.4.1"
-  },
-  "engines": {
-    "node": ">=10.0.0"
-  },
-  "husky": {
-    "hooks": {
-      "commit-msg": "commitlint -E HUSKY_GIT_PARAMS"
-    }
-  },
-  "repository": "https://cebreus@bitbucket.org/cebreus/gulp-dev-stack.git",
-  "homepage": "https://bitbucket.org/cebreus/gulp-dev-stack#readme",
-  "bugs": {
-    "url": "https://bitbucket.org/cebreus/gulp-dev-stack/issues",
-    "email": "cebreus69@gmail.com"
-  },
-  "author": "Jaroslav Vrána <cebreus69@gmail.com>",
-  "private": true,
-  "license": "UNLICENSED",
-  "keywords": [
-    "dev stack",
-    "gulp",
-    "bootstrap"
-  ]
+    "name": "gulp-dev-stack",
+    "version": "0.0.0",
+    "description": "Basic Gulp dev stack for basic front-end development with customized Bootsrap.",
+    "main": "index.js",
+    "scripts": {
+        "dev": "node ./node_modules/gulp/bin/gulp.js -f ./gulpfile-development.js default",
+        "csslint": "node ./node_modules/gulp/bin/gulp.js -f ./gulpfile-development.js csslint",
+        "cssfix": "node ./node_modules/gulp/bin/gulp.js -f ./gulpfile-development.js cssfix",
+        "gulp": "./node_modules/.bin/gulp"
+    },
+    "dependencies": {
+        "bootstrap": "^4.3.1",
+        "jquery": "^3.4.1",
+        "popper.js": "^1.15.0"
+    },
+    "devDependencies": {
+        "@commitlint/cli": "^8.0.0",
+        "@commitlint/config-conventional": "^8.0.0",
+        "@visionappscz/stylelint-config-visionapps": "^1.0.0",
+        "@visionappscz/stylelint-config-visionapps-order": "^1.0.0",
+        "autoprefixer": "^9.6.0",
+        "gulp": "^4.0.2",
+        "gulp-concat": "^2.6.1",
+        "gulp-if": "^2.0.2",
+        "gulp-jsbeautifier": "^3.0.0",
+        "gulp-plumber": "^1.2.1",
+        "gulp-postcss": "^8.0.0",
+        "gulp-sass": "^4.0.2",
+        "gulp-sass-glob": "^1.0.9",
+        "gulp-stylelint": "^9.0.0",
+        "husky": "^2.4.1",
+        "postcss-flexbugs-fixes": "^4.1.0",
+        "postcss-scss": "^2.0.0",
+        "stylelint": "^10.1.0",
+        "stylelint-order": "^3.0.0",
+        "stylelint-scss": "^3.8.0",
+        "stylelint-selector-bem-pattern": "^2.1.0"
+    },
+    "engines": {
+        "node": ">=10.0.0"
+    },
+    "husky": {
+        "hooks": {
+            "commit-msg": "commitlint -E HUSKY_GIT_PARAMS"
+        }
+    },
+    "repository": "https://cebreus@bitbucket.org/cebreus/gulp-dev-stack.git",
+    "homepage": "https://bitbucket.org/cebreus/gulp-dev-stack#readme",
+    "bugs": {
+        "url": "https://bitbucket.org/cebreus/gulp-dev-stack/issues",
+        "email": "cebreus69@gmail.com"
+    },
+    "author": "Jaroslav Vrána <cebreus69@gmail.com>",
+    "private": true,
+    "license": "UNLICENSED",
+    "keywords": [
+        "dev stack",
+        "gulp",
+        "bootstrap"
+    ]
 }
