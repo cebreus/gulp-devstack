@@ -22,8 +22,8 @@ node_modules/
 .eslintcache
 
 # Dist
-dist
-build
+dist/
+build/
 
 # Dotenv environment variables file
 .env
