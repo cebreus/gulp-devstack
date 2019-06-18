@@ -1,0 +1,30 @@
+.DS_Store
+
+# Editors
+*.sublime-*
+.idea
+.vscode
+
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# Runtime data
+*-lock.*
+package-lock.json
+
+# Dependency directories
+node_modules/
+
+# Optional cache directory
+.npm
+.eslintcache
+
+# Dist
+dist
+build
+
+# Dotenv environment variables file
+.env
+.vscode/settings.json
