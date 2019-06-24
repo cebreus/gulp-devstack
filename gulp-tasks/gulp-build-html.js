@@ -21,21 +21,24 @@ const buildHtml = (input, output, dataSource) => {
         fs.accessSync(dataSource);
         condition = true;
     } catch (error) {
-        console.log('JSON file doesn\'t exists.');
+        console.log("JSON file doesn't exists.");
         condition = false;
     }
 
-    return (
-        gulp
-            .src(input)
-            .pipe(plumber())
-            .pipe(gulpif(condition, data(function () {
-                return JSON.parse(fs.readFileSync(dataSource));
-            })))
-            .pipe(nunjucks.compile())
-            .pipe(prettify())
-            .pipe(gulp.dest(output))
-    );
+    return gulp
+        .src(input)
+        .pipe(plumber())
+        .pipe(
+            gulpif(
+                condition,
+                data(function() {
+                    return JSON.parse(fs.readFileSync(dataSource));
+                })
+            )
+        )
+        .pipe(nunjucks.compile())
+        .pipe(prettify())
+        .pipe(gulp.dest(output));
 };
 
 module.exports = buildHtml;
