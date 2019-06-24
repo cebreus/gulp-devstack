@@ -1,12 +1,12 @@
 const gulp = require('gulp');
 
-const compileSassFnc = require('./gulp-tasks-production/gulp-compile-sass');
-const concatFilesFnc = require('./gulp-tasks-production/gulp-concat-files');
+const compileSassFnc = require('./gulp-tasks-build/gulp-compile-sass');
+const concatFilesFnc = require('./gulp-tasks-build/gulp-concat-files');
 
 // Variables
 // --------------
 
-const config = require('./gulpconfig-production');
+const config = require('./gulpconfig-build');
 
 // Gulp functions
 // --------------

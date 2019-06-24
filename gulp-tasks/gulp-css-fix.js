@@ -6,6 +6,8 @@ const plumber = require('gulp-plumber');
 /**
  * @description Fix (S)CSS files
  * @param {string,object} input Path with filter to source files
+ * @param {string} output Path to save processed files
+ * @return {stream} Processed files
  */
 
 function fixCssOrScss(input, output) {
@@ -14,15 +16,15 @@ function fixCssOrScss(input, output) {
         .pipe(plumber())
         .pipe(
             gulpif(
-                '!bootstrap.scss',
+                '!_variables.scss',
                 gulpStylelint({
                     fix: true,
                     failAfterError: false,
-                    reporters: [{formatter: 'verbose', console: true}]
+                    reporters: [{ formatter: 'verbose', console: true }]
                 })
             )
         )
-        .pipe(gulpif('!bootstrap.scss', gulp.dest(output)));
+        .pipe(gulpif('!_variables.scss', gulp.dest(output)));
 }
 
 module.exports = fixCssOrScss;

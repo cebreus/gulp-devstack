@@ -24,6 +24,7 @@ node_modules/
 # Dist
 dist/
 build/
+temp/
 
 # Dotenv environment variables file
 .env

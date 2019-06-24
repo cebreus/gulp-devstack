@@ -6,6 +6,7 @@ const plumber = require('gulp-plumber');
 /**
  * @description Linting CSS files
  * @param {string,object} input Path with filter to source files
+ * @return {stream} Information into CLI
  */
 
 function lintCssfromScss(input) {

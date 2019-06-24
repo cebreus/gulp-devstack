@@ -7,12 +7,12 @@
 // Přetížení Bootatrapu
 // --------------
 
-// Fix minimum size on very small devices
+// Set minimum reasonable width on very small devices
 body {
     min-width: 320px;
 }
 
-// Fix viod in the bottom of the alerts
+// Remove viod in the bottom of the alert component
 .alert {
     p:last-child,
     ol:last-child,

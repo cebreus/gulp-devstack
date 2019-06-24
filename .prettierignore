@@ -1,5 +1,6 @@
 dist/
 build/
+*.html
 _variables.scss
 u-debugger.scss
 u-show-grid.scss

@@ -13,9 +13,9 @@ const sassGlob = require('gulp-sass-glob');
  * @param {string} output Path to save compiled files
  * @param {string} outputConcatFileName Output file name
  * @param {object} postcssPluginsBase Postcss plugins
- * @return {stream} compiled file
+ * @return {stream} Compiled file
  */
-// TODO: pokial je volitelny parameter, tak by mal ist na koniec
+
 const compileSass = (
     input,
     output,
