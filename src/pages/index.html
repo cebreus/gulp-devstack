@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="{{ SITE.meta.lang }}">
-
 <head>
     <meta charset="{{ SITE.meta.charset }}">
     <meta name="robots" content="{{ SITE.meta.robots }}">
@@ -13,8 +12,7 @@
     {% if SITE.open_graph.show !== false %}
     <meta property="og:type" content="{{ SITE.open_graph.type }}">
     <meta property="og:url" content="{{ SITE.meta.canonical }}">
-    {% if SITE.open_graph.app_id %}
-    <meta property="fb:app_id" content="{{ SITE.open_graph.app_id }}">{% endif %}
+    {% if SITE.open_graph.app_id %}<meta property="fb:app_id" content="{{ SITE.open_graph.app_id }}">{% endif %}
     <meta property="og:site_name" content="{{ SITE.open_graph.site_name }}">
     <meta property="og:title" content="{{ SITE.open_graph.title or SITE.title }}">
     <meta property="og:description" content="{{ SITE.open_graph.description or SITE.meta.description }}">
@@ -30,18 +28,14 @@
     <meta name="twitter:url" content="{{ SITE.meta.canonical }}">
     <meta name="twitter:image" content="{{ SITE.twitter_cards.image }}">
     {% endif %}
-
-    <!-- inject:css -->
-    <!-- endinject -->
 </head>
-
 <body>
     <header class="o-header" role="banner">
         <div class="container">
             hlava webu
         </div>
     </header>
-
+    
     <article class="py-5">
         <div class="container text-center">
             <h1>{{ INDEX.h1 }}</h1>
@@ -53,10 +47,5 @@
             {{ INDEX.copyright }}
         </div>
     </footer>
-
-    <!-- inject: bootstrap js -->
-    <!-- inject:js -->
-    <!-- endinject -->
 </body>
-
 </html>

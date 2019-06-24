@@ -11,20 +11,20 @@ const plumber = require('gulp-plumber');
  */
 
 function fixCssOrScss(input, output) {
-  return gulp
-    .src(input)
-    .pipe(plumber())
-    .pipe(
-      gulpif(
-        '!_variables.scss',
-        gulpStylelint({
-          fix: true,
-          failAfterError: false,
-          reporters: [{ formatter: 'verbose', console: true }]
-        })
-      )
-    )
-    .pipe(gulpif('!_variables.scss', gulp.dest(output)));
+    return gulp
+        .src(input)
+        .pipe(plumber())
+        .pipe(
+            gulpif(
+                '!_variables.scss',
+                gulpStylelint({
+                    fix: true,
+                    failAfterError: false,
+                    reporters: [{ formatter: 'verbose', console: true }]
+                })
+            )
+        )
+        .pipe(gulpif('!_variables.scss', gulp.dest(output)));
 }
 
 module.exports = fixCssOrScss;

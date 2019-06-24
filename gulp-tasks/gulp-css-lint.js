@@ -10,17 +10,17 @@ const plumber = require('gulp-plumber');
  */
 
 function lintCssfromScss(input) {
-  return gulp
-    .src(input)
-    .pipe(plumber())
-    .pipe(
-      gulpif(
-        '!bootstrap.scss',
-        gulpStylelint({
-          reporters: [{ formatter: 'string', console: true }]
-        })
-      )
-    );
+    return gulp
+        .src(input)
+        .pipe(plumber())
+        .pipe(
+            gulpif(
+                '!bootstrap.scss',
+                gulpStylelint({
+                    reporters: [{ formatter: 'string', console: true }]
+                })
+            )
+        );
 }
 
 module.exports = lintCssfromScss;

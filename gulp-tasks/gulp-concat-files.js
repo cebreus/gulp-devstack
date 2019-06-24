@@ -1,4 +1,4 @@
-const browsersync = require('browser-sync').create();
+//const browsersync = require('browser-sync').create();
 const gulp = require('gulp');
 const gulpConcat = require('gulp-concat');
 const plumber = require('gulp-plumber');
@@ -12,12 +12,12 @@ const plumber = require('gulp-plumber');
  */
 
 const concatFiles = (input, output, outputConcatFileName) => {
-  return gulp
-    .src(input)
-    .pipe(plumber())
-    .pipe(gulpConcat(outputConcatFileName))
-    .pipe(gulp.dest(output))
-    .pipe(browsersync.stream());
+    return gulp
+        .src(input)
+        .pipe(plumber())
+        .pipe(gulpConcat(outputConcatFileName))
+        .pipe(gulp.dest(output));
+    //.pipe(browsersync.stream());
 };
 
 module.exports = concatFiles;

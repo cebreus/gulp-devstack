@@ -17,28 +17,28 @@ const sassGlob = require('gulp-sass-glob');
  */
 
 const compileSass = (
-  input,
-  output,
-  outputConcatFileName,
-  postcssPluginsBase
+    input,
+    output,
+    outputConcatFileName,
+    postcssPluginsBase
 ) => {
-  let gulpConcat = require('gulp-concat');
+    let gulpConcat = require('gulp-concat');
 
-  if (!outputConcatFileName) {
-    gulpConcat = require('gulp-empty-pipe');
-  }
+    if (!outputConcatFileName) {
+        gulpConcat = require('gulp-empty-pipe');
+    }
 
-  return gulp
-    .src(input)
-    .pipe(plumber())
-    .pipe(sassGlob())
-    .pipe(sass())
-    .on('error', sass.logError)
-    .pipe(postcss(postcssPluginsBase, { syntax: postcssSyntax }))
-    .pipe(prettify({ indent_size: 4 }))
-    .pipe(gulpConcat(outputConcatFileName))
-    .pipe(gulp.dest(output));
-  //.pipe(browsersync.stream());
+    return gulp
+        .src(input)
+        .pipe(plumber())
+        .pipe(sassGlob())
+        .pipe(sass())
+        .on('error', sass.logError)
+        .pipe(postcss(postcssPluginsBase, { syntax: postcssSyntax }))
+        .pipe(prettify({ indent_size: 4 }))
+        .pipe(gulpConcat(outputConcatFileName))
+        .pipe(gulp.dest(output));
+    //.pipe(browsersync.stream());
 };
 
 module.exports = compileSass;
