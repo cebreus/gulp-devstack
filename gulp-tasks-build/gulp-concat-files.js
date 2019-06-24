@@ -5,9 +5,9 @@ const plumber = require('gulp-plumber');
 /**
  * @description Concatenate files into one file
  * @param {string,object} input Path with filter to source files
- * @param {string} output Path to save compiled files
+ * @param {string} output Path to save concatenated files
  * @param {string} outputConcatFileName Output file name
- * @return {stream} compiled file
+ * @return {stream} Concatenated file
  */
 
 const concatFiles = (input, output, outputConcatFileName) => {
