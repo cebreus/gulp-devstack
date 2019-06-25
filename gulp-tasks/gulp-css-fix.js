@@ -10,6 +10,8 @@ const plumber = require('gulp-plumber');
  * @return {stream} Processed files
  */
 
+// TODO: ověřit, že funguje, že opravuje chyby
+
 function fixCssOrScss(input, output) {
     return gulp
         .src(input)

@@ -14,7 +14,7 @@ const prettify = require('gulp-jsbeautifier');
  * @return {stream} Compiled file
  */
 
-const buildHtml = (input, output, dataSource) => {
+const buildHtml = (input, output, dataSource, cb) => {
     let condition;
 
     try {
@@ -38,7 +38,8 @@ const buildHtml = (input, output, dataSource) => {
         )
         .pipe(nunjucks.compile())
         .pipe(prettify())
-        .pipe(gulp.dest(output));
+        .pipe(gulp.dest(output))
+        .on('end', cb);
 };
 
 module.exports = buildHtml;
