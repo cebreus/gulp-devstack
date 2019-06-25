@@ -1,5 +1,6 @@
 const gulp = require('gulp');
 
+const hotReload = require('./gulp-tasks/gulp-hotreload');
 const buildHtmlFnc = require('./gulp-tasks/gulp-build-html');
 const buildDatasetFnc = require('./gulp-tasks/gulp-build-dataset');
 const compileSassFnc = require('./gulp-tasks/gulp-compile-sass');
@@ -60,14 +61,40 @@ function buildDataset(done) {
     buildDatasetFnc(
         config.datasetJsonBase,
         config.datasetJsonBuild,
-        config.datasetJsonFileName
+        config.datasetJsonFileName,
+        () => {
+            done();
+        }
     );
-    done();
 }
 
 function buildHtml(done) {
-    return buildHtmlFnc(config.tplMain, config.tplBuild, config.tplDataset);
-    done();
+    buildHtmlFnc(config.tplMain, config.tplBuild, config.tplDataset, () => {
+        done();
+    });
+}
+
+function watchFiles() {
+    gulp.watch(
+        config.sassCustom,
+        gulp.series(compileSassCustom, hotReload.browserSyncReload)
+    );
+    gulp.watch(
+        config.sassCore,
+        gulp.series(compileSassCore, hotReload.browserSyncReload)
+    );
+    gulp.watch(
+        config.sassUtils,
+        gulp.series(compileSassUtils, hotReload.browserSyncReload)
+    );
+    gulp.watch(
+        config.tplMain,
+        gulp.series(buildHtml, hotReload.browserSyncReload)
+    );
+    gulp.watch(
+        config.datasetJsonBase,
+        gulp.series(buildDataset, buildHtml, hotReload.browserSyncReload)
+    );
 }
 
 // Gulp tasks
@@ -81,7 +108,19 @@ gulp.task('cssfix', fixCss);
 gulp.task('csslint', lintCss);
 gulp.task('dataset', buildDataset);
 gulp.task('html', gulp.series(buildDataset, buildHtml));
+gulp.task(
+    'serve',
+    gulp.series(
+        buildDataset,
+        compileSassCore,
+        compileSassCustom,
+        compileSassUtils,
+        buildHtml,
+        gulp.parallel(watchFiles, hotReload.browserSync)
+    )
+);
 
 // Aliases
 
-gulp.task('default', gulp.series('build:css'));
+gulp.task('watch', gulp.series('serve'));
+gulp.task('default', gulp.series('serve'));
