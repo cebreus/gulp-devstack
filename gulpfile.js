@@ -69,9 +69,16 @@ function buildDataset(done) {
 }
 
 function buildHtml(done) {
-    buildHtmlFnc(config.tplMain, config.tplBuild, config.tplDataset, () => {
-        done();
-    });
+    const params = {
+        input: config.tplMain,
+        output: config.tplBuild,
+        dataSource: config.tplDataset,
+        injectCdnJs: config.injectCdnJs,
+        cb: () => {
+            done();
+        }
+    };
+    buildHtmlFnc(params);
 }
 
 function watchFiles() {
