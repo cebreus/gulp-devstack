@@ -74,6 +74,7 @@ function buildHtml(done) {
         output: config.tplBuild,
         dataSource: config.tplDataset,
         injectCdnJs: config.injectCdnJs,
+        injectCss: config.injectCss,
         cb: () => {
             done();
         }

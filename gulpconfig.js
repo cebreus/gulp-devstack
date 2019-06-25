@@ -21,6 +21,7 @@ const sassCustom = [
 ];
 const sassCore = [`${sassBase}/bootstrap.scss`, `${sassBase}/_variables.scss`];
 const sassUtils = [`${sassBase}/u-*.scss`, `${sassBase}/_variables.scss`];
+const injectCss = `${sassBuild}/*.css`;
 
 // Data JSON
 // --------------
@@ -72,6 +73,7 @@ module.exports = {
     sassCustom: sassCustom,
     sassCore: sassCore,
     sassUtils: sassUtils,
+    injectCss: injectCss,
     datasetJsonBase: datasetJsonBase,
     datasetJsonBuild: datasetJsonBuild,
     datasetJsonFileName: datasetJsonFileName,
