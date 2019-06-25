@@ -5,6 +5,7 @@ const data = require('gulp-data');
 const nunjucks = require('gulp-nunjucks');
 const plumber = require('gulp-plumber');
 const prettify = require('gulp-jsbeautifier');
+const replace = require('gulp-replace');
 
 /**
  * @description Compile Nunjucks templates and replaces variable from JSON
@@ -14,11 +15,11 @@ const prettify = require('gulp-jsbeautifier');
  * @return {stream} Compiled file
  */
 
-const buildHtml = (input, output, dataSource, cb) => {
+const buildHtml = (params) => {
     let condition;
 
     try {
-        fs.accessSync(dataSource);
+        fs.accessSync(params.dataSource);
         condition = true;
     } catch (error) {
         console.log("JSON file doesn't exists.");
@@ -26,20 +27,26 @@ const buildHtml = (input, output, dataSource, cb) => {
     }
 
     return gulp
-        .src(input)
+        .src(params.input)
         .pipe(plumber())
         .pipe(
             gulpif(
                 condition,
                 data(function() {
-                    return JSON.parse(fs.readFileSync(dataSource));
+                    return JSON.parse(fs.readFileSync(params.dataSource));
                 })
             )
         )
         .pipe(nunjucks.compile())
+        .pipe(
+            replace(
+                '<!-- inject: bootstrap js -->',
+                params.injectCdnJs.toString().replace(/[, ]+/g, ' ')
+            )
+        )
         .pipe(prettify())
-        .pipe(gulp.dest(output))
-        .on('end', cb);
+        .pipe(gulp.dest(params.output))
+        .on('end', params.cb);
 };
 
 module.exports = buildHtml;
