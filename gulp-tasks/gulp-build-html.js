@@ -2,6 +2,7 @@ const fs = require('fs');
 const gulp = require('gulp');
 const gulpif = require('gulp-if');
 const data = require('gulp-data');
+const inject = require('gulp-inject');
 const nunjucks = require('gulp-nunjucks');
 const plumber = require('gulp-plumber');
 const prettify = require('gulp-jsbeautifier');
@@ -36,6 +37,13 @@ const buildHtml = (params) => {
                     return JSON.parse(fs.readFileSync(params.dataSource));
                 })
             )
+        )
+        .pipe(
+            inject(gulp.src(params.injectCss, { read: false }), {
+                relative: true,
+                ignorePath: '../../dist',
+                removeTags: true
+            })
         )
         .pipe(nunjucks.compile())
         .pipe(
