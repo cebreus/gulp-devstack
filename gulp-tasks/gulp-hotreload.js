@@ -8,15 +8,15 @@ const config = require('../gulpconfig');
  */
 
 function browserSync() {
-  browsersync.init({
-    server: {
-      baseDir: config.buildBase
-    },
-    port: 4000,
-    notify: false
-    // proxy: 'yourdomain.dev',
-    // tunnel: true
-  });
+    browsersync.init({
+        server: {
+            baseDir: config.buildBase
+        },
+        port: 4000,
+        notify: false
+        // proxy: 'yourdomain.dev',
+        // tunnel: true
+    });
 }
 
 /**
@@ -24,8 +24,8 @@ function browserSync() {
  */
 
 function browserSyncReload(done) {
-  browsersync.reload();
-  done();
+    browsersync.reload();
+    done();
 }
 
 module.exports = { browserSync, browserSyncReload };

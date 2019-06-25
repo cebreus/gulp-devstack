@@ -13,7 +13,7 @@ const plumber = require('gulp-plumber');
  * @return {stream} Processed file
  */
 
-const buildDataset = (input, output, outputFilename) => {
+const buildDataset = (input, output, outputFilename, cb) => {
     return gulp
         .src(input)
         .pipe(
@@ -31,7 +31,8 @@ const buildDataset = (input, output, outputFilename) => {
                 }
             })
         )
-        .pipe(gulp.dest(output));
+        .pipe(gulp.dest(output))
+        .on('end', cb);
 };
 
 module.exports = buildDataset;
