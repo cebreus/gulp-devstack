@@ -49,6 +49,7 @@
         "gulp-rev-rewrite": "^1.1.4",
         "gulp-sass": "^4.0.2",
         "gulp-sass-glob": "^1.0.9",
+        "gulp-sri-hash": "^2.1.0",
         "gulp-stylelint": "^9.0.0",
         "husky": "^2.4.1",
         "postcss-flexbugs-fixes": "^4.1.0",
