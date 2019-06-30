@@ -7,6 +7,7 @@ const flexbugsFixes = require('postcss-flexbugs-fixes');
 
 const devBase = './src';
 const buildBase = './build';
+const templateFolder = './temp';
 
 // SASS
 // --------------
@@ -42,6 +43,7 @@ const postcssPluginsBase = [
 module.exports = {
     devBase: devBase,
     buildBase: buildBase,
+    templateFolder: templateFolder,
     sassBase: sassBase,
     sassBuild: sassBuild,
     sassAll: sassAll,
