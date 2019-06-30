@@ -8,6 +8,7 @@ const concatFilesFnc = require('./gulp-tasks/gulp-concat-files');
 const fixCssFnc = require('./gulp-tasks/gulp-css-fix');
 const lintCssFnc = require('./gulp-tasks/gulp-css-lint');
 const fontLoadFnc = require('./gulp-tasks/gulp-font-load');
+const faviconsFnc = require('./gulp-tasks/gulp-favicons');
 
 // Variables
 // --------------
@@ -56,6 +57,14 @@ function lintCss(done) {
 function fixCss(done) {
     fixCssFnc(config.sassCustom, config.sassBase);
     done();
+}
+
+function favicons() {
+    return faviconsFnc(
+        config.faviconSourceFile,
+        config.faviconBuild,
+        config.faviconGenConfig
+    );
 }
 
 function fontLoad(done) {
@@ -129,6 +138,7 @@ gulp.task('csslint', lintCss);
 gulp.task('dataset', buildDataset);
 gulp.task('html', gulp.series(buildDataset, buildHtml));
 gulp.task('fonts', fontLoad);
+gulp.task('favicons', favicons);
 gulp.task(
     'serve',
     gulp.series(
@@ -138,6 +148,7 @@ gulp.task(
         compileSassUtils,
         fontLoad,
         buildHtml,
+        favicons,
         gulp.parallel(watchFiles, hotReload.browserSync)
     )
 );

@@ -72,6 +72,28 @@ const fontLoadConfig = {
     relativePaths: true
 };
 
+const faviconSourceFile = `${gfxBase}/favicon/favicons-source.png`;
+const faviconBuild = `${gfxBuild}/favicons`;
+const faviconGenConfig = {
+    appName: 'My App',
+    appShortName: 'App',
+    appDescription: 'This is my application',
+    developerName: 'Developer name',
+    developerURL: 'https://developerwebsite.com/',
+    background: '#000000',
+    path: '/images/favicons/',
+    url: 'https://urlofwebsite.com/',
+    display: 'standalone',
+    orientation: 'portrait',
+    scope: '/',
+    start_url: '/?homescreen=1',
+    version: 1.0,
+    logging: false,
+    html: 'index.html',
+    pipeHTML: true,
+    replace: true
+};
+
 module.exports = {
     devBase: devBase,
     buildBase: buildBase,
@@ -92,5 +114,8 @@ module.exports = {
     postcssPluginsBase: postcssPluginsBase,
     injectCdnJs: injectCdnJs,
     fontloadFile: fontloadFile,
-    fontLoadConfig: fontLoadConfig
+    fontLoadConfig: fontLoadConfig,
+    faviconSourceFile: faviconSourceFile,
+    faviconBuild: faviconBuild,
+    faviconGenConfig: faviconGenConfig
 };
