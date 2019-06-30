@@ -64,6 +64,14 @@ const postcssPluginsBase = [
     })
 ];
 
+const fontloadFile = `${devBase}/fonts.list`;
+const fontLoadConfig = {
+    fontsDir: 'font/',
+    cssDir: 'css/',
+    cssFilename: 'fonts.css',
+    relativePaths: true
+};
+
 module.exports = {
     devBase: devBase,
     buildBase: buildBase,
@@ -82,5 +90,7 @@ module.exports = {
     tplBuild: tplBuild,
     tplDataset: tplDataset,
     postcssPluginsBase: postcssPluginsBase,
-    injectCdnJs: injectCdnJs
+    injectCdnJs: injectCdnJs,
+    fontloadFile: fontloadFile,
+    fontLoadConfig: fontLoadConfig
 };
