@@ -10,11 +10,11 @@ const googleWebFonts = require('gulp-google-webfonts');
  */
 
 const fontLoad = (input, output, params, cb) => {
-  return gulp
-    .src(input)
-    .pipe(googleWebFonts(params))
-    .pipe(gulp.dest(output))
-    .on('end', cb);
+    return gulp
+        .src(input)
+        .pipe(googleWebFonts(params))
+        .pipe(gulp.dest(output))
+        .on('end', cb);
 };
 
 module.exports = fontLoad;
