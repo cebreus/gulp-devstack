@@ -7,7 +7,7 @@ module.exports = {
         'subject-case': [
             2,
             'never',
-            ['sentence-case', 'start-case', 'pascal-case', 'upper-case']
+            ['sentence-case', 'start-case', 'pascal-case', 'upper-case'],
         ],
         'subject-full-stop': [2, 'never', '.'],
         'type-empty': [2, 'never'],
@@ -21,8 +21,9 @@ module.exports = {
                 'refactor',
                 'style',
                 'test',
-                'releaseAutomat'
-            ]
-        ]
-    }
+                'chore',
+                'releaseAutomat',
+            ],
+        ],
+    },
 };
