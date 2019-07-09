@@ -12,19 +12,18 @@ npm-debug.log*
 
 # Runtime data
 *-lock.*
-package-lock.json
 
 # Dependency directories
-node_modules/
+node_modules
 
 # Optional cache directory
 .npm
 .eslintcache
 
 # Dist
-dist/
-build/
-temp/
+build
+dist
+temp
 
 # Dotenv environment variables file
 .env
