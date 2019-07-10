@@ -14,7 +14,7 @@
     "dataset": "node ./node_modules/gulp/bin/gulp.js -f gulpfile.js dataset",
     "rev": "node ./node_modules/gulp/bin/gulp.js -f gulpfile-build.js revision",
     "stylelint-find-unused-rules": "stylelint-find-rules",
-    "css:lint": "stylelint --fix **/*.scss",
+    "css:lint": "stylelint **/*.scss",
     "css:fix": "stylelint --fix **/*.scss",
     "js:lint": "eslint **/*.js",
     "js:fix": "eslint --fix  **/*.js"
@@ -22,6 +22,7 @@
   "dependencies": {
     "bootstrap": "^4.3.1",
     "jquery": "^3.4.1",
+    "lint-staged": "^9.1.0",
     "popper.js": "^1.15.0"
   },
   "devDependencies": {
@@ -74,7 +75,8 @@
   "husky": {
     "hooks": {
       "commit-msg": "commitlint -E HUSKY_GIT_PARAMS",
-      "pre-push": "npm run lint"
+      "pre-commit": "lint-staged",
+      "pre-push": "npm run js:lint && css:lint"
     }
   },
   "repository": "https://cebreus@bitbucket.org/cebreus/gulp-dev-stack.git",
@@ -90,5 +92,15 @@
     "dev stack",
     "gulp",
     "bootstrap"
-  ]
+  ],
+  "lint-staged": {
+    "*.js": [
+      "eslint --fix",
+      "git add"
+    ],
+    "*.scss": [
+      "stylelint --fix",
+      "git add"
+    ]
+  }
 }
