@@ -12,9 +12,12 @@
     "gulp": "./node_modules/.bin/gulp",
     "html": "node ./node_modules/gulp/bin/gulp.js -f gulpfile.js html",
     "dataset": "node ./node_modules/gulp/bin/gulp.js -f gulpfile.js dataset",
-    "lint": "eslint .",
-    "lint-autofix": "eslint --fix .",
-    "rev": "node ./node_modules/gulp/bin/gulp.js -f gulpfile-build.js revision"
+    "rev": "node ./node_modules/gulp/bin/gulp.js -f gulpfile-build.js revision",
+    "stylelint-find-unused-rules": "stylelint-find-rules",
+    "css:lint": "stylelint --fix **/*.scss",
+    "css:fix": "stylelint --fix **/*.scss",
+    "js:lint": "eslint **/*.js",
+    "js:fix": "eslint --fix  **/*.js"
   },
   "dependencies": {
     "bootstrap": "^4.3.1",
@@ -59,8 +62,9 @@
     "postcss-scss": "^2.0.0",
     "prettier": "^1.18.2",
     "stylelint": "^10.1.0",
+    "stylelint-find-rules": "^2.0.0",
+    "stylelint-high-performance-animation": "^1.2.1",
     "stylelint-order": "^3.0.0",
-    "stylelint-prettier": "^1.1.1",
     "stylelint-scss": "^3.8.0",
     "stylelint-selector-bem-pattern": "^2.1.0"
   },
