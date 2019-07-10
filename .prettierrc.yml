@@ -1,27 +1,35 @@
-printWidth: 80
+endOfLine: lf
+tabWidth: 2
+useTabs: false
 singleQuote: true
 bracketSpacing: true
 semi: true
-tabWidth: 4
 arrowParens: always
-useTabs: false
 
 overrides:
   - files:
-      - '*.tpl'
-      - '*.html'
+      - '*.js'
     options:
-      parser: html
-      printWidth: 120
-      htmlWhitespaceSensitivity: ignore
+      printWidth: 80
+  - files:
+      - '*.json'
+    options:
+      useTabs: true
+  - files:
+      - '*.md'
+    options:
+  - files:
+      - 'Makefile'
+    options:
+      useTabs: true
   - files:
       - '*.yml'
+      - '*.yaml'
       - 'package.json'
-      - '.browserslistrc'
     options:
-      indentSize: 2
-      insertFinalNewline: false
-  - files:
-      - '*.scss'
-    options:
-      printWidth: 240
+      tabWidth: 2
+      useTabs: false
+  # - files:
+  #     - '*.html'
+  #   options:
+  #     htmlWhitespaceSensitivity: ignore
