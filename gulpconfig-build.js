@@ -16,9 +16,9 @@ const sassBase = `${devBase}/scss`;
 const sassBuild = `${buildBase}/css`;
 const sassAll = [`${sassBase}/*.scss`, `!${sassBase}/_*.scss`];
 const sassCustom = [
-    `${sassBase}/custom.scss`,
-    `${sassBase}/c-*.scss`,
-    `${sassBase}/_variables.scss`
+  `${sassBase}/custom.scss`,
+  `${sassBase}/c-*.scss`,
+  `${sassBase}/_variables.scss`
 ];
 const sassCore = [`${sassBase}/bootstrap.scss`, `${sassBase}/_variables.scss`];
 const sassUtils = [`${sassBase}/u-*.scss`, `${sassBase}/_variables.scss`];
@@ -33,24 +33,24 @@ const gfxBuild = `${buildBase}/images`;
 // --------------
 
 const postcssPluginsBase = [
-    flexbugsFixes,
-    autoprefixer({
-        grid: true
-    }),
-    cssnano()
+  flexbugsFixes,
+  autoprefixer({
+    grid: true
+  }),
+  cssnano()
 ];
 
 module.exports = {
-    devBase: devBase,
-    buildBase: buildBase,
-    templateFolder: templateFolder,
-    sassBase: sassBase,
-    sassBuild: sassBuild,
-    sassAll: sassAll,
-    sassCustom: sassCustom,
-    sassCore: sassCore,
-    sassUtils: sassUtils,
-    gfxBase: gfxBase,
-    gfxBuild: gfxBuild,
-    postcssPluginsBase: postcssPluginsBase
+  devBase: devBase,
+  buildBase: buildBase,
+  templateFolder: templateFolder,
+  sassBase: sassBase,
+  sassBuild: sassBuild,
+  sassAll: sassAll,
+  sassCustom: sassCustom,
+  sassCore: sassCore,
+  sassUtils: sassUtils,
+  gfxBase: gfxBase,
+  gfxBuild: gfxBuild,
+  postcssPluginsBase: postcssPluginsBase
 };

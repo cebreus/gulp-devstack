@@ -14,25 +14,22 @@ const plumber = require('gulp-plumber');
  */
 
 const buildDataset = (input, output, outputFilename, cb) => {
-    return gulp
-        .src(input)
-        .pipe(
-            mergeJson({
-                fileName: outputFilename,
-                edit: (json, file) => {
-                    let filename = path.basename(file.path),
-                        primaryKey = filename.replace(
-                            path.extname(filename),
-                            ''
-                        );
-                    let data = {};
-                    data[primaryKey.toUpperCase()] = json;
-                    return data;
-                }
-            })
-        )
-        .pipe(gulp.dest(output))
-        .on('end', cb);
+  return gulp
+    .src(input)
+    .pipe(
+      mergeJson({
+        fileName: outputFilename,
+        edit: (json, file) => {
+          let filename = path.basename(file.path),
+            primaryKey = filename.replace(path.extname(filename), '');
+          let data = {};
+          data[primaryKey.toUpperCase()] = json;
+          return data;
+        }
+      })
+    )
+    .pipe(gulp.dest(output))
+    .on('end', cb);
 };
 
 module.exports = buildDataset;
