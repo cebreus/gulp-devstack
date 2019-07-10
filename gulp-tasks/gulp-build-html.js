@@ -17,44 +17,44 @@ const replace = require('gulp-replace');
  */
 
 const buildHtml = (params) => {
-    let condition;
+  let condition;
 
-    try {
-        fs.accessSync(params.dataSource);
-        condition = true;
-    } catch (error) {
-        console.log("JSON file doesn't exists.");
-        condition = false;
-    }
+  try {
+    fs.accessSync(params.dataSource);
+    condition = true;
+  } catch (error) {
+    console.log("JSON file doesn't exists.");
+    condition = false;
+  }
 
-    return gulp
-        .src(params.input)
-        .pipe(plumber())
-        .pipe(
-            gulpif(
-                condition,
-                data(function() {
-                    return JSON.parse(fs.readFileSync(params.dataSource));
-                })
-            )
-        )
-        .pipe(
-            inject(gulp.src(params.injectCss, { read: false }), {
-                relative: true,
-                ignorePath: '../../dist',
-                removeTags: true
-            })
-        )
-        .pipe(nunjucks.compile())
-        .pipe(
-            replace(
-                '<!-- inject: bootstrap js -->',
-                params.injectCdnJs.toString().replace(/[, ]+/g, ' ')
-            )
-        )
-        .pipe(prettify())
-        .pipe(gulp.dest(params.output))
-        .on('end', params.cb);
+  return gulp
+    .src(params.input)
+    .pipe(plumber())
+    .pipe(
+      gulpif(
+        condition,
+        data(function() {
+          return JSON.parse(fs.readFileSync(params.dataSource));
+        })
+      )
+    )
+    .pipe(
+      inject(gulp.src(params.injectCss, { read: false }), {
+        relative: true,
+        ignorePath: '../../dist',
+        removeTags: true
+      })
+    )
+    .pipe(nunjucks.compile())
+    .pipe(
+      replace(
+        '<!-- inject: bootstrap js -->',
+        params.injectCdnJs.toString().replace(/[, ]+/g, ' ')
+      )
+    )
+    .pipe(prettify())
+    .pipe(gulp.dest(params.output))
+    .on('end', params.cb);
 };
 
 module.exports = buildHtml;
