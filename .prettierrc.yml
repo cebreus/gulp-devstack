@@ -16,9 +16,6 @@ overrides:
     options:
       useTabs: true
   - files:
-      - '*.md'
-    options:
-  - files:
       - 'Makefile'
     options:
       useTabs: true
