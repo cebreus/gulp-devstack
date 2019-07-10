@@ -83,7 +83,7 @@
     "hooks": {
       "commit-msg": "commitlint -E HUSKY_GIT_PARAMS",
       "pre-commit": "lint-staged",
-      "pre-push": "npm run js:lint && css:lint"
+      "pre-push": "npm run js:lint"
     }
   },
   "repository": "https://cebreus@bitbucket.org/cebreus/gulp-dev-stack.git",
