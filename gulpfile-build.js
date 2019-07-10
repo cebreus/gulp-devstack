@@ -14,28 +14,28 @@ const config = require('./gulpconfig-build');
 // --------------
 
 function compileSassAll() {
-    return compileSassFnc(
-        config.sassAll,
-        config.sassBuild,
-        'index.min.css',
-        config.postcssPluginsBase
-    );
+  return compileSassFnc(
+    config.sassAll,
+    config.sassBuild,
+    'index.min.css',
+    config.postcssPluginsBase
+  );
 }
 
 function revision() {
-    const params = {
-        inputRevision: `${config.buildBase}/**/*.css`,
-        outputRevision: config.buildBase,
-        ouputManifest: `${config.templateFolder}/revision`,
-        inputRewrite: `${config.buildBase}/*.html`,
-        outputRewrite: config.buildBase,
-        manifestFile: `${config.templateFolder}/revision/*.json`
-    };
-    return revisionFnc(params);
+  const params = {
+    inputRevision: `${config.buildBase}/**/*.css`,
+    outputRevision: config.buildBase,
+    ouputManifest: `${config.templateFolder}/revision`,
+    inputRewrite: `${config.buildBase}/*.html`,
+    outputRewrite: config.buildBase,
+    manifestFile: `${config.templateFolder}/revision/*.json`
+  };
+  return revisionFnc(params);
 }
 
 function replaceHash() {
-    return replaceHashFnc(`${config.buildBase}/*.html`, config.buildBase);
+  return replaceHashFnc(`${config.buildBase}/*.html`, config.buildBase);
 }
 
 // Gulp tasks

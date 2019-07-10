@@ -6,18 +6,18 @@
 // --------------
 
 .c-article {
-    a:not(.btn) {
-        text-decoration: underline;
+  a:not(.btn) {
+    text-decoration: underline;
 
-        &:hover {
-            text-decoration: none;
-        }
+    &:hover {
+      text-decoration: none;
     }
+  }
 }
 
 // Vnitřní formátování obsahu článků
 // --------------
 
 .c-article.c-article--detail {
-    color: $blue;
+  color: $blue;
 }

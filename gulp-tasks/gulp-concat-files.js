@@ -12,12 +12,12 @@ const plumber = require('gulp-plumber');
  */
 
 const concatFiles = (input, output, outputConcatFileName) => {
-    return gulp
-        .src(input)
-        .pipe(plumber())
-        .pipe(gulpConcat(outputConcatFileName))
-        .pipe(gulp.dest(output))
-        .pipe(browsersync.stream());
+  return gulp
+    .src(input)
+    .pipe(plumber())
+    .pipe(gulpConcat(outputConcatFileName))
+    .pipe(gulp.dest(output))
+    .pipe(browsersync.stream());
 };
 
 module.exports = concatFiles;

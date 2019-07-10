@@ -11,11 +11,11 @@ const plumber = require('gulp-plumber');
  */
 
 const concatFiles = (input, output, outputConcatFileName) => {
-    return gulp
-        .src(input)
-        .pipe(plumber())
-        .pipe(gulpConcat(outputConcatFileName))
-        .pipe(gulp.dest(output));
+  return gulp
+    .src(input)
+    .pipe(plumber())
+    .pipe(gulpConcat(outputConcatFileName))
+    .pipe(gulp.dest(output));
 };
 
 module.exports = concatFiles;
