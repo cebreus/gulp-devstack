@@ -1,5 +1,6 @@
 const gulp = require('gulp');
 
+const cleanBuildFnc = require('./gulp-tasks-build/gulp-clean-build');
 const compileSassFnc = require('./gulp-tasks-build/gulp-compile-sass');
 const concatFilesFnc = require('./gulp-tasks-build/gulp-concat-files');
 const revisionFnc = require('./gulp-tasks-build/gulp-revision');
@@ -12,6 +13,10 @@ const config = require('./gulpconfig-build');
 
 // Gulp functions
 // --------------
+
+function cleanBuild() {
+  return cleanBuildFnc(config.buildBase);
+}
 
 function compileSassAll() {
   return compileSassFnc(
@@ -41,6 +46,7 @@ function replaceHash() {
 // Gulp tasks
 // --------------
 
+gulp.task('clean-build', cleanBuild);
 gulp.task('build:css', gulp.parallel(compileSassAll));
 gulp.task('revision', gulp.series(revision));
 gulp.task('replace-hash', replaceHash);
