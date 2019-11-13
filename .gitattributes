@@ -1,0 +1,18 @@
+# Set line ending
+*.css text eol=lf
+*.js text eol=lf
+*.json text eol=lf
+*.jsx text eol=lf
+*.md text eol=lf
+*.scss text eol=lf
+*.ts text eol=lf
+*.tsx text eol=lf
+*.txt text eol=lf
+*.vue text eol=lf
+
+# Do not try merge
+package-lock.json -diff
+*.map -diff
+
+# Remove assets from statistics
+favicon.* linguist-vendored
