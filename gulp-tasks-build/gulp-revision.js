@@ -4,6 +4,17 @@ const revRewrite = require('gulp-rev-rewrite');
 const revReplace = require('gulp-rev-replace');
 const revDelete = require('gulp-rev-delete-original');
 
+/**
+ * @description Add version hash to files
+ * @param {string} inputRevision path to CSS files
+ * @param {string} outputRevision path to save files
+ * @param {string} outPutManifest path to save manifest file
+ * @param {string} inputRewrite path to HTML files which you want to rewrite
+ * @param {string} manifestFile path to manifest file
+ * @param {string} outputRewrite path to save rewrited HTML files
+ * @return {stream} Files with version hash
+ */
+
 const revision = (params) => {
   return gulp
     .src(params.inputRevision)
