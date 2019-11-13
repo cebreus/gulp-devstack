@@ -9,6 +9,7 @@ const fixCssFnc = require('./gulp-tasks/gulp-css-fix');
 const lintCssFnc = require('./gulp-tasks/gulp-css-lint');
 const fontLoadFnc = require('./gulp-tasks/gulp-font-load');
 const faviconsFnc = require('./gulp-tasks/gulp-favicons');
+const imagesFnc = require('./gulp-tasks/gulp-optimize-images');
 
 // Variables
 // --------------
@@ -56,6 +57,14 @@ function lintCss(done) {
 
 function fixCss(done) {
   fixCssFnc(config.sassCustom, config.sassBase);
+  done();
+}
+
+function images(done) {
+  imagesFnc.optimizeJpg(config.jpgImages, config.gfxBuild);
+  imagesFnc.optimizePng(config.pngImages, config.gfxBuild);
+  imagesFnc.optimizeSvg(config.svgImages, config.gfxBuild);
+
   done();
 }
 
@@ -139,6 +148,8 @@ gulp.task('dataset', buildDataset);
 gulp.task('html', gulp.series(buildDataset, buildHtml));
 gulp.task('fonts', fontLoad);
 gulp.task('favicons', favicons);
+gulp.task('images', images);
+
 gulp.task(
   'serve',
   gulp.series(
@@ -149,6 +160,7 @@ gulp.task(
     fontLoad,
     buildHtml,
     favicons,
+    images,
     gulp.parallel(watchFiles, hotReload.browserSync)
   )
 );

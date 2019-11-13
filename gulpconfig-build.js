@@ -29,6 +29,15 @@ const sassUtils = [`${sassBase}/u-*.scss`, `${sassBase}/_variables.scss`];
 const gfxBase = `${devBase}/gfx`;
 const gfxBuild = `${buildBase}/images`;
 
+const svgBase = `${gfxBase}/svg`;
+const svgImages = `${svgBase}/*.svg`;
+
+const jpgBase = `${gfxBase}/jpg`;
+const jpgImages = `${jpgBase}/*.jpg`;
+
+const pngBase = `${gfxBase}/png`;
+const pngImages = `${pngBase}/*.png`;
+
 // Modules & Plugins
 // --------------
 
@@ -52,5 +61,9 @@ module.exports = {
   sassUtils: sassUtils,
   gfxBase: gfxBase,
   gfxBuild: gfxBuild,
-  postcssPluginsBase: postcssPluginsBase
+  postcssPluginsBase: postcssPluginsBase,
+  gfxBuild: gfxBuild,
+  svgImages: svgImages,
+  jpgImages: jpgImages,
+  pngImages: pngImages
 };

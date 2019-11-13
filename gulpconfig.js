@@ -45,6 +45,15 @@ const tplDataset = `${tempBase}/dataset.json`;
 const gfxBase = `${devBase}/gfx`;
 const gfxBuild = `${buildBase}/images`;
 
+const svgBase = `${gfxBase}/svg`;
+const svgImages = `${svgBase}/*.svg`;
+
+const jpgBase = `${gfxBase}/jpg`;
+const jpgImages = `${jpgBase}/*.jpg`;
+
+const pngBase = `${gfxBase}/png`;
+const pngImages = `${pngBase}/*.png`;
+
 // JavaScript
 // --------------
 
@@ -117,5 +126,9 @@ module.exports = {
   fontLoadConfig: fontLoadConfig,
   faviconSourceFile: faviconSourceFile,
   faviconBuild: faviconBuild,
-  faviconGenConfig: faviconGenConfig
+  faviconGenConfig: faviconGenConfig,
+  gfxBuild: gfxBuild,
+  svgImages: svgImages,
+  jpgImages: jpgImages,
+  pngImages: pngImages
 };
