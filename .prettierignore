@@ -1,5 +1,6 @@
 dist/
 build/
+*.min.*
 *.html
 _variables.scss
 u-debugger.scss
