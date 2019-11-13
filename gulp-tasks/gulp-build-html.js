@@ -13,6 +13,9 @@ const replace = require('gulp-replace');
  * @param {string,object} input Path with filter to source files
  * @param {string} output Path to save compiled files
  * @param {string} dataSource Input file with data structure
+ * @param {string} injectCss Path to css files which you want inject
+ * @param {array} injectJs Path to JS files which you want inject
+ * @param {array} injectCdnJs Path to CDN JS files which you want inject
  * @return {stream} Compiled file
  */
 
@@ -40,6 +43,13 @@ const buildHtml = (params) => {
     )
     .pipe(
       inject(gulp.src(params.injectCss, { read: false }), {
+        relative: true,
+        ignorePath: '../../dist',
+        removeTags: true
+      })
+    )
+    .pipe(
+      inject(gulp.src(params.injectJs, { read: false }), {
         relative: true,
         ignorePath: '../../dist',
         removeTags: true
