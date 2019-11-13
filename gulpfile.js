@@ -112,6 +112,10 @@ function buildHtml(done) {
   buildHtmlFnc(params);
 }
 
+function concatFiles() {
+  return concatFilesFnc(config.jsFiles, config.jsBuild, 'app.js');
+}
+
 function watchFiles() {
   gulp.watch(
     config.sassCustom,
@@ -132,6 +136,10 @@ function watchFiles() {
   gulp.watch(
     config.datasetJsonBase,
     gulp.series(buildDataset, buildHtml, hotReload.browserSyncReload)
+  );
+  gulp.watch(
+    config.jsFiles,
+    gulp.series(concatFiles, buildHtml, hotReload.browserSyncReload)
   );
 }
 
@@ -154,6 +162,7 @@ gulp.task(
   'serve',
   gulp.series(
     buildDataset,
+    concatFiles,
     compileSassCore,
     compileSassCustom,
     compileSassUtils,

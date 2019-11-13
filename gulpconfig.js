@@ -57,6 +57,11 @@ const pngImages = `${pngBase}/*.png`;
 // JavaScript
 // --------------
 
+const jsBase = `${devBase}/js`;
+const jsFiles = `${jsBase}/*.js`;
+const jsBuild = `${buildBase}/js`;
+const injectJs = `${jsBuild}/*.js`;
+
 const injectCdnJs = [
   '<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>',
   '<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>',
@@ -127,6 +132,9 @@ module.exports = {
   faviconSourceFile: faviconSourceFile,
   faviconBuild: faviconBuild,
   faviconGenConfig: faviconGenConfig,
+  jsFiles: jsFiles,
+  jsBuild: jsBuild,
+  injectJs: injectJs,
   gfxBuild: gfxBuild,
   svgImages: svgImages,
   jpgImages: jpgImages,
