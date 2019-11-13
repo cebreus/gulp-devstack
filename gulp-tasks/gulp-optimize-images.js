@@ -1,5 +1,4 @@
 const gulp = require('gulp');
-const gulpif = require('gulp-if');
 const imagemin = require('gulp-imagemin');
 const mozjpeg = require('imagemin-mozjpeg');
 const newer = require('gulp-newer');
@@ -7,25 +6,17 @@ const upng = require('gulp-upng');
 const plumber = require('gulp-plumber');
 
 /**
- * @description Function for optimizing JPEG images
- * @param {string} input Path to JPEG files
- * @param {string} output Path to save files
- * @param {boolean} params.rewriteExisting Switcher for rewriting files
- * @return {stream} Optimized JPEG images
+ * @description Function for optimizing jpeg images
+ * @param {string} input Path to jpg images
+ * @param {string} output Path to save images
+ * @return {stream} optimized jpg images
  */
 
-const optimizeJpg = (input, output, params = {}) => {
-  const rewriteExisting =
-    params.rewriteExisting &&
-    typeof params.rewriteExisting === 'boolean' &&
-    params.rewriteExisting === true
-      ? true
-      : false;
-
+const optimizeJpg = (input, output) => {
   return gulp
     .src(input)
     .pipe(plumber())
-    .pipe(gulpif(!rewriteExisting, newer(output)))
+    .pipe(newer(output))
     .pipe(
       imagemin([
         mozjpeg({
@@ -38,49 +29,33 @@ const optimizeJpg = (input, output, params = {}) => {
 };
 
 /**
- * @description Function for optimizing PNG images
- * @param {string} input Path to PNG files
- * @param {string} output Path to save files
- * @param {boolean} params.rewriteExisting Switcher for rewriting files
- * @return {stream} Optimized PNG images
+ * @description Function for optimizing png images
+ * @param {string} input Path to png images
+ * @param {string} output Path to save images
+ * @return {stream} optimized png images
  */
 
-const optimizePng = (input, output, params = {}) => {
-  const rewriteExisting =
-    params.rewriteExisting &&
-    typeof params.rewriteExisting === 'boolean' &&
-    params.rewriteExisting === true
-      ? true
-      : false;
-
+const optimizePng = (input, output) => {
   return gulp
     .src(input)
     .pipe(plumber())
-    .pipe(gulpif(!rewriteExisting, newer(output)))
+    .pipe(newer(output))
     .pipe(upng({}))
     .pipe(gulp.dest(output));
 };
 
 /**
- * @description Function for optimizing SVG images
- * @param {string} input Path to SVG files
- * @param {string} output Path to save files
- * @param {boolean} params.rewriteExisting Switcher for rewriting files
- * @return {stream} Optimized SVG images
+ * @description Function for optimizing svg images
+ * @param {string} input Path to svg images
+ * @param {string} output Path to save images
+ * @return {stream} optimized svg images
  */
 
-const optimizeSvg = (input, output, params = {}) => {
-  const rewriteExisting =
-    params.rewriteExisting &&
-    typeof params.rewriteExisting === 'boolean' &&
-    params.rewriteExisting === true
-      ? true
-      : false;
-
+const optimizeSvg = (input, output) => {
   return gulp
     .src(input)
     .pipe(plumber())
-    .pipe(gulpif(!rewriteExisting, newer(output)))
+    .pipe(newer(output))
     .pipe(
       imagemin([
         imagemin.svgo({
