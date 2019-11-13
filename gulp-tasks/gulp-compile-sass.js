@@ -1,4 +1,4 @@
-const browsersync = require('browser-sync').create();
+//const browsersync = require('browser-sync').create();
 const gulp = require('gulp');
 const plumber = require('gulp-plumber');
 const postcss = require('gulp-postcss');
@@ -37,8 +37,8 @@ const compileSass = (
     .pipe(postcss(postcssPluginsBase, { syntax: postcssSyntax }))
     .pipe(prettify({ indent_size: 4 }))
     .pipe(gulpConcat(outputConcatFileName))
-    .pipe(gulp.dest(output))
-    .pipe(browsersync.stream());
+    .pipe(gulp.dest(output));
+  //.pipe(browsersync.stream());
 };
 
 module.exports = compileSass;
