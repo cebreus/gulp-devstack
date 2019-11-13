@@ -6,6 +6,8 @@ const concatFilesFnc = require('./gulp-tasks-build/gulp-concat-files');
 const revisionFnc = require('./gulp-tasks-build/gulp-revision');
 const replaceHashFnc = require('./gulp-tasks-build/gulp-sri-hash');
 
+const imagesFnc = require('./gulp-tasks/gulp-optimize-images');
+
 // Variables
 // --------------
 
@@ -43,6 +45,14 @@ function replaceHash() {
   return replaceHashFnc(`${config.buildBase}/*.html`, config.buildBase);
 }
 
+function images(done) {
+  imagesFnc.optimizeJpg(config.jpgImages, config.gfxBuild);
+  imagesFnc.optimizePng(config.pngImages, config.gfxBuild);
+  imagesFnc.optimizeSvg(config.svgImages, config.gfxBuild);
+
+  done();
+}
+
 // Gulp tasks
 // --------------
 
@@ -50,6 +60,7 @@ gulp.task('clean-build', cleanBuild);
 gulp.task('build:css', gulp.parallel(compileSassAll));
 gulp.task('revision', gulp.series(revision));
 gulp.task('replace-hash', replaceHash);
+gulp.task('images', images);
 
 // Aliases
 
