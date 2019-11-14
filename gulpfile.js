@@ -1,15 +1,16 @@
 const gulp = require('gulp');
 
-const hotReload = require('./gulp-tasks/gulp-hotreload');
-const buildHtmlFnc = require('./gulp-tasks/gulp-build-html');
 const buildDatasetFnc = require('./gulp-tasks/gulp-build-dataset');
+const buildHtmlFnc = require('./gulp-tasks/gulp-build-html');
 const compileSassFnc = require('./gulp-tasks/gulp-compile-sass');
 const concatFilesFnc = require('./gulp-tasks/gulp-concat-files');
-const fixCssFnc = require('./gulp-tasks/gulp-css-fix');
-const lintCssFnc = require('./gulp-tasks/gulp-css-lint');
-const fontLoadFnc = require('./gulp-tasks/gulp-font-load');
-const faviconsFnc = require('./gulp-tasks/gulp-favicons');
 const imagesFnc = require('./gulp-tasks/gulp-optimize-images');
+
+const faviconsFnc = require('./gulp-tasks/gulp-favicons');
+const fixCssFnc = require('./gulp-tasks/gulp-css-fix');
+const fontLoadFnc = require('./gulp-tasks/gulp-font-load');
+const hotReload = require('./gulp-tasks/gulp-hotreload');
+const lintCssFnc = require('./gulp-tasks/gulp-css-lint');
 
 // Variables
 // --------------
@@ -18,6 +19,44 @@ const config = require('./gulpconfig');
 
 // Gulp functions
 // --------------
+
+function buildDataset(done) {
+  buildDatasetFnc(
+    config.datasetJsonBase,
+    config.datasetJsonBuild,
+    config.datasetJsonFileName,
+    () => {
+      done();
+    }
+  );
+}
+
+function buildHtml(done) {
+  const params = {
+    input: config.tplMain,
+    output: config.tplBuild,
+    dataSource: config.tplDataset,
+    injectCdnJs: config.injectCdnJs,
+    injectJs: config.injectJs,
+    injectCss: config.injectCss,
+    cb: () => {
+      done();
+    }
+  };
+  buildHtmlFnc(params);
+}
+
+function concatFiles() {
+  return concatFilesFnc(config.jsFiles, config.jsBuild, 'app.js');
+}
+
+function images(done) {
+  imagesFnc.optimizeJpg(config.jpgImages, config.gfxBuild);
+  imagesFnc.optimizePng(config.pngImages, config.gfxBuild);
+  imagesFnc.optimizeSvg(config.svgImages, config.gfxBuild);
+
+  done();
+}
 
 function compileSassCore() {
   return compileSassFnc(
@@ -60,14 +99,6 @@ function fixCss(done) {
   done();
 }
 
-function images(done) {
-  imagesFnc.optimizeJpg(config.jpgImages, config.gfxBuild);
-  imagesFnc.optimizePng(config.pngImages, config.gfxBuild);
-  imagesFnc.optimizeSvg(config.svgImages, config.gfxBuild);
-
-  done();
-}
-
 function favicons() {
   return faviconsFnc(
     config.faviconSourceFile,
@@ -85,35 +116,6 @@ function fontLoad(done) {
       done();
     }
   );
-}
-
-function buildDataset(done) {
-  buildDatasetFnc(
-    config.datasetJsonBase,
-    config.datasetJsonBuild,
-    config.datasetJsonFileName,
-    () => {
-      done();
-    }
-  );
-}
-
-function buildHtml(done) {
-  const params = {
-    input: config.tplMain,
-    output: config.tplBuild,
-    dataSource: config.tplDataset,
-    injectCdnJs: config.injectCdnJs,
-    injectCss: config.injectCss,
-    cb: () => {
-      done();
-    }
-  };
-  buildHtmlFnc(params);
-}
-
-function concatFiles() {
-  return concatFilesFnc(config.jsFiles, config.jsBuild, 'app.js');
 }
 
 function watchFiles() {
@@ -150,9 +152,9 @@ gulp.task(
   'build:css',
   gulp.parallel(compileSassCore, compileSassCustom, compileSassUtils)
 );
+gulp.task('dataset', buildDataset);
 gulp.task('cssfix', fixCss);
 gulp.task('csslint', lintCss);
-gulp.task('dataset', buildDataset);
 gulp.task('html', gulp.series(buildDataset, buildHtml));
 gulp.task('fonts', fontLoad);
 gulp.task('favicons', favicons);
