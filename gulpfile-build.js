@@ -1,14 +1,14 @@
 const gulp = require('gulp');
 
-const cleanBuildFnc = require('./gulp-tasks-build/gulp-clean-build');
+const buildDatasetFnc = require('./gulp-tasks/gulp-build-dataset');
+const buildHtmlFnc = require('./gulp-tasks-build/gulp-build-html');
 const compileSassFnc = require('./gulp-tasks-build/gulp-compile-sass');
 const concatFilesFnc = require('./gulp-tasks-build/gulp-concat-files');
-const buildHtmlFnc = require('./gulp-tasks-build/gulp-build-html');
-const revisionFnc = require('./gulp-tasks-build/gulp-revision');
-const replaceHashFnc = require('./gulp-tasks-build/gulp-sri-hash');
-
-const buildDatasetFnc = require('./gulp-tasks/gulp-build-dataset');
 const imagesFnc = require('./gulp-tasks/gulp-optimize-images');
+
+const cleanBuildFnc = require('./gulp-tasks-build/gulp-clean-build');
+const replaceHashFnc = require('./gulp-tasks-build/gulp-sri-hash');
+const revisionFnc = require('./gulp-tasks-build/gulp-revision');
 
 // Variables
 // --------------
@@ -17,19 +17,6 @@ const config = require('./gulpconfig-build');
 
 // Gulp functions
 // --------------
-
-function cleanBuild() {
-  return cleanBuildFnc(config.buildBase);
-}
-
-function compileSassAll() {
-  return compileSassFnc(
-    config.sassAll,
-    config.sassBuild,
-    'index.min.css',
-    config.postcssPluginsBase
-  );
-}
 
 function buildDataset(done) {
   buildDatasetFnc(
@@ -48,29 +35,13 @@ function buildHtml(done) {
     output: config.tplBuild,
     dataSource: config.tplDataset,
     injectCdnJs: config.injectCdnJs,
-    injectCss: config.injectCss,
     injectJs: config.injectJs,
+    injectCss: config.injectCss,
     cb: () => {
       done();
     }
   };
   buildHtmlFnc(params);
-}
-
-function revision() {
-  const params = {
-    inputRevision: `${config.buildBase}/**/*.css`,
-    outputRevision: config.buildBase,
-    ouputManifest: `${config.tempBase}/revision`,
-    inputRewrite: `${config.buildBase}/*.html`,
-    outputRewrite: config.buildBase,
-    manifestFile: `${config.tempBase}/revision/*.json`
-  };
-  return revisionFnc(params);
-}
-
-function replaceHash() {
-  return replaceHashFnc(`${config.buildBase}/*.html`, config.buildBase);
 }
 
 function concatFiles() {
@@ -85,13 +56,40 @@ function images(done) {
   done();
 }
 
+function compileSassAll() {
+  return compileSassFnc(
+    config.sassAll,
+    config.sassBuild,
+    'index.min.css',
+    config.postcssPluginsBase
+  );
+}
+
+function cleanBuild() {
+  return cleanBuildFnc(config.buildBase);
+}
+
+function replaceHash() {
+  return replaceHashFnc(`${config.buildBase}/*.html`, config.buildBase);
+}
+
+function revision() {
+  const params = {
+    inputRevision: `${config.buildBase}/**/*.css`,
+    outputRevision: config.buildBase,
+    ouputManifest: `${config.tempBase}/revision`,
+    inputRewrite: `${config.buildBase}/*.html`,
+    outputRewrite: config.buildBase,
+    manifestFile: `${config.tempBase}/revision/*.json`
+  };
+  return revisionFnc(params);
+}
+
 // Gulp tasks
 // --------------
 
-gulp.task('clean-build', cleanBuild);
 gulp.task('build:css', gulp.parallel(compileSassAll));
-gulp.task('revision', gulp.series(revision));
-gulp.task('replace-hash', replaceHash);
+gulp.task('cleanup', cleanBuild);
 gulp.task('images', images);
 
 // Aliases
@@ -100,9 +98,9 @@ gulp.task(
   'default',
   gulp.series(
     cleanBuild,
-    'build:css',
-    concatFiles,
     buildDataset,
+    concatFiles,
+    compileSassAll,
     revision,
     buildHtml,
     replaceHash,

@@ -45,13 +45,13 @@ const tplDataset = `${tempBase}/dataset.json`;
 const gfxBase = `${devBase}/gfx`;
 const gfxBuild = `${buildBase}/images`;
 
-const svgBase = `${gfxBase}/svg`;
+const svgBase = `${gfxBase}/**`;
 const svgImages = `${svgBase}/*.svg`;
 
-const jpgBase = `${gfxBase}/jpg`;
+const jpgBase = `${gfxBase}/**`;
 const jpgImages = `${jpgBase}/*.jpg`;
 
-const pngBase = `${gfxBase}/png`;
+const pngBase = `${gfxBase}/**`;
 const pngImages = `${pngBase}/*.png`;
 
 // JavaScript
@@ -111,12 +111,14 @@ const faviconGenConfig = {
 module.exports = {
   devBase: devBase,
   buildBase: buildBase,
+  tempBase: tempBase,
   sassBase: sassBase,
   sassBuild: sassBuild,
   sassAll: sassAll,
   sassCustom: sassCustom,
   sassCore: sassCore,
   sassUtils: sassUtils,
+  postcssPluginsBase: postcssPluginsBase,
   injectCss: injectCss,
   datasetJsonBase: datasetJsonBase,
   datasetJsonBuild: datasetJsonBuild,
@@ -125,18 +127,18 @@ module.exports = {
   tplMain: tplMain,
   tplBuild: tplBuild,
   tplDataset: tplDataset,
-  postcssPluginsBase: postcssPluginsBase,
   injectCdnJs: injectCdnJs,
+  jsFiles: jsFiles,
+  jsBuild: jsBuild,
+  injectJs: injectJs,
+  gfxBase: gfxBase,
+  gfxBuild: gfxBuild,
+  svgImages: svgImages,
+  jpgImages: jpgImages,
+  pngImages: pngImages,
   fontloadFile: fontloadFile,
   fontLoadConfig: fontLoadConfig,
   faviconSourceFile: faviconSourceFile,
   faviconBuild: faviconBuild,
-  faviconGenConfig: faviconGenConfig,
-  jsFiles: jsFiles,
-  jsBuild: jsBuild,
-  injectJs: injectJs,
-  gfxBuild: gfxBuild,
-  svgImages: svgImages,
-  jpgImages: jpgImages,
-  pngImages: pngImages
+  faviconGenConfig: faviconGenConfig
 };
