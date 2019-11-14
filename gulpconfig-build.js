@@ -23,6 +23,7 @@ const sassCustom = [
 const sassCore = [`${sassBase}/bootstrap.scss`, `${sassBase}/_variables.scss`];
 const sassUtils = [`${sassBase}/u-*.scss`, `${sassBase}/_variables.scss`];
 const injectCss = `${sassBuild}/*.css`;
+
 // Data JSON
 // --------------
 
@@ -59,13 +60,13 @@ const injectCdnJs = [
   '<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>'
 ];
 
-const svgBase = `${gfxBase}/svg`;
+const svgBase = `${gfxBase}/**`;
 const svgImages = `${svgBase}/*.svg`;
 
-const jpgBase = `${gfxBase}/jpg`;
+const jpgBase = `${gfxBase}/**`;
 const jpgImages = `${jpgBase}/*.jpg`;
 
-const pngBase = `${gfxBase}/png`;
+const pngBase = `${gfxBase}/**`;
 const pngImages = `${pngBase}/*.png`;
 
 // Modules & Plugins
