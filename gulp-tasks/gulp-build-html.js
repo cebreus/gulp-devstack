@@ -20,14 +20,14 @@ const replace = require('gulp-replace');
  */
 
 const buildHtml = (params) => {
-  let condition;
+  let existsJson;
 
   try {
     fs.accessSync(params.dataSource);
-    condition = true;
+    existsJson = true;
   } catch (error) {
     console.log("JSON file doesn't exists.");
-    condition = false;
+    existsJson = false;
   }
 
   return gulp
@@ -35,7 +35,7 @@ const buildHtml = (params) => {
     .pipe(plumber())
     .pipe(
       gulpif(
-        condition,
+        existsJson,
         data(function() {
           return JSON.parse(fs.readFileSync(params.dataSource));
         })
