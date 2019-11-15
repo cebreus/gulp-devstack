@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "build": "node ./node_modules/gulp/bin/gulp.js -f gulpfile-build.js default",
-    "dev": "node ./node_modules/gulp/bin/gulp.js -f gulpfile.js default",
+    "develop": "node ./node_modules/gulp/bin/gulp.js -f gulpfile.js default",
     "csslint": "node ./node_modules/gulp/bin/gulp.js -f gulpfile.js csslint",
     "cssfix": "node ./node_modules/gulp/bin/gulp.js -f gulpfile.js cssfix",
     "format": "prettier --write **/*.{js,md,scss}",
@@ -24,7 +24,7 @@
   "dependencies": {
     "bootstrap": "^4.3.1",
     "jquery": "^3.4.1",
-    "lint-staged": "^9.4.2",
+    "lint-staged": "^9.4.3",
     "popper.js": "^1.16.0"
   },
   "devDependencies": {
@@ -79,6 +79,7 @@
     "stylelint-selector-bem-pattern": "^2.1.0",
     "textlint": "^11.5.0",
     "textlint-rule-common-misspellings": "^1.0.1",
+    "textlint-rule-diacritics": "^1.0.0",
     "textlint-rule-no-dead-link": "^4.6.1",
     "textlint-rule-terminology": "^1.1.30",
     "textlint-rule-write-good": "^1.6.2"
@@ -97,11 +98,11 @@
   "homepage": "https://bitbucket.org/cebreus/gulp-dev-stack#readme",
   "bugs": {
     "url": "https://bitbucket.org/cebreus/gulp-dev-stack/issues",
-    "email": "cebreus69@gmail.com"
+    "email": "cebreus@live.com"
   },
-  "author": "Jaroslav Vrána <cebreus69@gmail.com>",
-  "private": true,
-  "license": "UNLICENSED",
+  "author": "Jaroslav Vrána <cebreus@live.com>",
+  "private": false,
+  "license": "MIT",
   "keywords": [
     "dev stack",
     "gulp",
