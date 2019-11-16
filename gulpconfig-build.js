@@ -80,6 +80,11 @@ const postcssPluginsBase = [
   cssnano()
 ];
 
+// Files that need to be removed
+// --------------
+
+const buildRevManifest = `${buildBase}/rev-manifest.json`;
+
 module.exports = {
   devBase: devBase,
   buildBase: buildBase,
@@ -107,5 +112,6 @@ module.exports = {
   gfxBuild: gfxBuild,
   svgImages: svgImages,
   jpgImages: jpgImages,
-  pngImages: pngImages
+  pngImages: pngImages,
+  buildRevManifest: buildRevManifest
 };
