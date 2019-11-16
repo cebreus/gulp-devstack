@@ -6,7 +6,7 @@ const compileSassFnc = require('./gulp-tasks-build/gulp-compile-sass');
 const concatFilesFnc = require('./gulp-tasks-build/gulp-concat-files');
 const imagesFnc = require('./gulp-tasks/gulp-optimize-images');
 
-const cleanBuildFnc = require('./gulp-tasks-build/gulp-clean-build');
+const cleanFnc = require('./gulp-tasks-build/gulp-clean');
 const replaceHashFnc = require('./gulp-tasks-build/gulp-sri-hash');
 const revisionFnc = require('./gulp-tasks-build/gulp-revision');
 
@@ -65,8 +65,13 @@ function compileSassAll() {
   );
 }
 
-function cleanBuild() {
-  return cleanBuildFnc(config.buildBase);
+function cleanFolders() {
+  cleanFnc(config.tempBase);
+  return cleanFnc(config.buildBase);
+}
+
+function cleanFiles() {
+  return cleanFnc(config.buildRevManifest);
 }
 
 function replaceHash() {
@@ -89,7 +94,7 @@ function revision() {
 // --------------
 
 gulp.task('build:css', gulp.parallel(compileSassAll));
-gulp.task('cleanup', cleanBuild);
+gulp.task('cleanup', cleanFolders);
 gulp.task('images', images);
 
 // Aliases
@@ -97,13 +102,14 @@ gulp.task('images', images);
 gulp.task(
   'default',
   gulp.series(
-    cleanBuild,
+    cleanFolders,
     buildDataset,
     concatFiles,
     compileSassAll,
     revision,
     buildHtml,
     replaceHash,
-    images
+    images,
+    cleanFiles
   )
 );
