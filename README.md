@@ -1,6 +1,6 @@
 # Front-end Gulp DevStack
 
-### Designed for building static pages. Creates a complete web page with a style sheet from templates and SCSS. Development mode with hot-reload and production build.
+## For building static pages. Creates a complete web page with a style sheet from templates and SCSS. Development mode with hot-reload and production build.
 
 ![Maintenance](https://img.shields.io/maintenance/yes/2022)
 ![Contributions welcome](https://img.shields.io/badge/contributions-welcome-green.svg)
@@ -18,6 +18,8 @@
   - [Prerequisites](#prerequisites)
   - [Installation](#installation)
 - [Usage](#usage)
+  - [Development](#development)
+  - [Production Build](#production-build)
 - [Roadmap](#roadmap)
 - [Contributing](#contributing)
 - [License](#license)
@@ -52,7 +54,7 @@ This is an example of how you may give instructions on setting up your project l
    git clone https://bitbucket.org/cebreus/gulp-dev-stack/
    ```
 
-1. Install NPM packages
+2. Install NPM packages
 
    ```bash
    npm i
@@ -70,9 +72,9 @@ Starts watchers, compilers etc. for dynamic development with hot reload in the b
    npm run develop
    ```
 
-1. Open Browser on URL `http://localhost:4000` or what you see in command line.
+2. Open Browser on URL `http://localhost:4000` or what you see in command line.
 
-1. Modify files in `src` folder a subfolders:
+3. Modify files in `src` folder a subfolders:
 
    - folder `/data` contind JSON files with data structures for templates
    - folder `/gfx` containes graphic files
