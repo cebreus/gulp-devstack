@@ -51,9 +51,15 @@ function concatFiles() {
 }
 
 function images(done) {
-  imagesFnc.optimizeJpg(config.jpgImages, config.gfxBuild);
-  imagesFnc.optimizePng(config.pngImages, config.gfxBuild);
-  imagesFnc.optimizeSvg(config.svgImages, config.gfxBuild);
+  imagesFnc.optimizeJpg(config.jpgImages, config.gfxBuild, {
+    rewriteExisting: true
+  });
+  imagesFnc.optimizePng(config.pngImages, config.gfxBuild, {
+    rewriteExisting: true
+  });
+  imagesFnc.optimizeSvg(config.svgImages, config.gfxBuild, {
+    rewriteExisting: true
+  });
 
   done();
 }
