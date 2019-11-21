@@ -1,7 +1,7 @@
 {
   "name": "gulp-dev-stack",
   "version": "0.0.0",
-  "description": "Basic Gulp dev stack for basic front-end development with customized Bootstrap.",
+  "description": "Basic Gulp DevStack for basic front-end development with customized Bootstrap.",
   "main": "index.js",
   "scripts": {
     "build": "node ./node_modules/gulp/bin/gulp.js -f gulpfile-build.js default",
@@ -10,6 +10,7 @@
     "cssfix": "node ./node_modules/gulp/bin/gulp.js -f gulpfile.js cssfix",
     "format": "prettier --write **/*.{js,md,scss}",
     "gulp": "./node_modules/.bin/gulp",
+    "remark": "remark -q . -o",
     "html": "node ./node_modules/gulp/bin/gulp.js -f gulpfile.js html",
     "dataset": "node ./node_modules/gulp/bin/gulp.js -f gulpfile.js dataset",
     "rev": "node ./node_modules/gulp/bin/gulp.js -f gulpfile-build.js revision",
@@ -17,9 +18,9 @@
     "css:lint": "stylelint **/*.scss",
     "css:fix": "stylelint --fix **/*.scss",
     "js:lint": "eslint **/*.js",
-    "js:fix": "eslint --fix  **/*.js",
+    "js:fix": "eslint --fix **/*.js",
     "text:lint": "textlint *.md",
-    "text:fix": "textlint --fix *.md"
+    "text:fix": "textlint --fix *.md && npm run remark"
   },
   "dependencies": {
     "bootstrap": "^4.3.1",
@@ -32,7 +33,7 @@
     "@commitlint/config-conventional": "^8.2.0",
     "@visionappscz/stylelint-config-visionapps": "^1.1.0",
     "@visionappscz/stylelint-config-visionapps-order": "^1.1.0",
-    "autoprefixer": "^9.7.1",
+    "autoprefixer": "^9.7.2",
     "babel-core": "^6.26.3",
     "babel-eslint": "^10.0.3",
     "babel-plugin-loop-optimizer": "^1.4.1",
@@ -75,11 +76,16 @@
     "postcss-flexbugs-fixes": "^4.1.0",
     "postcss-scss": "^2.0.0",
     "prettier": "^1.19.1",
+    "remark": "^11.0.2",
+    "remark-cli": "^7.0.1",
+    "remark-lint-match-punctuation": "^0.2.0",
+    "remark-preset-lint-consistent": "^2.0.3",
+    "remark-preset-lint-recommended": "^3.0.3",
     "stylelint": "^10.1.0",
     "stylelint-find-rules": "^2.2.0",
     "stylelint-high-performance-animation": "^1.3.0",
     "stylelint-order": "^3.1.1",
-    "stylelint-scss": "^3.12.1",
+    "stylelint-scss": "^3.13.0",
     "stylelint-selector-bem-pattern": "^2.1.0",
     "textlint": "^11.5.0",
     "textlint-rule-common-misspellings": "^1.0.1",
@@ -108,7 +114,7 @@
   "private": false,
   "license": "MIT",
   "keywords": [
-    "dev stack",
+    "devstack",
     "gulp",
     "bootstrap"
   ],
@@ -118,7 +124,7 @@
       "git add"
     ],
     "*.md": [
-      "prettier --write",
+      "remark -q . -o",
       "git add"
     ],
     "*.scss": [
