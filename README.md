@@ -116,4 +116,4 @@ Distributed under the MIT License. See `LICENSE` for more information.
 
 Your Name - [@cebreus69](https://twitter.com/cebreus69) — cebreus@live.com
 
-Project Link: <https://bitbucket.org/socialauth/login/atlassianid/?next=%2Fcebreus%2Fgulp-dev-stack%2F>
+Project Link: [https://bitbucket.org/cebreus/gulp-dev-stack](https://bitbucket.org/cebreus/gulp-dev-stack/)
