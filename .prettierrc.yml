@@ -15,10 +15,10 @@ overrides:
       - '*.json'
     options:
       useTabs: true
-  - files:
-      - 'Makefile'
-    options:
-      useTabs: true
+  # - files:
+  #     - 'Makefile'
+  #   options:
+  #     useTabs: true
   - files:
       - '*.yml'
       - '*.yaml'
