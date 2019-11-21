@@ -3,8 +3,9 @@ const gulp = require('gulp');
 const buildDatasetFnc = require('./gulp-tasks/gulp-build-dataset');
 const buildHtmlFnc = require('./gulp-tasks-build/gulp-build-html');
 const compileSassFnc = require('./gulp-tasks-build/gulp-compile-sass');
-const concatFilesFnc = require('./gulp-tasks-build/gulp-concat-files');
+// const concatFilesFnc = require('./gulp-tasks-build/gulp-concat-files');
 const imagesFnc = require('./gulp-tasks/gulp-optimize-images');
+const processJsFnc = require('./gulp-tasks-build/gulp-process-js');
 
 const cleanFnc = require('./gulp-tasks-build/gulp-clean');
 const replaceHashFnc = require('./gulp-tasks-build/gulp-sri-hash');
@@ -44,8 +45,15 @@ function buildHtml(done) {
   buildHtmlFnc(params);
 }
 
-function concatFiles() {
-  return concatFilesFnc(config.jsFiles, config.jsBuild, 'index.min.js');
+// function concatFiles() {
+//   return concatFilesFnc(config.jsFiles, config.jsBuild, 'index.min.js');
+// }
+
+function processJs() {
+  return processJsFnc(config.jsFiles, config.jsBuild, {
+    concatFiles: true,
+    outputConcatPrefixFileName: 'app'
+  });
 }
 
 function images(done) {
@@ -104,7 +112,8 @@ gulp.task(
   gulp.series(
     cleanFolders,
     buildDataset,
-    concatFiles,
+    // concatFiles,
+    processJs,
     compileSassAll,
     revision,
     buildHtml,
