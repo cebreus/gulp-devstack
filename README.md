@@ -5,7 +5,7 @@
 ![Maintenance](https://img.shields.io/maintenance/yes/2022)
 ![Contributions welcome](https://img.shields.io/badge/contributions-welcome-green.svg)
 
-![Codacy grade](https://img.shields.io/codacy/grade/5508ca7b76d14320bc3e18e22b6c7740)
+![Codacy grade](https://img.shields.io/codacy/grade/4c460cbeb0894666ba35c3c9971a91bb)
 ![Bitbucket open issues](https://img.shields.io/bitbucket/issues/cebreus/gulp-dev-stack)
 ![Bitbucket open pull requests](https://img.shields.io/bitbucket/pr/cebreus/gulp-dev-stack)
 
