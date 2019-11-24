@@ -1,7 +1,5 @@
 # Frontend Gulp DevStack
 
-## For building static pages. Creates a complete web page with a style sheet from templates and SCSS. Development mode with hot-reload and production build.
-
 ![Maintenance](https://img.shields.io/maintenance/yes/2022)
 ![Contributions welcome](https://img.shields.io/badge/contributions-welcome-green.svg)
 
@@ -11,6 +9,7 @@
 
 * * *
 
+<!--
 ## Table of Contents
 
 -   [Key features](#key-features)
@@ -24,15 +23,28 @@
 -   [Contributing](#contributing)
 -   [License](#license)
 -   [Contact](#contact)
+-->
 
-## Key features
+## Introduction
+
+It is meant to be used for building static pages with full output control. Creates a bundled of the web page(s) with a style sheet(s), transpilled JavaScript for browsers and optimized images. It has development mode with hot-reload and production build.
+
+When you want to build whole web pages from the data sources as API or bunch of the markdown files, Static Page Generators as [Gridsome](https://gridsome.org/) (VueJS), [Gatsby](https://www.gatsbyjs.org/) (React) or [Hugo](https://gohugo.io/) (Go) will work for you much better. I personally prefer Gridsome or Hugo. Gridsome produces HTML files for every markdown file or API source and then in browser hydrates with javascript. The best solution for SEO.
+
+### Typical use cases
+
+-   Building landing pages.
+-   Building prototypes.
+-   Building the final output bundle for clients or programmers.
+-   Optimize images.
+
+### Key features
 
 -   Separate tasks for developing `npm run develop` and final build `npm run build`.
 -   [Bootstrap](https://getbootstrap.com/) version 4 as a frontend framework.
 -   [Nunjucks](https://mozilla.github.io/nunjucks/) as templating engine.
 -   JSON as the main data source for templates (`<head />` etc.).
--   [SCSS](https://sass-lang.com/) and [BEM](https://en.bem.info/).
--   PostCSS, Autoprefixer and other modules for SCSS processing.
+-   [SCSS](https://sass-lang.com/) and [BEM](https://en.bem.info/) with PostCSS, Autoprefixer and other modules for SCSS processing.
 -   Generates favicons.
 -   Optimizes images.
 -   Automatic formatting, linting and repair of source files — Eslint, Prettier, Stylelint, Textlint. Execution using npm scripts and automatically before committing.
@@ -96,7 +108,7 @@ Produces optimized files in production quality.
 
 ## Roadmap
 
-See the [open issues](https://bitbucket.org/cebreus/gulp-dev-stack/issues?status=new&status=open) for a list of proposed features (and known issues).
+See the [open issues](https://bitbucket.org/socialauth/login/atlassianid/?next=%2Fcebreus%2Fgulp-dev-stack%2Fissues%3Fstatus%3Dnew%26status%3Dopen) for a list of proposed features (and known issues).
 
 ## Contributing
 
