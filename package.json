@@ -124,7 +124,7 @@
       "git add"
     ],
     "*.md": [
-      "remark -q . -o",
+      "remark -qSh . -o",
       "git add"
     ],
     "*.scss": [
