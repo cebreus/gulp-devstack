@@ -1,6 +1,6 @@
 {
   "name": "gulp-dev-stack",
-  "version": "0.9.2",
+  "version": "1.0.0",
   "description": "Basic Gulp DevStack for basic front-end development with customized Bootstrap.",
   "main": "index.js",
   "scripts": {
@@ -22,7 +22,7 @@
     "text:lint": "textlint *.md",
     "text:fix": "textlint --fix *.md && npm run remark",
     "release": "release-it",
-    "version": "auto-changelog -p -t keepachangelog && git add CHANGELOG.md"
+    "version": "auto-changelog -p -t keepachangelog.hbs && npm run remark && git add CHANGELOG.md"
   },
   "dependencies": {
     "bootstrap": "^4.3.1",
@@ -33,6 +33,7 @@
   "devDependencies": {
     "@commitlint/cli": "^8.2.0",
     "@commitlint/config-conventional": "^8.2.0",
+    "@release-it/conventional-changelog": "^1.1.0",
     "@visionappscz/stylelint-config-visionapps": "^1.1.0",
     "@visionappscz/stylelint-config-visionapps-order": "^1.1.0",
     "auto-changelog": "^1.16.2",

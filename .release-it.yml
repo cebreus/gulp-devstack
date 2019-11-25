@@ -4,7 +4,7 @@ git:
   changelog: git log --pretty=format:"* %s (%h)" ${latestTag}...HEAD
   requireCleanWorkingDir: true
   requireUpstream: true
-  requireCommits: false
+  requireCommits: true
   addUntrackedFiles: false
   commit: true
   commitMessage: 'releaseAutomat: release ${version}'
