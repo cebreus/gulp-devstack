@@ -21,7 +21,8 @@
     "js:fix": "eslint --fix **/*.js",
     "text:lint": "textlint *.md",
     "text:fix": "textlint --fix *.md && npm run remark",
-    "release": "release-it"
+    "release": "release-it",
+    "version": "auto-changelog -p -t keepachangelog && git add CHANGELOG.md"
   },
   "dependencies": {
     "bootstrap": "^4.3.1",
@@ -34,6 +35,7 @@
     "@commitlint/config-conventional": "^8.2.0",
     "@visionappscz/stylelint-config-visionapps": "^1.1.0",
     "@visionappscz/stylelint-config-visionapps-order": "^1.1.0",
+    "auto-changelog": "^1.16.2",
     "autoprefixer": "^9.7.2",
     "babel-core": "^6.26.3",
     "babel-eslint": "^10.0.3",
