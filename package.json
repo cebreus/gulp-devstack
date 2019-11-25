@@ -1,6 +1,6 @@
 {
   "name": "gulp-dev-stack",
-  "version": "1.0.0",
+  "version": "0.9.2",
   "description": "Basic Gulp DevStack for basic front-end development with customized Bootstrap.",
   "main": "index.js",
   "scripts": {
