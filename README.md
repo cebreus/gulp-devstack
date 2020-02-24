@@ -63,7 +63,7 @@ This is an example of how you may give instructions on setting up your project l
 1.  Clone the repository
 
     ```bash
-    git clone https://bitbucket.org/cebreus/gulp-dev-stack/
+    git clone https://github.com/cebreus/gulp-devstack/
     ```
 
 2.  Install npm packages
@@ -128,4 +128,4 @@ Distributed under the MIT License. See `LICENSE` for more information.
 
 Your Name - [@cebreus69](https://twitter.com/cebreus69) — cebreus@live.com
 
-Project Link: [https://bitbucket.org/cebreus/gulp-dev-stack](https://bitbucket.org/cebreus/gulp-dev-stack/)
+Project Link: [https://bitbucket.org/cebreus/gulp-dev-stack](https://github.com/cebreus/gulp-devstack/)

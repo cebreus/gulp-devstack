@@ -101,10 +101,10 @@
       "pre-commit": "lint-staged"
     }
   },
-  "repository": "https://cebreus@bitbucket.org/cebreus/gulp-dev-stack.git",
-  "homepage": "https://bitbucket.org/cebreus/gulp-dev-stack#readme",
+  "repository": "https://github.com/cebreus/gulp-devstack",
+  "homepage": "https://github.com/cebreus/gulp-devstack#readme",
   "bugs": {
-    "url": "https://bitbucket.org/cebreus/gulp-dev-stack/issues",
+    "url": "https://github.com/cebreus/gulp-devstack/issues",
     "email": "cebreus@live.com"
   },
   "author": "Jaroslav Vrána <cebreus@live.com>",
