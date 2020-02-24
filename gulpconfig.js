@@ -105,7 +105,17 @@ const faviconGenConfig = {
   logging: false,
   html: 'index.html',
   pipeHTML: true,
-  replace: true
+  replace: true,
+  icons: {
+    android: false,
+    appleIcon: false,
+    appleStartup: false,
+    coast: false,
+    favicons: true,
+    firefox: false,
+    windows: false,
+    yandex: false
+  }
 };
 
 module.exports = {
