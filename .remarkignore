@@ -1,4 +1,16 @@
-dist/
-build/
-git-release/
-*.min.*
+############################
+# Folders
+############################
+
+.cache
+.idea
+.temp
+.tmp
+build
+dist
+git-release
+nbproject
+node_modules
+ssl
+static
+temp
