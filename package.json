@@ -10,7 +10,6 @@
     "cssfix": "node ./node_modules/gulp/bin/gulp.js -f gulpfile.js cssfix",
     "format": "prettier --write **/*.{js,md,scss}",
     "gulp": "./node_modules/.bin/gulp",
-    "remark": "remark -q . -o",
     "html": "node ./node_modules/gulp/bin/gulp.js -f gulpfile.js html",
     "dataset": "node ./node_modules/gulp/bin/gulp.js -f gulpfile.js dataset",
     "rev": "node ./node_modules/gulp/bin/gulp.js -f gulpfile-build.js revision",
@@ -19,10 +18,10 @@
     "css:fix": "stylelint --fix **/*.scss",
     "js:lint": "eslint **/*.js",
     "js:fix": "eslint --fix **/*.js",
-    "text:lint": "textlint *.md",
-    "text:fix": "textlint --fix *.md && npm run remark",
+    "text:lint": "remark -q .",
+    "text:fix": "remark -q . -o --",
     "release": "release-it",
-    "version": "auto-changelog -p -t keepachangelog.hbs && npm run remark && git add CHANGELOG.md"
+    "version": "auto-changelog -p -t keepachangelog.hbs && npm run text:fix && git add CHANGELOG.md"
   },
   "dependencies": {
     "bootstrap": "^4.4.1",
@@ -91,13 +90,7 @@
     "stylelint-high-performance-animation": "^1.4.0",
     "stylelint-order": "^4.0.0",
     "stylelint-scss": "^3.14.2",
-    "stylelint-selector-bem-pattern": "^2.1.0",
-    "textlint": "^11.6.3",
-    "textlint-rule-common-misspellings": "^1.0.1",
-    "textlint-rule-diacritics": "^1.0.0",
-    "textlint-rule-no-dead-link": "^4.6.2",
-    "textlint-rule-terminology": "^2.1.3",
-    "textlint-rule-write-good": "^1.6.2"
+    "stylelint-selector-bem-pattern": "^2.1.0"
   },
   "engines": {
     "node": ">=10.0.0"
@@ -123,12 +116,16 @@
     "bootstrap"
   ],
   "lint-staged": {
+    "*.{css,scss,md,js,jsx,ts,tsx,json}": [
+      "prettier --write",
+      "git add"
+    ],
     "*.js": [
       "eslint --fix",
       "git add"
     ],
     "*.md": [
-      "remark -qSh . -o",
+      "npm run text:fix",
       "git add"
     ],
     "*.scss": [
