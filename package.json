@@ -1,10 +1,11 @@
 {
   "name": "gulp-dev-stack",
-  "version": "1.0.1",
+  "version": "1.0.0",
   "description": "Basic Gulp DevStack for basic front-end development with customized Bootstrap.",
   "main": "index.js",
   "scripts": {
     "build": "node ./node_modules/gulp/bin/gulp.js -f gulpfile-build.js default",
+    "commit": "git-cz",
     "develop": "node ./node_modules/gulp/bin/gulp.js -f gulpfile.js default",
     "csslint": "node ./node_modules/gulp/bin/gulp.js -f gulpfile.js csslint",
     "cssfix": "node ./node_modules/gulp/bin/gulp.js -f gulpfile.js cssfix",
@@ -42,6 +43,7 @@
     "babel-preset-env": "^1.7.0",
     "browser-sync": "^2.26.7",
     "cssnano": "^4.1.10",
+    "cz-conventional-changelog": "^3.1.0",
     "eslint": "^6.8.0",
     "eslint-config-prettier": "^6.10.0",
     "eslint-plugin-prettier": "^3.1.2",
@@ -132,5 +134,10 @@
       "stylelint --fix",
       "git add"
     ]
+  },
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
   }
 }
