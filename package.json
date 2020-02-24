@@ -116,19 +116,19 @@
     "bootstrap"
   ],
   "lint-staged": {
-    "*.{css,scss,md,js,jsx,ts,tsx,json}": [
+    "--allow-empty *.{css,scss,md,js,jsx,ts,tsx,json}": [
       "prettier --write",
       "git add"
     ],
-    "*.js": [
+    "--allow-empty *.js": [
       "eslint --fix",
       "git add"
     ],
-    "*.md": [
+    "--allow-empty *.md": [
       "npm run text:fix",
       "git add"
     ],
-    "*.scss": [
+    "--allow-empty *.scss": [
       "stylelint --fix",
       "git add"
     ]
