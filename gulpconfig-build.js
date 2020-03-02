@@ -35,8 +35,7 @@ const datasetJsonBuild = tempBase;
 // --------------
 
 const tplBase = `${devBase}/pages`;
-// const tplMain = `${tplBase}/**/*.html`;
-const tplMain = `${tplBase}/index.html`;
+const tplMain = `${tplBase}/**/*.html`;
 const tplBuild = `${buildBase}`;
 const tplDataset = `${tempBase}/dataset.json`;
 
