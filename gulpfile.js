@@ -146,9 +146,10 @@ function watchFiles() {
     gulp.series(buildDataset, buildHtml, hotReload.browserSyncReload)
   );
   gulp.watch(
-    config.jsFiles,
+    `config.jsFiles + '/**/*'`,
     gulp.series(concatFiles, buildHtml, hotReload.browserSyncReload)
   );
+  gulp.watch(config.gfxBase, gulp.series(images, hotReload.browserSyncReload));
 }
 
 // Gulp tasks
