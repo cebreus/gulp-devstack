@@ -5,7 +5,7 @@ const flexbugsFixes = require('postcss-flexbugs-fixes');
 // --------------
 
 const devBase = './src';
-const buildBase = './dist';
+const buildBase = './temp';
 const tempBase = './temp';
 
 // SASS

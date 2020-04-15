@@ -44,14 +44,14 @@ const buildHtml = (params) => {
     .pipe(
       inject(gulp.src(params.injectCss, { read: false }), {
         relative: true,
-        ignorePath: '../../dist',
+        ignorePath: '../../temp',
         removeTags: true,
       })
     )
     .pipe(
       inject(gulp.src(params.injectJs, { read: false }), {
         relative: true,
-        ignorePath: '../../dist',
+        ignorePath: '../../temp',
         removeTags: true,
       })
     )
