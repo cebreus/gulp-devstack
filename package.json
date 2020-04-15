@@ -5,8 +5,9 @@
   "main": "index.js",
   "scripts": {
     "build": "node ./node_modules/gulp/bin/gulp.js -f gulpfile-build.js default",
-    "commit": "git-cz",
     "develop": "node ./node_modules/gulp/bin/gulp.js -f gulpfile.js default",
+    "export": "node ./node_modules/gulp/bin/gulp.js -f gulpfile-export.js default",
+    "commit": "git-cz",
     "csslint": "node ./node_modules/gulp/bin/gulp.js -f gulpfile.js csslint",
     "cssfix": "node ./node_modules/gulp/bin/gulp.js -f gulpfile.js cssfix",
     "format": "prettier --write **/*.{js,md,scss}",
