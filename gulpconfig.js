@@ -17,7 +17,7 @@ const sassAll = [`${sassBase}/*.scss`, `!${sassBase}/_*.scss`];
 const sassCustom = [
   `${sassBase}/custom.scss`,
   `${sassBase}/c-*.scss`,
-  `${sassBase}/_variables.scss`
+  `${sassBase}/_variables.scss`,
 ];
 const sassCore = [`${sassBase}/bootstrap.scss`, `${sassBase}/_variables.scss`];
 const sassUtils = [`${sassBase}/u-*.scss`, `${sassBase}/_variables.scss`];
@@ -64,7 +64,7 @@ const injectJs = `${jsBuild}/*.js`;
 const injectCdnJs = [
   '<script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"></script>',
   '<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>',
-  '<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>'
+  '<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>',
 ];
 
 // Modules & Plugins
@@ -73,8 +73,8 @@ const injectCdnJs = [
 const postcssPluginsBase = [
   flexbugsFixes,
   autoprefixer({
-    grid: true
-  })
+    grid: true,
+  }),
 ];
 
 const fontloadFile = `${devBase}/fonts.list`;
@@ -82,7 +82,7 @@ const fontLoadConfig = {
   fontsDir: 'font/',
   cssDir: 'css/',
   cssFilename: 'fonts.css',
-  relativePaths: true
+  relativePaths: true,
 };
 
 const faviconSourceFile = `${gfxBase}/favicon/favicons-source.png`;
@@ -113,8 +113,8 @@ const faviconGenConfig = {
     favicons: true,
     firefox: false,
     windows: false,
-    yandex: false
-  }
+    yandex: false,
+  },
 };
 
 module.exports = {
@@ -149,5 +149,5 @@ module.exports = {
   fontLoadConfig: fontLoadConfig,
   faviconSourceFile: faviconSourceFile,
   faviconBuild: faviconBuild,
-  faviconGenConfig: faviconGenConfig
+  faviconGenConfig: faviconGenConfig,
 };

@@ -9,10 +9,7 @@ const favicons = require('gulp-favicons');
  */
 
 const iconGenerator = (input, output, params) => {
-  return gulp
-    .src(input)
-    .pipe(favicons(params))
-    .pipe(gulp.dest(output));
+  return gulp.src(input).pipe(favicons(params)).pipe(gulp.dest(output));
 };
 
 module.exports = iconGenerator;

@@ -41,7 +41,7 @@ function buildHtml(done) {
     injectCss: config.injectCss,
     cb: () => {
       done();
-    }
+    },
   };
   buildHtmlFnc(params);
 }
@@ -52,13 +52,13 @@ function concatFiles() {
 
 function images(done) {
   imagesFnc.optimizeJpg(config.jpgImages, config.gfxBuild, {
-    rewriteExisting: true
+    rewriteExisting: true,
   });
   imagesFnc.optimizePng(config.pngImages, config.gfxBuild, {
-    rewriteExisting: true
+    rewriteExisting: true,
   });
   imagesFnc.optimizeSvg(config.svgImages, config.gfxBuild, {
-    rewriteExisting: true
+    rewriteExisting: true,
   });
 
   done();

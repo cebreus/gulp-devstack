@@ -40,7 +40,7 @@ function buildHtml(done) {
     injectCss: config.injectCss,
     cb: () => {
       done();
-    }
+    },
   };
   buildHtmlFnc(params);
 }
@@ -52,7 +52,7 @@ function buildHtml(done) {
 function processJs() {
   return processJsFnc(config.jsFiles, config.jsBuild, {
     concatFiles: true,
-    outputConcatPrefixFileName: 'app'
+    outputConcatPrefixFileName: 'app',
   });
 }
 
@@ -93,7 +93,7 @@ function revision() {
     ouputManifest: `${config.tempBase}/revision`,
     inputRewrite: `${config.buildBase}/*.html`,
     outputRewrite: config.buildBase,
-    manifestFile: `${config.tempBase}/revision/*.json`
+    manifestFile: `${config.tempBase}/revision/*.json`,
   };
   return revisionFnc(params);
 }

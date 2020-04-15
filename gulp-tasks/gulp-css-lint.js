@@ -17,7 +17,7 @@ function lintCssfromScss(input) {
       gulpif(
         '!bootstrap.scss',
         gulpStylelint({
-          reporters: [{ formatter: 'string', console: true }]
+          reporters: [{ formatter: 'string', console: true }],
         })
       )
     );
