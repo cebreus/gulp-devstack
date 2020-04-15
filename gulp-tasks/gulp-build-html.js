@@ -36,7 +36,7 @@ const buildHtml = (params) => {
     .pipe(
       gulpif(
         existsJson,
-        data(function() {
+        data(function () {
           return JSON.parse(fs.readFileSync(params.dataSource));
         })
       )
@@ -45,14 +45,14 @@ const buildHtml = (params) => {
       inject(gulp.src(params.injectCss, { read: false }), {
         relative: true,
         ignorePath: '../../dist',
-        removeTags: true
+        removeTags: true,
       })
     )
     .pipe(
       inject(gulp.src(params.injectJs, { read: false }), {
         relative: true,
         ignorePath: '../../dist',
-        removeTags: true
+        removeTags: true,
       })
     )
     .pipe(nunjucks.compile())

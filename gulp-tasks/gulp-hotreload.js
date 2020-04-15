@@ -10,10 +10,10 @@ const config = require('../gulpconfig');
 function browserSync() {
   browsersync.init({
     server: {
-      baseDir: config.buildBase
+      baseDir: config.buildBase,
     },
     port: 4000,
-    notify: false
+    notify: false,
     // proxy: 'yourdomain.dev',
     // tunnel: true
   });

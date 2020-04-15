@@ -41,12 +41,12 @@ const processJs = (input, output, params = {}) => {
             'env',
             {
               targets: {
-                browsers: ['last 2 versions', 'ie >= 11']
-              }
-            }
-          ]
+                browsers: ['last 2 versions', 'ie >= 11'],
+              },
+            },
+          ],
         ],
-        plugins: ['babel-plugin-loop-optimizer']
+        plugins: ['babel-plugin-loop-optimizer'],
       })
     )
     .pipe(uglify())
