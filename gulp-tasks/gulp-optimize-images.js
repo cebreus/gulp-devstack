@@ -30,8 +30,8 @@ const optimizeJpg = (input, output, params = {}) => {
       imagemin([
         mozjpeg({
           quantTable: 3,
-          dcScanOpt: 2
-        })
+          dcScanOpt: 2,
+        }),
       ])
     )
     .pipe(gulp.dest(output));
@@ -87,10 +87,10 @@ const optimizeSvg = (input, output, params = {}) => {
           plugins: [
             {
               removeViewBox: false,
-              collapseGroups: true
-            }
-          ]
-        })
+              collapseGroups: true,
+            },
+          ],
+        }),
       ])
     )
     .pipe(gulp.dest(output));
@@ -99,5 +99,5 @@ const optimizeSvg = (input, output, params = {}) => {
 module.exports = {
   optimizeJpg,
   optimizePng,
-  optimizeSvg
+  optimizeSvg,
 };

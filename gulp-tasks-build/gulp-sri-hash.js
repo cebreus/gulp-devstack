@@ -9,10 +9,7 @@ const sri = require('gulp-sri-hash');
  */
 
 const sriHash = (input, output) => {
-  return gulp
-    .src(input)
-    .pipe(sri())
-    .pipe(gulp.dest(output));
+  return gulp.src(input).pipe(sri()).pipe(gulp.dest(output));
 };
 
 module.exports = sriHash;
