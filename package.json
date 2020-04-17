@@ -26,9 +26,7 @@
     "version": "auto-changelog -p -t keepachangelog.hbs && npm run text:fix && git add CHANGELOG.md"
   },
   "dependencies": {
-    "bootstrap": "^4.4.1",
-    "jquery": "^3.5.0",
-    "popper.js": "^1.16.1"
+    "bootstrap": "^4.4.1"
   },
   "devDependencies": {
     "@commitlint/cli": "^8.3.5",
