@@ -41,21 +41,25 @@ img:not([src$='.svg']) {
 // --------------
 
 .o-header {
-  color: $blue;
+  padding: map-get($spacers, 3);
+  color: theme-color('light');
+  background-color: map-get($colors, 'pink');
 }
 
 // Hlavní obsah
 // --------------
 
 .o-main {
-  color: $blue;
+  background-color: theme-color('light');
 }
 
 // Zápatí webu
 // --------------
 
 .o-footer {
-  color: $blue;
+  padding-top: map-get($spacers, 5);
+  padding-bottom: map-get($spacers, 3);
+  color: map-get($grays, '600');
 }
 
 // Importy komponent
