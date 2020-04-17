@@ -27,16 +27,6 @@ img:not([src$='.svg']) {
   height: auto;
 }
 
-// Extension for responsive media 3:2
-.embed-responsive-3by2::before {
-  padding-top: 66.67%;
-}
-
-// Extension for responsive media 4:3
-.embed-responsive-4by3::before {
-  padding-top: 75%;
-}
-
 // Záhlaví webu
 // --------------
 
