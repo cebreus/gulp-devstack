@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="{{ SITE.meta.lang }}">
+	<head>
+		<meta charset="{{ SITE.meta.charset }}">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+		{% include "./partials/meta-seo.njk" %}
+		{% include "./partials/meta-open-graph.njk" %}
+		{% include "./partials/meta-twitter-cards.njk" %}
+		{% include "./partials/favicons.njk" %}
+
+		<!-- inject:css -->
+		<!-- endinject -->
+	</head>
+	<body data-version="0.0.1" data-template="{{ pageData.template }}">
+
+		{% if pageData.page_id === '404' %}
+			{% block content404 %}{% endblock %}
+		{% else %}
+			{% include "./partials/o-header.njk" %}
+			{% block content %}{% endblock %}
+			{% include "./partials/o-footer.njk" %}
+		{% endif %}
+
+		<!-- inject: bootstrap js -->
+		<!-- inject:js -->
+		<!-- endinject -->
+	</body>
+</html>

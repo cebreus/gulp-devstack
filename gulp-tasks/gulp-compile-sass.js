@@ -1,4 +1,3 @@
-//const browsersync = require('browser-sync').create();
 const gulp = require('gulp');
 const plumber = require('gulp-plumber');
 const postcss = require('gulp-postcss');
@@ -9,7 +8,7 @@ const sassGlob = require('gulp-sass-glob');
 
 /**
  * @description Compiling SCSS files into CSS files
- * @param {string,object} input Path with filter to source files
+ * @param {string} input Path with filter to source files
  * @param {string} output Path to save compiled files
  * @param {string} outputConcatFileName Output file name
  * @param {object} postcssPluginsBase Postcss plugins
@@ -38,7 +37,6 @@ const compileSass = (
     .pipe(prettify({ indent_size: 4 }))
     .pipe(gulpConcat(outputConcatFileName))
     .pipe(gulp.dest(output));
-  //.pipe(browsersync.stream());
 };
 
 module.exports = compileSass;

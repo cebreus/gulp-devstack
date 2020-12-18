@@ -1,0 +1,20 @@
+{% set navItems = {
+  menu:  [
+    {name: 'Home', page_id: 'home', url: '/'}
+  ]
+} %}
+
+<header class="o-header sticky-top" role="banner">
+	<div class="container">
+		<nav class="navbar">
+			<a class="navbar-brand" href="/">Gulp DevStack</a>
+			<ul class="navbar-nav ml-auto">
+				{% for item in navItems.menu %}
+					<li class="nav-item{% if pageData.page_id === item.page_id %} active{% endif %}">
+						<a class="nav-item nav-link" href="{{ item.url }}">{{ item.name }}</a>
+					</li>
+				{% endfor %}
+			</ul>
+		</nav>
+	</div>
+</header>

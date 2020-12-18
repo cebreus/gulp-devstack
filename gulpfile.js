@@ -1,16 +1,17 @@
+const fs = require('fs');
 const gulp = require('gulp');
+const path = require('path');
 
-const buildDatasetFnc = require('./gulp-tasks/gulp-build-dataset');
-const buildHtmlFnc = require('./gulp-tasks/gulp-build-html');
-const compileSassFnc = require('./gulp-tasks/gulp-compile-sass');
-const concatFilesFnc = require('./gulp-tasks/gulp-concat-files');
-const imagesFnc = require('./gulp-tasks/gulp-optimize-images');
-
-const faviconsFnc = require('./gulp-tasks/gulp-favicons');
-const fixCssFnc = require('./gulp-tasks/gulp-css-fix');
+const cleanFnc = require('./gulp-tasks/gulp-clean');
+const copyStaticFnc = require('./gulp-tasks/gulp-copy-static');
+const cssCompileFnc = require('./gulp-tasks/gulp-compile-sass');
+const datasetBuildFnc = require('./gulp-tasks/gulp-dataset-build');
+const datasetPrepareFnc = require('./gulp-tasks/gulp-dataset-prepare');
 const fontLoadFnc = require('./gulp-tasks/gulp-font-load');
 const hotReload = require('./gulp-tasks/gulp-hotreload');
-const lintCssFnc = require('./gulp-tasks/gulp-css-lint');
+const htmlBuildFnc = require('./gulp-tasks/gulp-html-build');
+const imagesOptimizeFnc = require('./gulp-tasks/gulp-optimize-images');
+const jsProcessFnc = require('./gulp-tasks/gulp-concat-files');
 
 // Variables
 // --------------
@@ -20,52 +21,20 @@ const config = require('./gulpconfig');
 // Gulp functions
 // --------------
 
-function buildDataset(done) {
-  buildDatasetFnc(
-    config.datasetJsonBase,
-    config.datasetJsonBuild,
-    config.datasetJsonFileName,
-    () => {
-      done();
-    }
-  );
+function cleanFolders() {
+  return cleanFnc(config.buildBase);
 }
 
-function buildHtml(done) {
-  const params = {
-    input: config.tplMain,
-    output: config.tplBuild,
-    dataSource: config.tplDataset,
-    injectCdnJs: config.injectCdnJs,
-    injectJs: config.injectJs,
-    injectCss: config.injectCss,
-    cb: () => {
-      done();
-    },
-  };
-  buildHtmlFnc(params);
-}
-
-function concatFiles() {
-  return concatFilesFnc(config.jsFiles, config.jsBuild, 'app.js');
-}
-
-function images(done) {
-  imagesFnc.optimizeJpg(config.jpgImages, config.gfxBuild, {
-    rewriteExisting: true,
+function copyStatic(done) {
+  return copyStaticFnc('./static/**/*', './static', config.buildBase, () => {
+    done();
   });
-  imagesFnc.optimizePng(config.pngImages, config.gfxBuild, {
-    rewriteExisting: true,
-  });
-  imagesFnc.optimizeSvg(config.svgImages, config.gfxBuild, {
-    rewriteExisting: true,
-  });
-
-  done();
 }
+
+// SASS
 
 function compileSassCore() {
-  return compileSassFnc(
+  return cssCompileFnc(
     config.sassCore,
     config.sassBuild,
     'bootstrap.css',
@@ -74,7 +43,7 @@ function compileSassCore() {
 }
 
 function compileSassCustom() {
-  return compileSassFnc(
+  return cssCompileFnc(
     config.sassCustom,
     config.sassBuild,
     'custom.css',
@@ -83,7 +52,7 @@ function compileSassCustom() {
 }
 
 function compileSassUtils() {
-  return compileSassFnc(
+  return cssCompileFnc(
     config.sassUtils,
     config.sassBuild,
     'utils.css',
@@ -91,32 +60,79 @@ function compileSassUtils() {
   );
 }
 
-function lintCss(done) {
-  lintCssFnc(config.sassAll);
-  //console.log("\n\n");
-  //lintCssPropsFnc(config.sassAll);
-  //console.log("\n\n");
-  //lintCssColorsFnc(config.sassAll);
-  done();
+// JS
+
+function concatJs() {
+  return jsProcessFnc(config.jsFiles, config.jsBuild, 'app.js');
 }
 
-function fixCss(done) {
-  fixCssFnc(config.sassCustom, config.sassBase);
-  done();
+// Dataset
+
+function datasetPrepareSite(done) {
+  datasetPrepareFnc(`${config.contentBase}/site.md`, config.tempBase, () => {
+    done();
+  });
 }
 
-function favicons() {
-  return faviconsFnc(
-    config.faviconSourceFile,
-    config.faviconBuild,
-    config.faviconGenConfig
+function datasetPreparePages(done) {
+  datasetPrepareFnc(config.datasetPagesSource, config.datasetPagesBuild, () => {
+    done();
+  });
+}
+
+function datasetBuild(done) {
+  datasetBuildFnc(
+    [`${config.tempBase}/site.json`, `${config.datasetPagesBuild}/*.json`],
+    config.tempBase,
+    '_dataset-site',
+    () => {
+      done();
+    }
   );
 }
+
+// Templates
+
+function buildPages(done) {
+  const params = {
+    input: `${config.tplPagesBase}/**/*.html`,
+    output: config.tplBuild,
+    templates: config.tplTemplatesBase,
+    processPaths: [config.tplPagesBase, config.tplTemplatesBase],
+    siteConfig: `${config.tempBase}/site.json`,
+    dataSource: config.datasetPagesBuild,
+    injectCdnJs: config.injectCdnJs,
+    injectJs: config.injectJs,
+    injectCss: config.injectCss,
+    injectIgnorePath: config.buildBase.replace('./', ''),
+    cb: () => {
+      done();
+    },
+  };
+  htmlBuildFnc(params);
+}
+
+// GFX
+
+function images(done) {
+  imagesOptimizeFnc.optimizeJpg(config.imagesJpg, config.gfxBuild, {
+    rewriteExisting: true,
+  });
+  imagesOptimizeFnc.optimizePng(config.imagesPng, config.gfxBuild, {
+    rewriteExisting: true,
+  });
+  imagesOptimizeFnc.optimizeSvg(config.imagesSvg, config.gfxBuild, {
+    rewriteExisting: true,
+  });
+  done();
+}
+
+// Fonts
 
 function fontLoad(done) {
   fontLoadFnc(
     config.fontloadFile,
-    config.buildBase,
+    config.tempBase,
     config.fontLoadConfig,
     () => {
       done();
@@ -124,60 +140,88 @@ function fontLoad(done) {
   );
 }
 
+// Watch
+// --------------
+
 function watchFiles() {
+  // Watch SASS
+
   gulp.watch(
     config.sassCustom,
-    gulp.series(compileSassCustom, hotReload.browserSyncReload)
+    gulp.series(compileSassCustom, hotReload.browserSyncRefresh)
   );
+
   gulp.watch(
     config.sassCore,
-    gulp.series(compileSassCore, hotReload.browserSyncReload)
+    gulp.series(compileSassCore, hotReload.browserSyncRefresh)
   );
+
   gulp.watch(
     config.sassUtils,
-    gulp.series(compileSassUtils, hotReload.browserSyncReload)
+    gulp.series(compileSassUtils, hotReload.browserSyncRefresh)
   );
+
+  // Watch JS
+
   gulp.watch(
-    config.tplMain,
-    gulp.series(buildHtml, hotReload.browserSyncReload)
+    config.jsFiles,
+    gulp.series(concatJs, hotReload.browserSyncRefresh)
   );
-  gulp.watch(
-    config.datasetJsonBase,
-    gulp.series(buildDataset, buildHtml, hotReload.browserSyncReload)
-  );
-  gulp.watch(
-    `config.jsFiles + '/**/*'`,
-    gulp.series(concatFiles, buildHtml, hotReload.browserSyncReload)
-  );
-  gulp.watch(config.gfxBase, gulp.series(images, hotReload.browserSyncReload));
+
+  // Watch Templates
+
+  gulp
+    .watch(['./src/templates/**/*.*', './src/pages/**/*.*'], buildPages)
+    .on('change', hotReload.browserSyncReload);
+
+  // Watch Datasets
+  gulp
+    .watch(
+      './content/**/*.md',
+      gulp.series(datasetPrepareSite, datasetPreparePages, buildPages)
+    )
+    .on('change', hotReload.browserSyncReload);
+
+  // Watch GFX
+
+  gulp.watch(config.gfxBase, gulp.series(images, hotReload.browserSyncRefresh));
 }
 
 // Gulp tasks
 // --------------
 
 gulp.task(
-  'build:css',
+  'css',
   gulp.parallel(compileSassCore, compileSassCustom, compileSassUtils)
 );
-gulp.task('dataset', buildDataset);
-gulp.task('cssfix', fixCss);
-gulp.task('csslint', lintCss);
-gulp.task('html', gulp.series(buildDataset, buildHtml));
-gulp.task('fonts', fontLoad);
-gulp.task('favicons', favicons);
+
+gulp.task('js', concatJs);
+
+gulp.task('dataset', gulp.parallel(datasetPrepareSite, datasetPreparePages));
+
+gulp.task(
+  'html',
+  gulp.series(datasetPrepareSite, datasetPreparePages, buildPages)
+);
+
 gulp.task('images', images);
+
+gulp.task('fonts', fontLoad);
 
 gulp.task(
   'serve',
   gulp.series(
-    buildDataset,
-    concatFiles,
+    cleanFolders,
+    copyStatic,
+    datasetPrepareSite,
+    datasetPreparePages,
+    datasetBuild,
+    fontLoad,
     compileSassCore,
     compileSassCustom,
     compileSassUtils,
-    fontLoad,
-    buildHtml,
-    favicons,
+    concatJs,
+    buildPages,
     images,
     gulp.parallel(watchFiles, hotReload.browserSync)
   )
