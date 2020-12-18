@@ -8,8 +8,8 @@ const sri = require('gulp-sri-hash');
  * @return {stream} HTML files with integrity hashes
  */
 
-const sriHash = (input, output) => {
-  return gulp.src(input).pipe(sri()).pipe(gulp.dest(output));
+const sriHash = (input, output, cb) => {
+  return gulp.src(input).pipe(sri()).pipe(gulp.dest(output)).on('end', cb);
 };
 
 module.exports = sriHash;

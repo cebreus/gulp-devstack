@@ -4,6 +4,7 @@ const gulpif = require('gulp-if');
 const babel = require('gulp-babel');
 const gulpConcat = require('gulp-concat');
 const plumber = require('gulp-plumber');
+const prettify = require('gulp-jsbeautifier');
 
 /**
  * @description Transpile JavaScript files
@@ -22,7 +23,7 @@ const processJs = (input, output, params = {}) => {
       ? true
       : false;
 
-  const outputConcatFileName = `${params.outputConcatPrefixFileName}.js`;
+  const outputConcatFileName = `${params.outputConcatPrefixFileName}.min.js`;
 
   if (fs.existsSync(`${output}/${outputConcatFileName}`)) {
     throw Error(
@@ -37,18 +38,17 @@ const processJs = (input, output, params = {}) => {
       babel({
         presets: [
           [
-            'env',
+            '@babel/preset-env',
             {
               targets: {
-                browsers: ['last 2 versions', 'ie >= 11'],
+                browsers: ['last 2 versions'],
               },
             },
           ],
         ],
-        plugins: ['babel-plugin-loop-optimizer'],
       })
     )
-
+    .pipe(prettify())
     .pipe(gulpif(concatFiles, gulpConcat(outputConcatFileName)))
     .pipe(gulp.dest(output));
 };

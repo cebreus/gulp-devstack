@@ -7,65 +7,66 @@ const flexbugsFixes = require('postcss-flexbugs-fixes');
 const devBase = './src';
 const buildBase = './temp';
 const tempBase = './temp';
+const contentBase = './content';
 
 // SASS
 // --------------
 
 const sassBase = `${devBase}/scss`;
-const sassBuild = `${buildBase}/css`;
+const sassBuild = `${buildBase}/assets/css`;
 const sassAll = [`${sassBase}/*.scss`, `!${sassBase}/_*.scss`];
 const sassCustom = [
-  `${sassBase}/custom.scss`,
-  `${sassBase}/c-*.scss`,
-  `${sassBase}/_variables.scss`,
+  `${sassBase}/*.scss`,
+  `${sassBase}/_variables.scss`, // TODO: jw potřeba _variables.scss?
+  `!${sassBase}/u-*.scss`,
+  `!${sassBase}/bootstrap.scss`,
 ];
-const sassCore = [`${sassBase}/bootstrap.scss`, `${sassBase}/_variables.scss`];
-const sassUtils = [`${sassBase}/u-*.scss`, `${sassBase}/_variables.scss`];
+const sassCore = [`${sassBase}/bootstrap.scss`, `${sassBase}/_variables.scss`]; // TODO: je potřeba _variables.scss?
+const sassUtils = [`${sassBase}/u-*.scss`, `${sassBase}/_variables.scss`]; // TODO: je potřeba _variables.scss?
 const injectCss = `${sassBuild}/*.css`;
-
-// Data JSON
-// --------------
-
-const datasetJsonBase = `${devBase}/data/**/*.json`;
-const datasetJsonFileName = 'dataset.json';
-const datasetJsonBuild = tempBase;
-
-// Templates
-// --------------
-
-const tplBase = `${devBase}/pages`;
-const tplMain = `${tplBase}/**/*.html`;
-const tplBuild = `${buildBase}`;
-const tplDataset = `${tempBase}/dataset.json`;
-
-// GFX
-// --------------
-
-const gfxBase = `${devBase}/gfx`;
-const gfxBuild = `${buildBase}/images`;
-
-const svgBase = `${gfxBase}/**`;
-const svgImages = `${svgBase}/*.svg`;
-
-const jpgBase = `${gfxBase}/**`;
-const jpgImages = `${jpgBase}/*.jpg`;
-
-const pngBase = `${gfxBase}/**`;
-const pngImages = `${pngBase}/*.png`;
 
 // JavaScript
 // --------------
 
 const jsBase = `${devBase}/js`;
 const jsFiles = `${jsBase}/*.js`;
-const jsBuild = `${buildBase}/js`;
+const jsBuild = `${buildBase}/assets/js`;
 const injectJs = `${jsBuild}/*.js`;
 
 const injectCdnJs = [
-  '<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.slim.min.js" integrity="sha256-pasqAKBDmFT4eHoN2ndd6lN370kFiGUFyTiUHWhU7k8=" crossorigin="anonymous"></script>',
-  '<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.1/umd/popper.min.js" integrity="sha256-/ijcOLwFf26xEYAjW75FizKVo5tnTYiQddPZoLUHHZ8=" crossorigin="anonymous"></script>',
-  '<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha256-WqU1JavFxSAMcLP2WIOI+GB2zWmShMI82mTpLDcqFUg=" crossorigin="anonymous"></script>',
+  // '<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg==" crossorigin="anonymous"></script>',
+  // '<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.5.3/js/bootstrap.bundle.min.js" integrity="sha512-iceXjjbmB2rwoX93Ka6HAHP+B76IY1z0o3h+N1PeDtRSsyeetU3/0QKJqGyPJcX63zysNehggFwMC/bi7dvMig==" crossorigin="anonymous"></script>',
 ];
+
+// Templates
+// --------------
+
+const tplBase = `${devBase}/templates`;
+const tplBuild = buildBase;
+
+const tplPagesBase = `${tplBase}/pages`;
+const tplTemplatesBase = `${tplBase}`;
+
+// Datasets from Markdown to JSON
+// ----------------
+
+const datasetPagesSource = `${contentBase}/pages/**/*.md`;
+const datasetPagesBuild = `${tempBase}/_dataset-pages`;
+
+// GFX
+// --------------
+
+const gfxBase = `${devBase}/gfx`;
+const gfxBuild = `${buildBase}/assets/images`;
+
+const jpgBase = `${gfxBase}/**`;
+const imagesJpg = [`${jpgBase}/*.jpg`, `!${devBase}/favicon/**/*.*`];
+
+const pngBase = `${gfxBase}/**`;
+const imagesPng = [`${pngBase}/*.png`, `!${pngBase}/favicon/**/*.*`];
+
+const svgBase = `${gfxBase}/**`;
+const imagesSvg = [`${svgBase}/*.svg`, `!${devBase}/favicon/**/*.*`];
 
 // Modules & Plugins
 // --------------
@@ -79,75 +80,44 @@ const postcssPluginsBase = [
 
 const fontloadFile = `${devBase}/fonts.list`;
 const fontLoadConfig = {
-  fontsDir: 'font/',
-  cssDir: 'css/',
-  cssFilename: 'fonts.css',
+  fontsDir: 'assets/font/',
+  cssDir: 'assets/css/',
+  cssFilename: 'fonts.scss',
   relativePaths: true,
+  fontDisplayType: 'swap',
 };
 
-const faviconSourceFile = `${gfxBase}/favicon/favicons-source.png`;
-const faviconBuild = `${gfxBuild}/favicons`;
-const faviconGenConfig = {
-  appName: 'My App',
-  appShortName: 'App',
-  appDescription: 'This is my application',
-  developerName: 'Developer name',
-  developerURL: 'https://developerwebsite.com/',
-  background: '#000000',
-  path: '/images/favicons/',
-  url: 'https://urlofwebsite.com/',
-  display: 'standalone',
-  orientation: 'portrait',
-  scope: '/',
-  start_url: '/?homescreen=1',
-  version: 1.0,
-  logging: false,
-  html: 'index.html',
-  pipeHTML: true,
-  replace: true,
-  icons: {
-    android: false,
-    appleIcon: false,
-    appleStartup: false,
-    coast: false,
-    favicons: true,
-    firefox: false,
-    windows: false,
-    yandex: false,
-  },
-};
+// Exports
+// --------------
 
 module.exports = {
-  devBase: devBase,
-  buildBase: buildBase,
-  tempBase: tempBase,
-  sassBase: sassBase,
-  sassBuild: sassBuild,
-  sassAll: sassAll,
-  sassCustom: sassCustom,
-  sassCore: sassCore,
-  sassUtils: sassUtils,
-  postcssPluginsBase: postcssPluginsBase,
-  injectCss: injectCss,
-  datasetJsonBase: datasetJsonBase,
-  datasetJsonBuild: datasetJsonBuild,
-  datasetJsonFileName: datasetJsonFileName,
-  tplBase: tplBase,
-  tplMain: tplMain,
-  tplBuild: tplBuild,
-  tplDataset: tplDataset,
-  injectCdnJs: injectCdnJs,
-  jsFiles: jsFiles,
-  jsBuild: jsBuild,
-  injectJs: injectJs,
-  gfxBase: gfxBase,
-  gfxBuild: gfxBuild,
-  svgImages: svgImages,
-  jpgImages: jpgImages,
-  pngImages: pngImages,
-  fontloadFile: fontloadFile,
-  fontLoadConfig: fontLoadConfig,
-  faviconSourceFile: faviconSourceFile,
-  faviconBuild: faviconBuild,
-  faviconGenConfig: faviconGenConfig,
+  buildBase,
+  contentBase,
+  datasetPagesBuild,
+  datasetPagesSource,
+  devBase,
+  fontLoadConfig,
+  fontloadFile,
+  gfxBase,
+  gfxBuild,
+  imagesJpg,
+  imagesPng,
+  imagesSvg,
+  injectCdnJs,
+  injectCss,
+  injectJs,
+  jsBuild,
+  jsFiles,
+  postcssPluginsBase,
+  sassAll,
+  sassBase,
+  sassBuild,
+  sassCore,
+  sassCustom,
+  sassUtils,
+  tempBase,
+  tplBase,
+  tplBuild,
+  tplPagesBase,
+  tplTemplatesBase,
 };
