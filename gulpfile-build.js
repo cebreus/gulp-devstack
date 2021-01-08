@@ -7,6 +7,7 @@ const copyStaticFnc = require('./gulp-tasks/gulp-copy-static');
 const cssCompileFnc = require('./gulp-tasks-build/gulp-compile-sass');
 const cssPurgeFnc = require('./gulp-tasks-build/gulp-purgecss');
 const datasetPrepareFnc = require('./gulp-tasks/gulp-dataset-prepare');
+const deployFtpFnc = require('./gulp-tasks/gulp-deploy-ftp');
 const faviconsFnc = require('./gulp-tasks/gulp-favicons');
 const fontLoadFnc = require('./gulp-tasks/gulp-font-load');
 const htmlBuildFnc = require('./gulp-tasks-build/gulp-html-build');
@@ -40,6 +41,19 @@ function copyStatic(done) {
     return copyStaticFnc('./static/**/*', './static', config.buildBase, () => {
       done();
     });
+  });
+}
+
+function deployFtp(done) {
+  sleep().then(() => {
+    return deployFtpFnc(
+      `${config.buildBase}/**`,
+      `${config.buildBase}/`,
+      '.',
+      () => {
+        done();
+      }
+    );
   });
 }
 
@@ -284,6 +298,8 @@ gulp.task(
     cleanFolderTemp
   )
 );
+
+gulp.task('deployFtp', gulp.series('build', deployFtp));
 
 // Aliases
 
