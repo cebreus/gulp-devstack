@@ -11,6 +11,7 @@ const deployFtpFnc = require('./gulp-tasks/gulp-deploy-ftp');
 const faviconsFnc = require('./gulp-tasks/gulp-favicons');
 const fontLoadFnc = require('./gulp-tasks/gulp-font-load');
 const htmlBuildFnc = require('./gulp-tasks-build/gulp-html-build');
+const htmlValidateFnc = require('./gulp-tasks/gulp-html-validate');
 const imagesOptimizeFnc = require('./gulp-tasks/gulp-optimize-images');
 const jsProcessFnc = require('./gulp-tasks-build/gulp-process-js');
 
@@ -42,6 +43,10 @@ function copyStatic(done) {
       done();
     });
   });
+}
+
+function htmlValidate() {
+  return htmlValidateFnc(`${config.buildBase}/**/*.html`);
 }
 
 function deployFtp(done) {
@@ -278,6 +283,8 @@ gulp.task(
 gulp.task('images', images);
 
 gulp.task('fonts', fontLoad);
+
+gulp.task('validate', htmlValidate);
 
 gulp.task(
   'build',
