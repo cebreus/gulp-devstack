@@ -31,20 +31,20 @@ When you want to build whole web sites from the data sources as API or bunch of 
 
 <!-- toc -->
 
-*   [Features](#features)
-    *   [Something more under the hood](#something-more-under-the-hood)
-*   [Getting Started](#getting-started)
-    *   [Installation](#installation)
-*   [Project structure](#project-structure)
-*   [Workflow](#workflow)
-    *   [Development](#development)
-    *   [Production Build](#production-build)
-    *   [Export Build](#export-build)
-*   [Updates from devstack to your existing project](#updates-from-devstack-to-your-existing-project)
-*   [Roadmap and Known issues](#roadmap-and-known-issues)
-*   [Contributing](#contributing)
-*   [License](#license)
-*   [Contact](#contact)
+- [Features](#features)
+  - [Something more under the hood](#something-more-under-the-hood)
+- [Getting Started](#getting-started)
+  - [Installation](#installation)
+- [Project structure](#project-structure)
+- [Workflow](#workflow)
+  - [Development](#development)
+  - [Production Build](#production-build)
+  - [Export Build](#export-build)
+- [Updates from devstack to your existing project](#updates-from-devstack-to-your-existing-project)
+- [Roadmap and Known issues](#roadmap-and-known-issues)
+- [Contributing](#contributing)
+- [License](#license)
+- [Contact](#contact)
 
 <!-- tocstop -->
 
@@ -54,7 +54,7 @@ When you want to build whole web sites from the data sources as API or bunch of 
 
 ## Features
 
-|                        | Preprocessing / Linting                                                                      | 🛠️ Development<br>Postprocessing                                                                                                                                 | 👁️ Export<br>Postprocessing                                                                                                                                      | 💯 Build<br>Postprocessing                                                                                                                                                               |
+|                        | Preprocessing / Linting                                                                      | 🛠️ Development<br>Postprocessing                                                                                                                                  | 👁️ Export<br>Postprocessing                                                                                                                                       | 💯 Build<br>Postprocessing                                                                                                                                                                |
 | ---------------------- | :------------------------------------------------------------------------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **CSS**                | [SASS](https://github.com/dlmanning/gulp-sass) / [Stylelint](https://stylelint.io/)          | [PostCSS](https://github.com/postcss/postcss) ([Autoprefixer](https://github.com/postcss/autoprefixer), [prettify](https://github.com/beautify-web/js-beautify)) | [PostCSS](https://github.com/postcss/postcss) ([Autoprefixer](https://github.com/postcss/autoprefixer), [prettify](https://github.com/beautify-web/js-beautify)) | [PostCSS](https://github.com/postcss/postcss) ([Autoprefixer](https://github.com/postcss/autoprefixer), [cssnano](https://github.com/ben-eb/cssnano), [PurgeCSS](https://purgecss.com/)) |
 | **JavaScript**         | [Babel](https://babeljs.io/) / [ESLint](https://eslint.org/)                                 | only concatenate                                                                                                                                                 | concatenate & [uglify](https://github.com/terinjokes/gulp-uglify)                                                                                                | concatenate & [uglify](https://github.com/terinjokes/gulp-uglify)                                                                                                                        |
@@ -156,6 +156,9 @@ When you want to build whole web sites from the data sources as API or bunch of 
         *   `/partials` —
         *   `layout-default.html` — main layout which extends files in `./templates/pages`
     *   `font.list` — tab-delimeted format for [gulp-google-webfonts](https://github.com/battlesnake/gulp-google-webfonts) which download font files and CSS to the project.
+*   ### `/static`
+    Content of this directory will be coppied into target (temp, export or build directory).
+    *   `/.well-known/security.txt` — definition of the security policies. [Further info](https://securitytxt.org/)
 *   ### `/` (root)
     *   `.browserslistrc` — [Browserslist](https://github.com/browserslist/browserslist) configuration to share target browsers versions between different front-end tools as Autoprefixer, Babel etc. The configuration is a copy of the Bootstrap configuration in this repo.
     *   `.editorconfig` — basic definition of code formatting for different code editors and IDEs. These settings are used as a baseline for language specialised linters in this repo. [Further info](http://editorconfig.org/)
