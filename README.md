@@ -159,6 +159,7 @@ When you want to build whole web sites from the data sources as API or bunch of 
 *   ### `/static`
     Content of this directory will be coppied into target (temp, export or build directory).
     *   `/.well-known/security.txt` — definition of the security policies. [Further info](https://securitytxt.org/)
+    *   `humans.txt` — detailed public information about project e.g. team members, technologies etc. [Further info](http://humanstxt.org/)
 *   ### `/` (root)
     *   `.browserslistrc` — [Browserslist](https://github.com/browserslist/browserslist) configuration to share target browsers versions between different front-end tools as Autoprefixer, Babel etc. The configuration is a copy of the Bootstrap configuration in this repo.
     *   `.editorconfig` — basic definition of code formatting for different code editors and IDEs. These settings are used as a baseline for language specialised linters in this repo. [Further info](http://editorconfig.org/)

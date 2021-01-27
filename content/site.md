@@ -5,7 +5,7 @@ baseUrl: https://www.example.eu
 meta:
   lang: en
   charset: utf-8
-  author: Jaroslav Vrána
+  author: humans.txt
 seo:
   title: 𝕊𝕚𝕥𝕖 SEO Title
   description: 𝕊𝕚𝕥𝕖 SEO Description
