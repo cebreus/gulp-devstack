@@ -17,7 +17,7 @@ const purgeCss = (inputCss, inputHtml, outputCss, cb) => {
     .pipe(
       purgecss({
         content: inputHtml,
-        safelist: ['show'],
+        safelist: ['show', 'collapsing'],
         // rejected: true,
       })
     )
