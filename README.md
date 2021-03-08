@@ -9,15 +9,40 @@
 
 > Gulp stack for building optimized static pages and exports for collaboration between coders and programmers.
 
-**Typical use cases**
+<br>
+
+**Table of contents** (click to expand)
+
+<!-- toc -->
+
+- [Typical use cases](#typical-use-cases)
+- [Features](#features)
+  - [Something more under the hood](#something-more-under-the-hood)
+- [Getting Started](#getting-started)
+  - [Installation](#installation)
+- [Project structure](#project-structure)
+- [Workflow](#workflow)
+  - [Development](#development)
+  - [Production Build](#production-build)
+  - [Export Build](#export-build)
+- [Updates from devstack to your existing project](#updates-from-devstack-to-your-existing-project)
+- [Inject devstack to your new project](#inject-devstack-to-your-new-project)
+- [Roadmap and Known issues](#roadmap-and-known-issues)
+- [Contributing](#contributing)
+- [License](#license)
+- [Contact](#contact)
+
+<!-- tocstop -->
+
+## Typical use cases
 
 *   Developing landing pages or prototypes (`npm run dev`).
 *   Building carefully compiled and formated files for programmers (`npm run export`).
 *   Building the final (production) output bundle ready for deployment (`npm run deploy`).
 
-When you want to build whole web sites from the data sources as API or bunch of the markdown files, go with Static Page Generators (SGC). For example [Gridsome](https://gridsome.org/) (VueJS), [Gatsby](https://www.gatsbyjs.org/) (React) or [Hugo](https://gohugo.io/) (Go) will work for you much better.
+When you want to build whole web sites from the data sources as API or many markdown files, go with Static Page Generators (SGC). For example [Gridsome](https://gridsome.org/) (VueJS), [Gatsby](https://www.gatsbyjs.org/) (React) or [Hugo](https://gohugo.io/) (Go) will work for you much better.
 
-**Key features**
+## Features
 
 *   SEO-friendly — Open Graph and Twiter Cards markup, self/canonical.
 *   User-friendly — image optimizations, favicons, webmanifest and all sources minification to smallest bundle.
@@ -26,39 +51,13 @@ When you want to build whole web sites from the data sources as API or bunch of 
 *   Ready for implementation Git based CMS as [Forestry.io](https://forestry.io/) or [Netlify CMS](https://www.netlifycms.org/) etc. — Front Matter (Markdown files metadata and content).
 *   HTML temlates uses [Nunjucks](https://mozilla.github.io/nunjucks/). Fully customisable [Bootstrap 4.5.x](https://getbootstrap.com/) extended with [BEM](https://en.bem.info/). JavaScript processed with [Babel](https://babeljs.io/) or injected from CDN or as static files.
 
-<details>
-<summary><strong>Table of concents</strong> (click to expand)</summary>
-
-<!-- toc -->
-
-*   [Features](#features)
-    *   [Something more under the hood](#something-more-under-the-hood)
-*   [Getting Started](#getting-started)
-    *   [Installation](#installation)
-*   [Project structure](#project-structure)
-*   [Workflow](#workflow)
-    *   [Development](#development)
-    *   [Production Build](#production-build)
-    *   [Export Build](#export-build)
-*   [Updates from devstack to your existing project](#updates-from-devstack-to-your-existing-project)
-*   [Roadmap and Known issues](#roadmap-and-known-issues)
-*   [Contributing](#contributing)
-*   [License](#license)
-*   [Contact](#contact)
-
-<!-- tocstop -->
-
-</details>
-
 ***
 
-## Features
-
-|                        | Preprocessing / Linting                                                                      | 🛠️ Development<br>Postprocessing                                                                                                                                 | 👁️ Export<br>Postprocessing                                                                                                                                      | 💯 Build<br>Postprocessing                                                                                                                                                               |
+|                        | Preprocessing / Linting                                                                      | 🛠️ Development<br>Postprocessing                                                                                                                                  | 👁️ Export<br>Postprocessing                                                                                                                                       | 💯 Build<br>Postprocessing                                                                                                                                                                |
 | ---------------------- | :------------------------------------------------------------------------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **CSS**                | [SASS](https://github.com/dlmanning/gulp-sass) / [Stylelint](https://stylelint.io/)          | [PostCSS](https://github.com/postcss/postcss) ([Autoprefixer](https://github.com/postcss/autoprefixer), [prettify](https://github.com/beautify-web/js-beautify)) | [PostCSS](https://github.com/postcss/postcss) ([Autoprefixer](https://github.com/postcss/autoprefixer), [prettify](https://github.com/beautify-web/js-beautify)) | [PostCSS](https://github.com/postcss/postcss) ([Autoprefixer](https://github.com/postcss/autoprefixer), [cssnano](https://github.com/ben-eb/cssnano), [PurgeCSS](https://purgecss.com/)) |
 | **JavaScript**         | [Babel](https://babeljs.io/) / [ESLint](https://eslint.org/)                                 | only concatenate                                                                                                                                                 | concatenate & [uglify](https://github.com/terinjokes/gulp-uglify)                                                                                                | concatenate & [uglify](https://github.com/terinjokes/gulp-uglify)                                                                                                                        |
-| **HTML**               | [Nunjucks](https://github.com/carlitoplatanito/gulp-nunjucks-render)                         | [prettify](https://github.com/beautify-web/js-beautify)                                                                                                          | [prettify](https://github.com/beautify-web/js-beautify)                                                                                                          | [mimify](https://github.com/kangax/html-minifier)                                                                                                                                        |
+| **HTML**               | [Nunjucks](https://github.com/carlitoplatanito/gulp-nunjucks-render)                         | [prettify](https://github.com/beautify-web/js-beautify)                                                                                                          | [prettify](https://github.com/beautify-web/js-beautify)                                                                                                          | [minify](https://github.com/kangax/html-minifier)                                                                                                                                        |
 | **Content & Metadata** | [Markdown](https://daringfireball.net/projects/markdown/) / [Remark](https://remark.js.org/) |                                                                                                                                                                  |                                                                                                                                                                  |                                                                                                                                                                                          |
 | **JPG**, **SVG**       |                                                                                              | [imagemin](https://github.com/sindresorhus/gulp-imagemin)                                                                                                        | [imagemin](https://github.com/sindresorhus/gulp-imagemin)                                                                                                        | [imagemin](https://github.com/sindresorhus/gulp-imagemin)                                                                                                                                |
 | **PNG**                |                                                                                              | [UPNG.js](https://github.com/photopea/UPNG.js/)                                                                                                                  | [UPNG.js](https://github.com/photopea/UPNG.js/)                                                                                                                  | [UPNG.js](https://github.com/photopea/UPNG.js/)                                                                                                                                          |
@@ -108,7 +107,7 @@ When you want to build whole web sites from the data sources as API or bunch of 
         rm LICENSE
         ```
 
-    *   Change this `README.md` according to your new project or replace it from template
+    *   Change this `README.md` according to your new project or replace it from the template
 
         ```bash
         curl https://gist.githubusercontent.com/cebreus/a6010a2a95a4f2375830b0af3193f2f9/raw/cde6d9c68f2605b34eb5b8710bd553e7ad28a678/minimalistic-readme > README.md
@@ -193,7 +192,7 @@ When you want to build whole web sites from the data sources as API or bunch of 
 
 ### Development
 
-Starts watchers, compilers etc. for development with hot-reload in the browser.
+Starts watchers, compilers etc., for development with hot-reload in the browser.
 
 1.  Run development task
 
@@ -233,7 +232,7 @@ Produces optimized and formated files with good readability of the code.
 
 ## Updates from devstack to your existing project
 
-1.  create branch in your project’s repo (eg. `devstack-update`)
+1.  create a branch in your project’s repo (e.g. `devstack-update`)
 
     ```bash
     git checkout -b devstack-update
@@ -267,6 +266,23 @@ Produces optimized and formated files with good readability of the code.
 
 7.  create PR from `devstack-update` to your master
 
+## Inject devstack to your new project
+
+```bash
+git remote add devstack git@github.com:cebreus/gulp-devstack.git
+git fetch devstack
+git merge devstack master --squash --allow-unrelated-histories
+git commit -m "feat: Gulp DevStack init"
+```
+
+Optional clenup
+
+```bash
+> CHANGELOG.md
+rm LICENSE
+curl https://gist.githubusercontent.com/cebreus/a6010a2a95a4f2375830b0af3193f2f9/raw/cde6d9c68f2605b34eb5b8710bd553e7ad28a678/minimalistic-readme > README.md
+```
+
 ## Roadmap and Known issues
 
 See the [open issues](https://github.com/cebreus/gulp-devstack/issues) for a list of proposed features (and known issues).
@@ -287,6 +303,6 @@ It is distributed under the MIT License. See `LICENSE` for more information.
 
 ## Contact
 
-Jaroslav Vrána — <cebreus@live.com>
+Jaroslav Vrána — <mailto:cebreus@live.com>
 
 Project Link: [github.com/cebreus/gulp-devstack](https://github.com/cebreus/gulp-devstack)
