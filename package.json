@@ -21,7 +21,8 @@
     "text:fix": "node ./node_modules/remark-cli/cli -q . -o --",
     "release": "release-it",
     "version": "node ./node_modules/auto-changelog/src/index.js -p -t keepachangelog.hbs && git add CHANGELOG.md",
-    "todo": "leasot -x -r markdown -A '.txt,coffeeParser' './**/*.{js,html,njk,scss,txt,md,yml}' -i './node_modules/**/*' > TODO.md && node ./node_modules/remark-cli/cli -q TODO.md && prettier --write TODO.md && file_contents=$(<TODO.md) && echo \"${file_contents//### TODOs/# TODOs}\" > TODO.md"
+    "todo": "./todo.sh",
+    "todo:show": "leasot -x -r markdown -A '.txt,coffeeParser' './**/*.{js,html,njk,scss,txt,md,yml}' -i './node_modules/**/*'"
   },
   "dependencies": {
     "bootstrap": "4.5.3"
@@ -127,7 +128,7 @@
   "husky": {
     "hooks": {
       "commit-msg": "commitlint -E HUSKY_GIT_PARAMS",
-      "pre-commit": "npm run todo && git add TODO.md && npx lint-staged --allow-empty"
+      "pre-commit": "npx lint-staged --allow-empty && npm run todo"
     }
   },
   "lint-staged": {
