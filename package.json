@@ -1,6 +1,6 @@
 {
   "name": "gulp-devstack",
-  "version": "1.0.2",
+  "version": "3.0.0",
   "description": "Basic Gulp DevStack for basic front-end development with customized Bootstrap.",
   "scripts": {
     "build": "node ./node_modules/gulp/bin/gulp.js -f gulpfile-build.js default",
@@ -14,13 +14,12 @@
     "css:lint": "node ./node_modules/stylelint/bin/stylelint.js **/*.scss",
     "css:fix": "node ./node_modules/stylelint/bin/stylelint.js --fix **/*.scss",
     "css:unused": "node ./node_modules/stylelint-find-rules/src/bin/stylelint-find-rules.js",
-    "html:lint": "node ./node_modules/gulp/bin/gulp.js -f gulpfile-build.js validate",
-    "js:lint": "node ./node_modules/eslint/bin/eslint.js **/*.js",
-    "js:fix": "node ./node_modules/eslint/bin/eslint.js --fix **/*.js",
+    "js:lint": "node ./node_modules/eslint/bin/eslint.js '**/*.js'",
+    "js:fix": "node ./node_modules/eslint/bin/eslint.js --fix '**/*.js'",
     "text:lint": "node ./node_modules/remark-cli/cli.js -q .",
     "text:fix": "node ./node_modules/remark-cli/cli -q . -o --",
     "release": "release-it",
-    "version": "node ./node_modules/auto-changelog/src/index.js -p -t keepachangelog.hbs && git add CHANGELOG.md",
+    "version": "node ./node_modules/auto-changelog/src/index.js -p -t keepachangelog.hbs && npm run text:fix && git add CHANGELOG.md",
     "todo": "./todo.sh",
     "todo:show": "leasot -x -r markdown -A '.txt,coffeeParser' './**/*.{js,html,njk,scss,txt,md,yml}' -i './node_modules/**/*'"
   },
