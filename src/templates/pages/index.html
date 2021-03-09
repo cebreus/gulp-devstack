@@ -9,11 +9,11 @@
 
 	<article class="o-main py-5" role="main">
 		<div class="container">
-			<h1 class="mb-4">{{ title_h1 }}</h1>
-			{% if excerpt is defined and excerpt|length > 0 %}
-				<div class="lead mb-3">{{ excerpt|safe }}</div>
+			<h1 class="mb-4">{{ title_h1 | safe }}</h1>
+			{% if excerpt is defined and excerpt | length > 0 %}
+				<div class="lead mb-3">{{ excerpt | md | safe }}</div>
 			{% endif %}
-			{{ body|safe }}
+			{{ body | md | safe }}
 		</div>
 	</article>
 

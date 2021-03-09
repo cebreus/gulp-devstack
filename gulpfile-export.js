@@ -10,6 +10,7 @@ const datasetPrepareFnc = require('./gulp-tasks/gulp-dataset-prepare');
 const faviconsFnc = require('./gulp-tasks/gulp-favicons');
 const fontLoadFnc = require('./gulp-tasks/gulp-font-load');
 const htmlBuildFnc = require('./gulp-tasks-export/gulp-html-build');
+const htmlValidateFnc = require('./gulp-tasks/gulp-html-validate');
 const imagesOptimizeFnc = require('./gulp-tasks/gulp-optimize-images');
 const jsProcessFnc = require('./gulp-tasks-export/gulp-process-js');
 
@@ -43,10 +44,14 @@ function copyStatic(done) {
   });
 }
 
+function htmlValidate() {
+  return htmlValidateFnc(`${config.buildBase}/**/*.html`);
+}
+
 // SASS
 
 function compileSassAll() {
-  return compileSassFnc(
+  return cssCompileFnc(
     config.sassAll,
     config.sassBuild,
     'index.min.css',
@@ -264,6 +269,8 @@ gulp.task(
 gulp.task('images', images);
 
 gulp.task('fonts', fontLoad);
+
+gulp.task('validate', htmlValidate);
 
 gulp.task(
   'export',

@@ -10,7 +10,7 @@ extends:
 
 rules:
   linebreaks: 'unix'
-  unit-whitelist: ['px', 'rem', '%', 's', 'deg']
+  unit-allowed-list: ['px', 'rem', '%', 's', 'deg']
 
   plugin/no-low-performance-animation-properties: true
 
