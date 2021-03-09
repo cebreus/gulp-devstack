@@ -1,0 +1,30 @@
+plugins:
+  - stylelint-scss
+  - stylelint-high-performance-animation
+  - stylelint-selector-bem-pattern
+
+extends:
+  - '@visionappscz/stylelint-config-visionapps'
+  - '@visionappscz/stylelint-config-visionapps-order'
+  - stylelint-config-standard
+
+rules:
+  linebreaks: 'unix'
+  unit-whitelist: ['px', 'rem', '%', 's', 'deg']
+
+  plugin/no-low-performance-animation-properties: true
+
+  plugin/selector-bem-pattern:
+    preset: 'bem'
+    implicitComponents: '**/c-*.scss'
+    componentName: '(([a-z0-9]+(?!-$)-?)+)'
+    componentSelectors:
+      initial: "\\.{componentName}(((__|--)(([a-z0-9\\[\\]'=]+(?!-$)-?)+))+)?$"
+    implicitUtilities: '**/u-*.scss'
+    utilitySelectors: "^\\.u-[a-z]+$"
+
+  # Reset for visionapps
+  at-rule-no-unknown: null
+  max-nesting-depth: 3
+  selector-nested-pattern: null
+  scss/at-rule-no-unknown: true

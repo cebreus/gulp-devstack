@@ -1,0 +1,80 @@
+{
+    "folders": [
+        {
+            "path": "."
+        }
+    ],
+    "settings": {
+        "files.autoSave": "onFocusChange",
+        "files.insertFinalNewline": true,
+        "files.exclude": {
+            "**/node_modules": true
+        },
+        "css.remoteStyleSheets": [
+            "https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+        ],
+        "attrsSorter.order": [
+            "v-.*",
+            "ng-.*",
+            "mkt-block.*",
+            "mkt-data-.*",
+            "mkt-label-.*",
+            "mkt-field-.*",
+            "mkt-.*",
+            "class",
+            "id",
+            "async",
+            "defer",
+            "rel",
+            "name",
+            "property",
+            "content",
+            "lang",
+            "hreflang",
+            "http-equiv",
+            "media",
+            "method",
+            "action",
+            "for",
+            "type",
+            "value",
+            "label",
+            "cols",
+            "rows",
+            "min",
+            "max",
+            "maxlenght",
+            "multiple",
+            "checked",
+            "disabled",
+            "hidden",
+            "readonly",
+            "required",
+            "selected",
+            "placeholder",
+            "autocomplete",
+            "width",
+            "height",
+            "href",
+            "target",
+            "src",
+            "srcset",
+            "size",
+            "sizes",
+            "alt",
+            "title",
+            "border",
+            "cellpadding",
+            "cellspacing",
+            "align",
+            "valign",
+            "summary",
+            "colspan",
+            "rowspan",
+            "bgcolor",
+            "background",
+            "data-.*",
+            "aria-.*"
+        ]
+    }
+}

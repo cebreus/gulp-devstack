@@ -1,45 +1,131 @@
-**Edit a file, create a new file, and clone from Bitbucket in under 2 minutes**
+# Frontend Gulp DevStack
 
-When you're done, you can delete the content in this README and update the file with details for others getting started with your repository.
+![Maintenance](https://img.shields.io/maintenance/yes/2022)
+![Contributions welcome](https://img.shields.io/badge/contributions-welcome-green.svg)
 
-*We recommend that you open this README in another tab as you perform the tasks below. You can [watch our video](https://youtu.be/0ocf7u76WSo) for a full demo of all the steps in this tutorial. Open the video in a new tab to avoid leaving Bitbucket.*
+![Codacy grade](https://img.shields.io/codacy/grade/4c460cbeb0894666ba35c3c9971a91bb)
+![Bitbucket open issues](https://img.shields.io/bitbucket/issues/cebreus/gulp-dev-stack)
+![Bitbucket open pull requests](https://img.shields.io/bitbucket/pr/cebreus/gulp-dev-stack)
 
----
+* * *
 
-## Edit a file
+<!--
+## Table of Contents
 
-You’ll start by editing this README file to learn how to edit a file in Bitbucket.
+-   [Key features](#key-features)
+-   [Getting Started](#getting-started)
+    -   [Prerequisites](#prerequisites)
+    -   [Installation](#installation)
+-   [Usage](#usage)
+    -   [Development](#development)
+    -   [Production Build](#production-build)
+-   [Roadmap](#roadmap)
+-   [Contributing](#contributing)
+-   [License](#license)
+-   [Contact](#contact)
+-->
 
-1. Click **Source** on the left side.
-2. Click the README.md link from the list of files.
-3. Click the **Edit** button.
-4. Delete the following text: *Delete this line to make a change to the README from Bitbucket.*
-5. After making your change, click **Commit** and then **Commit** again in the dialog. The commit page will open and you’ll see the change you just made.
-6. Go back to the **Source** page.
+## Introduction
 
----
+It is meant to be used for building static pages with full output control. Creates a bundled of the web page(s) with a style sheet(s), transpilled JavaScript for browsers and optimized images. It has development mode with hot-reload and production build.
 
-## Create a file
+When you want to build whole web pages from the data sources as API or bunch of the markdown files, Static Page Generators as [Gridsome](https://gridsome.org/) (VueJS), [Gatsby](https://www.gatsbyjs.org/) (React) or [Hugo](https://gohugo.io/) (Go) will work for you much better. I personally prefer Gridsome or Hugo. Gridsome produces HTML files for every markdown file or API source and then in browser hydrates with javascript. The best solution for SEO.
 
-Next, you’ll add a new file to this repository.
+### Typical use cases
 
-1. Click the **New file** button at the top of the **Source** page.
-2. Give the file a filename of **contributors.txt**.
-3. Enter your name in the empty file space.
-4. Click **Commit** and then **Commit** again in the dialog.
-5. Go back to the **Source** page.
+-   Building landing pages.
+-   Building prototypes.
+-   Building the final output bundle for clients or programmers.
+-   Optimize images.
 
-Before you move on, go ahead and explore the repository. You've already seen the **Source** page, but check out the **Commits**, **Branches**, and **Settings** pages.
+### Key features
 
----
+-   Separate tasks for developing `npm run develop` and final build `npm run build`.
+-   [Bootstrap](https://getbootstrap.com/) version 4 as a frontend framework.
+-   [Nunjucks](https://mozilla.github.io/nunjucks/) as templating engine.
+-   JSON as the main data source for templates (`<head />` etc.).
+-   [SCSS](https://sass-lang.com/) and [BEM](https://en.bem.info/) with PostCSS, Autoprefixer and other modules for SCSS processing.
+-   Generates favicons.
+-   Optimizes images.
+-   Automatic formatting, linting and repair of source files — Eslint, Prettier, Stylelint, Textlint. Execution using npm scripts and automatically before committing.
+-   [Gitflow](https://www.atlassian.com/git/tutorials/comparing-workflows/gitflow-workflow); [Semantic Commit Messages](https://seesparkbox.com/foundry/semantic_commit_messages) based on [Conventional Commits](https://www.conventionalcommits.org/); [Semantic Versioning](https://semver.org/); Git submodule for the release process.
 
-## Clone a repository
+## Getting Started
 
-Use these steps to clone from SourceTree, our client for using the repository command-line free. Cloning allows you to work on your files locally. If you don't yet have SourceTree, [download and install first](https://www.sourcetreeapp.com/). If you prefer to clone from the command line, see [Clone a repository](https://confluence.atlassian.com/x/4whODQ).
+This is an example of how you may give instructions on setting up your project locally. To get a local copy up and running follow these simple example steps.
 
-1. You’ll see the clone button under the **Source** heading. Click that button.
-2. Now click **Check out in SourceTree**. You may need to create a SourceTree account or log in.
-3. When you see the **Clone New** dialog in SourceTree, update the destination path and name if you’d like to and then click **Clone**.
-4. Open the directory you just created to see your repository’s files.
+### Prerequisites
 
-Now that you're more familiar with your Bitbucket repository, go ahead and add a new file locally. You can [push your change back to Bitbucket with SourceTree](https://confluence.atlassian.com/x/iqyBMg), or you can [add, commit,](https://confluence.atlassian.com/x/8QhODQ) and [push from the command line](https://confluence.atlassian.com/x/NQ0zDQ).
+[Node.js and npm](https://nodejs.org/en/) are required.
+
+### Installation
+
+1.  Clone the repository
+
+    ```bash
+    git clone https://bitbucket.org/cebreus/gulp-dev-stack/
+    ```
+
+2.  Install npm packages
+
+    ```bash
+    npm i
+    ```
+
+## Usage
+
+### Development
+
+Starts watchers, compilers etc. for dynamic development with hot reload in the browser.
+
+1.  Run development task
+
+    ```bash
+    npm run develop
+    ```
+
+2.  Open Browser on URL `http://localhost:4000` or what you see in command-line.
+
+3.  Modify files in `src` folder a subfolders:
+
+    -   folder `/data` contind JSON files with data structures for templates
+    -   folder `/gfx` contains graphic files
+    -   folder `/pages` contains template files
+    -   folder `/scss` contains all SCSS files
+    -   file `/fonts.list` defines font famillys
+
+### Production Build
+
+Produces optimized files in production quality.
+
+1.  Run build task
+
+    ```bash
+    npm run build
+    ```
+
+2.  See files in `build` folder.
+
+## Roadmap
+
+See the [open issues](https://bitbucket.org/socialauth/login/atlassianid/?next=%2Fcebreus%2Fgulp-dev-stack%2Fissues%3Fstatus%3Dnew%26status%3Dopen) for a list of proposed features (and known issues).
+
+## Contributing
+
+Contributions are what make the open source community such an amazing place to be learn, inspire, and create. Any contributions you make are **greatly appreciated**.
+
+1.  Fork the Project
+2.  Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
+3.  Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
+4.  Push to the Branch (`git push origin feature/AmazingFeature`)
+5.  Open a Pull Request
+
+## License
+
+Distributed under the MIT License. See `LICENSE` for more information.
+
+## Contact
+
+Your Name - [@cebreus69](https://twitter.com/cebreus69) — cebreus@live.com
+
+Project Link: [https://bitbucket.org/cebreus/gulp-dev-stack](https://bitbucket.org/cebreus/gulp-dev-stack/)

@@ -1,0 +1,6 @@
+*.min.*
+*.html
+dist/
+build/
+static/
+package-lock.json

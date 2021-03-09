@@ -1,0 +1,64 @@
+@charset "utf-8";
+
+@import '../../node_modules/bootstrap/scss/functions';
+@import '../../node_modules/bootstrap/scss/mixins';
+@import './variables';
+
+// Přetížení Bootatrapu
+// --------------
+
+// Set minimum reasonable width on very small devices
+body {
+  min-width: 320px;
+}
+
+// Remove viod in the bottom of the alert component
+.alert {
+  p:last-child,
+  ol:last-child,
+  ul:last-child {
+    margin-bottom: 0;
+  }
+}
+
+// Reset for SVG images in `<img src=""`
+img:not([src$='.svg']) {
+  max-width: 100%;
+  height: auto;
+}
+
+// Extension for responsive media 3:2
+.embed-responsive-3by2::before {
+  padding-top: 66.67%;
+}
+
+// Extension for responsive media 4:3
+.embed-responsive-4by3::before {
+  padding-top: 75%;
+}
+
+// Záhlaví webu
+// --------------
+
+.o-header {
+  color: $blue;
+}
+
+// Hlavní obsah
+// --------------
+
+.o-main {
+  color: $blue;
+}
+
+// Zápatí webu
+// --------------
+
+.o-footer {
+  color: $blue;
+}
+
+// Importy komponent
+// --------------
+
+@import 'c-article';
