@@ -3,6 +3,7 @@
 @import '../../node_modules/bootstrap/scss/functions';
 @import '../../node_modules/bootstrap/scss/mixins';
 @import './variables';
+@import './temp/assets/css/fonts';
 
 // Přetížení Bootatrapu
 // --------------
@@ -31,9 +32,8 @@ img:not([src$='.svg']) {
 // --------------
 
 .o-header {
-  padding: map-get($spacers, 3);
   color: theme-color('light');
-  background-color: map-get($colors, 'pink');
+  background-color: map-get($colors, 'gray-dark');
 }
 
 // Hlavní obsah
