@@ -12,7 +12,6 @@ const fontLoadFnc = require('./gulp-tasks/gulp-font-load');
 const hotReload = require('./gulp-tasks/gulp-hotreload');
 const lintCssFnc = require('./gulp-tasks/gulp-css-lint');
 
-
 // Variables
 // --------------
 
