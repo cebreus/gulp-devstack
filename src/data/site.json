@@ -1,31 +1,31 @@
 {
-    "title": "Vyvíjejme rychle a s radostí | Gulp Dev Stack",
-    "author": "Jaroslav Vrána",
-    "meta": {
-        "lang": "cs",
-        "charset": "utf8",
-        "robots": "index,follow",
-        "canonical": "https://www.example.com/",
-        "description": "Description v meta tagu",
-        "keywords": "klíčové,slovo"
-    },
-    "open_graph": {
-        "show": "true",
-        "type": "website",
-        "app_id": "",
-        "site_name": "Gulp Dev Stack",
-        "title": "Vyvíjejme rychle a s radostí",
-        "description": "Description for Facebook",
-        "image": "https://www.http://example.com/assets/images-og/og-img.png",
-        "image_type": "image/png",
-        "image_width": "1200",
-        "image_height": "630"
-    },
-    "twitter_cards": {
-        "show": "true",
-        "type": "summary_large_image",
-        "title": "Vyvíjejme rychle a s radostí",
-        "description": "Description for Twitter",
-        "image": "https://www.example.com/assets/images-tw/tw-img.png"
-    }
+	"title": "Vyvíjejme rychle a s radostí | Gulp Dev Stack",
+	"author": "Jaroslav Vrána",
+	"meta": {
+		"lang": "cs",
+		"charset": "utf-8",
+		"robots": "index,follow",
+		"canonical": "https://www.example.com/",
+		"description": "Description v meta tagu",
+		"keywords": "klíčové,slovo"
+	},
+	"open_graph": {
+		"show": "true",
+		"type": "website",
+		"app_id": "",
+		"site_name": "Gulp Dev Stack",
+		"title": "Vyvíjejme rychle a s radostí",
+		"description": "Description for Facebook",
+		"image": "https://example.com/assets/images-og/og-img.png",
+		"image_type": "image/png",
+		"image_width": "1200",
+		"image_height": "630"
+	},
+	"twitter_cards": {
+		"show": "true",
+		"type": "summary_large_image",
+		"title": "Vyvíjejme rychle a s radostí",
+		"description": "Description for Twitter",
+		"image": "https://www.example.com/assets/images-tw/tw-img.png"
+	}
 }

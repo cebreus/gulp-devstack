@@ -25,7 +25,7 @@ const buildDataset = (input, output, outputFilename, cb) => {
           let data = {};
           data[primaryKey.toUpperCase()] = json;
           return data;
-        }
+        },
       })
     )
     .pipe(gulp.dest(output))

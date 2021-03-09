@@ -14,14 +14,17 @@ const tempBase = './temp';
 
 const sassBase = `${devBase}/scss`;
 const sassBuild = `${buildBase}/css`;
-const sassAll = [`${sassBase}/*.scss`, `!${sassBase}/_*.scss`];
+const sassAll = [
+  `${sassBase}/*.scss`,
+  `!${sassBase}/_*.scss`,
+  `!${sassBase}/u-*.scss`,
+];
 const sassCustom = [
   `${sassBase}/custom.scss`,
   `${sassBase}/c-*.scss`,
-  `${sassBase}/_variables.scss`
+  `${sassBase}/_variables.scss`,
 ];
 const sassCore = [`${sassBase}/bootstrap.scss`, `${sassBase}/_variables.scss`];
-const sassUtils = [`${sassBase}/u-*.scss`, `${sassBase}/_variables.scss`];
 const injectCss = `${sassBuild}/*.css`;
 
 // Data JSON
@@ -35,8 +38,7 @@ const datasetJsonBuild = tempBase;
 // --------------
 
 const tplBase = `${devBase}/pages`;
-// const tplMain = `${tplBase}/**/*.html`;
-const tplMain = `${tplBase}/index.html`;
+const tplMain = `${tplBase}/**/*.html`;
 const tplBuild = `${buildBase}`;
 const tplDataset = `${tempBase}/dataset.json`;
 
@@ -64,9 +66,9 @@ const jsBuild = `${buildBase}/js`;
 const injectJs = `${jsBuild}/*.js`;
 
 const injectCdnJs = [
-  '<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>',
-  '<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>',
-  '<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>'
+  '<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.slim.min.js" integrity="sha256-pasqAKBDmFT4eHoN2ndd6lN370kFiGUFyTiUHWhU7k8=" crossorigin="anonymous"></script>',
+  '<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.1/umd/popper.min.js" integrity="sha256-/ijcOLwFf26xEYAjW75FizKVo5tnTYiQddPZoLUHHZ8=" crossorigin="anonymous"></script>',
+  '<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha256-WqU1JavFxSAMcLP2WIOI+GB2zWmShMI82mTpLDcqFUg=" crossorigin="anonymous"></script>',
 ];
 
 // Modules & Plugins
@@ -75,9 +77,9 @@ const injectCdnJs = [
 const postcssPluginsBase = [
   flexbugsFixes,
   autoprefixer({
-    grid: true
+    grid: true,
   }),
-  cssnano()
+  cssnano(),
 ];
 
 // Files that need to be removed
@@ -94,7 +96,6 @@ module.exports = {
   sassAll: sassAll,
   sassCustom: sassCustom,
   sassCore: sassCore,
-  sassUtils: sassUtils,
   postcssPluginsBase: postcssPluginsBase,
   injectCss: injectCss,
   datasetJsonBase: datasetJsonBase,
@@ -113,5 +114,5 @@ module.exports = {
   svgImages: svgImages,
   jpgImages: jpgImages,
   pngImages: pngImages,
-  buildRevManifest: buildRevManifest
+  buildRevManifest: buildRevManifest,
 };

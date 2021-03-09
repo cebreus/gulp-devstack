@@ -10,7 +10,7 @@
     <title>{{ SITE.title }}</title>
     <meta name="description" content="{{ SITE.meta.description }}">
     <meta name="author" content="{{ SITE.meta.author }}">
-    {% if SITE.open_graph.show !== false %}
+    {% if (SITE.open_graph.show) and (SITE.open_graph.show === 'true')  %}
     <meta property="og:type" content="{{ SITE.open_graph.type }}">
     <meta property="og:url" content="{{ SITE.meta.canonical }}">
     {% if SITE.open_graph.app_id %}
@@ -23,26 +23,26 @@
     <meta property="og:image:width" content="{{ SITE.open_graph.image_width }}">
     <meta property="og:image:height" content="{{ SITE.open_graph.image_height }}">
     {% endif %}
-    {% if SITE.opentwitter_cards_graph.show !== false %}
+    {% if (SITE.twitter_cards.show) and (SITE.twitter_cards.show === 'true')  %}
     <meta name="twitter:card" content="{{ SITE.twitter_cards.type }}">
     <meta name="twitter:title" content="{{ SITE.twitter_cards.title or SITE.title }}">
     <meta name="twitter:description" content="{{ SITE.twitter_cards.description or SITE.meta.description }}">
     <meta name="twitter:url" content="{{ SITE.meta.canonical }}">
     <meta name="twitter:image" content="{{ SITE.twitter_cards.image }}">
     {% endif %}
-
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin="">
     <!-- inject:css -->
     <!-- endinject -->
 </head>
 
-<body>
+<body data-template="index">
     <header class="o-header" role="banner">
         <div class="container">
             hlava webu
         </div>
     </header>
 
-    <article class="py-5">
+    <article class="o-main py-5">
         <div class="container text-center">
             <h1>{{ INDEX.h1 }}</h1>
         </div>

@@ -76,9 +76,16 @@ $RECYCLE.BIN/
 ############################
 
 *#
-ssl
+.cache
 .idea
+.temp
+.tmp
+build
+dist
 nbproject
+ssl
+static
+temp
 
 
 ############################
@@ -100,12 +107,3 @@ node_modules
 
 testApp
 coverage
-
-############################
-# Custom
-############################
-
-.cache
-build
-dist
-temp

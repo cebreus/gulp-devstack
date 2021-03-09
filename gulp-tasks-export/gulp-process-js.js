@@ -4,7 +4,6 @@ const gulpif = require('gulp-if');
 const babel = require('gulp-babel');
 const gulpConcat = require('gulp-concat');
 const plumber = require('gulp-plumber');
-const uglify = require('gulp-uglify');
 
 /**
  * @description Transpile JavaScript files
@@ -23,11 +22,11 @@ const processJs = (input, output, params = {}) => {
       ? true
       : false;
 
-  const outputConcatFileName = `${params.outputConcatPrefixFileName}.min.js`;
+  const outputConcatFileName = `${params.outputConcatPrefixFileName}.js`;
 
   if (fs.existsSync(`${output}/${outputConcatFileName}`)) {
     throw Error(
-      `There is already ${outputConcatFileName} inside your output folder.  Please change outputConcatPrefixFileName in gulpfile-build.js.`
+      `There is already ${outputConcatFileName} inside your output folder. Please change outputConcatPrefixFileName in gulpfile-export.js.`
     );
   }
 
@@ -49,7 +48,7 @@ const processJs = (input, output, params = {}) => {
         plugins: ['babel-plugin-loop-optimizer'],
       })
     )
-    .pipe(uglify())
+
     .pipe(gulpif(concatFiles, gulpConcat(outputConcatFileName)))
     .pipe(gulp.dest(output));
 };

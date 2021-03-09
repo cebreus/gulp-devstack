@@ -20,7 +20,7 @@ function fixCssOrScss(input, output) {
         gulpStylelint({
           fix: true,
           failAfterError: false,
-          reporters: [{ formatter: 'verbose', console: true }]
+          reporters: [{ formatter: 'verbose', console: true }],
         })
       )
     )
