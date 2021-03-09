@@ -38,15 +38,14 @@ const processJs = (input, output, params = {}) => {
       babel({
         presets: [
           [
-            'env',
+            '@babel/preset-env',
             {
               targets: {
-                browsers: ['last 2 versions', 'ie >= 11'],
+                browsers: ['last 2 versions'],
               },
             },
           ],
         ],
-        plugins: ['babel-plugin-loop-optimizer'],
       })
     )
     .pipe(uglify())

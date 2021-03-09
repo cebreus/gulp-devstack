@@ -14,8 +14,7 @@ function browserSync() {
     },
     port: 4000,
     notify: false,
-    // proxy: 'yourdomain.dev',
-    // tunnel: true
+    open: false,
   });
 }
 
@@ -23,9 +22,13 @@ function browserSync() {
  * @description BrowserSync reload
  */
 
-function browserSyncReload(done) {
+function browserSyncRefresh(done) {
   browsersync.reload();
   done();
 }
 
-module.exports = { browserSync, browserSyncReload };
+function browserSyncReload() {
+  browsersync.reload();
+}
+
+module.exports = { browserSync, browserSyncRefresh, browserSyncReload };

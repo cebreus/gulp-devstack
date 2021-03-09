@@ -1,10 +1,10 @@
 @charset 'utf-8';
 
 /*!
- * Bootstrap v4.4.1 (https://getbootstrap.com/)
- * Copyright 2011-2019 The Bootstrap Authors
- * Copyright 2011-2019 Twitter, Inc.
- * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
+ * Bootstrap v4.5.3 (https://getbootstrap.com/)
+ * Copyright 2011-2020 The Bootstrap Authors
+ * Copyright 2011-2020 Twitter, Inc.
+ * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
  */
 
 @import '../../node_modules/bootstrap/scss/functions';
@@ -25,7 +25,7 @@
 //@import '../../node_modules/bootstrap/scss/input-group';
 //@import '../../node_modules/bootstrap/scss/custom-forms';
 @import '../../node_modules/bootstrap/scss/nav';
-//@import '../../node_modules/bootstrap/scss/navbar';
+@import '../../node_modules/bootstrap/scss/navbar';
 //@import '../../node_modules/bootstrap/scss/card';
 //@import '../../node_modules/bootstrap/scss/breadcrumb';
 //@import '../../node_modules/bootstrap/scss/pagination';

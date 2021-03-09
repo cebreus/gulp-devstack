@@ -7,7 +7,7 @@
 ![GitHub open issues](https://img.shields.io/github/issues/cebreus/gulp-devstack)
 ![License](https://img.shields.io/github/license/cebreus/gulp-devstack)
 
-* * *
+***
 
 <!--
 ## Table of Contents
@@ -22,7 +22,7 @@
   - [Development](#development)
   - [Production Build](#production-build)
   - [Export Build](#export-build)
-- [Roadmap](#roadmap)
+- [Roadmap and Known issues](#roadmap-and-known-issues)
 - [Contributing](#contributing)
 - [License](#license)
 - [Contact](#contact)
@@ -36,22 +36,22 @@ When you want to build whole web pages from the data sources as API or bunch of 
 
 ### Typical use cases
 
--   Building landing pages.
--   Building prototypes.
--   Building the final output bundle for clients or programmers.
--   Optimize images.
+*   Building landing pages.
+*   Building prototypes.
+*   Building the final output bundle for clients or programmers.
+*   Optimize images.
 
 ### Key features
 
--   Separate tasks for developing `npm run develop` and final build `npm run build`.
--   [Bootstrap](https://getbootstrap.com/) version 4 as a frontend framework.
--   [Nunjucks](https://mozilla.github.io/nunjucks/) as templating engine.
--   JSON as the main data source for templates (`<head />` etc.).
--   [SCSS](https://sass-lang.com/) and [BEM](https://en.bem.info/) with PostCSS, Autoprefixer and other modules for SCSS processing.
--   Generates favicons.
--   Optimizes images.
--   Automatic formatting, linting and repair of source files — Eslint, Prettier, Stylelint, Textlint. Execution using npm scripts and automatically before committing.
--   [Gitflow](https://www.atlassian.com/git/tutorials/comparing-workflows/gitflow-workflow); [Semantic Commit Messages](https://seesparkbox.com/foundry/semantic_commit_messages) based on [Conventional Commits](https://www.conventionalcommits.org/); [Semantic Versioning](https://semver.org/); Git submodule for the release process.
+*   Separate tasks for developing `npm run develop` and final build `npm run build`.
+*   [Bootstrap](https://getbootstrap.com/) version 4 as a frontend framework.
+*   [Nunjucks](https://mozilla.github.io/nunjucks/) as templating engine.
+*   JSON as the main data source for templates (`<head />` etc.).
+*   [SCSS](https://sass-lang.com/) and [BEM](https://en.bem.info/) with PostCSS, Autoprefixer and other modules for SCSS processing.
+*   Generates favicons.
+*   Optimizes images.
+*   Automatic formatting, linting and repair of source files — Eslint, Prettier, Stylelint, Textlint. Execution using npm scripts and automatically before committing.
+*   [Gitflow](https://www.atlassian.com/git/tutorials/comparing-workflows/gitflow-workflow); [Semantic Commit Messages](https://seesparkbox.com/foundry/semantic_commit_messages) based on [Conventional Commits](https://www.conventionalcommits.org/); [Semantic Versioning](https://semver.org/); Git submodule for the release process.
 
 ## Getting Started
 
@@ -84,18 +84,18 @@ Starts watchers, compilers etc. for dynamic development with hot reload in the b
 1.  Run development task
 
     ```bash
-    npm run develop
+    npm run dev
     ```
 
 2.  Open Browser on URL `http://localhost:4000` or what you see in command-line.
 
 3.  Modify files in `src` folder a subfolders:
 
-    -   folder `/data` contind JSON files with data structures for templates
-    -   folder `/gfx` contains graphic files
-    -   folder `/pages` contains template files
-    -   folder `/scss` contains all SCSS files
-    -   file `/fonts.list` defines font famillys
+    *   folder `/data` contind JSON files with data structures for templates
+    *   folder `/gfx` contains graphic files
+    *   folder `/pages` contains template files
+    *   folder `/scss` contains all SCSS files
+    *   file `/fonts.list` defines font famillys
 
 ### Production Build
 
@@ -119,11 +119,11 @@ Produces optimized and formated files with good readibility of the code.
     npm run export
     ```
 
-2.  See files in `build` folder.
+2.  See files in `export` folder.
 
-## Roadmap
+## Roadmap and Known issues
 
-See the [open issues](https://github.com/cebreus/gulp-devstack/issues/new) for a list of proposed features (and known issues).
+See the [open issues](https://github.com/cebreus/gulp-devstack/issues) for a list of proposed features (and known issues).
 
 ## Contributing
 
@@ -141,6 +141,6 @@ It is distributed under the MIT License. See `LICENSE` for more information.
 
 ## Contact
 
-Jaroslav Vrána — [cebreus@live.com](mailto:cebreus@live.com)
+Jaroslav Vrána - [@cebreus69](https://twitter.com/cebreus69) — <mailto:cebreus@live.com>
 
-Project Link: [github.com/cebreus/gulp-devstack](https://github.com/cebreus/gulp-devstack)
+Project Link: [https://github.com/cebreus/gulp-devstack](https://github.com/cebreus/gulp-devstack/)

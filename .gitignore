@@ -76,16 +76,18 @@ $RECYCLE.BIN/
 ############################
 
 *#
+*.bak
 .cache
 .idea
 .temp
 .tmp
 build
 dist
+export
 nbproject
 ssl
-static
 temp
+.eslintcache
 
 
 ############################
