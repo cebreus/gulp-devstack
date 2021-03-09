@@ -5,7 +5,7 @@ const flexbugsFixes = require('postcss-flexbugs-fixes');
 // --------------
 
 const devBase = './src';
-const buildBase = './temp';
+const buildBase = './build';
 const tempBase = './temp';
 
 // SASS
@@ -13,14 +13,17 @@ const tempBase = './temp';
 
 const sassBase = `${devBase}/scss`;
 const sassBuild = `${buildBase}/css`;
-const sassAll = [`${sassBase}/*.scss`, `!${sassBase}/_*.scss`];
+const sassAll = [
+  `${sassBase}/*.scss`,
+  `!${sassBase}/_*.scss`,
+  `!${sassBase}/u-*.scss`,
+];
 const sassCustom = [
   `${sassBase}/custom.scss`,
   `${sassBase}/c-*.scss`,
   `${sassBase}/_variables.scss`,
 ];
 const sassCore = [`${sassBase}/bootstrap.scss`, `${sassBase}/_variables.scss`];
-const sassUtils = [`${sassBase}/u-*.scss`, `${sassBase}/_variables.scss`];
 const injectCss = `${sassBuild}/*.css`;
 
 // Data JSON
@@ -77,45 +80,10 @@ const postcssPluginsBase = [
   }),
 ];
 
-const fontloadFile = `${devBase}/fonts.list`;
-const fontLoadConfig = {
-  fontsDir: 'font/',
-  cssDir: 'css/',
-  cssFilename: 'fonts.css',
-  relativePaths: true,
-};
+// Files that need to be removed
+// --------------
 
-const faviconSourceFile = `${gfxBase}/favicon/favicons-source.png`;
-const faviconBuild = `${gfxBuild}/favicons`;
-const faviconGenConfig = {
-  appName: 'My App',
-  appShortName: 'App',
-  appDescription: 'This is my application',
-  developerName: 'Developer name',
-  developerURL: 'https://developerwebsite.com/',
-  background: '#000000',
-  path: '/images/favicons/',
-  url: 'https://urlofwebsite.com/',
-  display: 'standalone',
-  orientation: 'portrait',
-  scope: '/',
-  start_url: '/?homescreen=1',
-  version: 1.0,
-  logging: false,
-  html: 'index.html',
-  pipeHTML: true,
-  replace: true,
-  icons: {
-    android: false,
-    appleIcon: false,
-    appleStartup: false,
-    coast: false,
-    favicons: true,
-    firefox: false,
-    windows: false,
-    yandex: false,
-  },
-};
+const buildRevManifest = `${buildBase}/rev-manifest.json`;
 
 module.exports = {
   devBase: devBase,
@@ -126,7 +94,6 @@ module.exports = {
   sassAll: sassAll,
   sassCustom: sassCustom,
   sassCore: sassCore,
-  sassUtils: sassUtils,
   postcssPluginsBase: postcssPluginsBase,
   injectCss: injectCss,
   datasetJsonBase: datasetJsonBase,
@@ -145,9 +112,5 @@ module.exports = {
   svgImages: svgImages,
   jpgImages: jpgImages,
   pngImages: pngImages,
-  fontloadFile: fontloadFile,
-  fontLoadConfig: fontLoadConfig,
-  faviconSourceFile: faviconSourceFile,
-  faviconBuild: faviconBuild,
-  faviconGenConfig: faviconGenConfig,
+  buildRevManifest: buildRevManifest,
 };

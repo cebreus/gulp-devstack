@@ -3,33 +3,36 @@
 ![Maintenance](https://img.shields.io/maintenance/yes/2022)
 ![Contributions welcome](https://img.shields.io/badge/contributions-welcome-green.svg)
 
-![Codacy grade](https://img.shields.io/codacy/grade/4c460cbeb0894666ba35c3c9971a91bb)
-![Bitbucket open issues](https://img.shields.io/bitbucket/issues/cebreus/gulp-dev-stack)
-![Bitbucket open pull requests](https://img.shields.io/bitbucket/pr/cebreus/gulp-dev-stack)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/16e0c62b123d4dbfb27c216f5107f464)](https://www.codacy.com/gh/cebreus/gulp-devstack/dashboard?utm_source=github.com\&utm_medium=referral\&utm_content=cebreus/gulp-devstack\&utm_campaign=Badge_Grade)
+![GitHub open issues](https://img.shields.io/github/issues/cebreus/gulp-devstack)
+![License](https://img.shields.io/github/license/cebreus/gulp-devstack)
 
 * * *
 
 <!--
 ## Table of Contents
 
--   [Key features](#key-features)
--   [Getting Started](#getting-started)
-    -   [Prerequisites](#prerequisites)
-    -   [Installation](#installation)
--   [Usage](#usage)
-    -   [Development](#development)
-    -   [Production Build](#production-build)
--   [Roadmap](#roadmap)
--   [Contributing](#contributing)
--   [License](#license)
--   [Contact](#contact)
+- [Introduction](#introduction)
+  - [Typical use cases](#typical-use-cases)
+  - [Key features](#key-features)
+- [Getting Started](#getting-started)
+  - [Prerequisites](#prerequisites)
+  - [Installation](#installation)
+- [Usage](#usage)
+  - [Development](#development)
+  - [Production Build](#production-build)
+  - [Export Build](#export-build)
+- [Roadmap](#roadmap)
+- [Contributing](#contributing)
+- [License](#license)
+- [Contact](#contact)
 -->
 
 ## Introduction
 
 It is meant to be used for building static pages with full output control. Creates a bundled of the web page(s) with a style sheet(s), transpilled JavaScript for browsers and optimized images. It has development mode with hot-reload and production build.
 
-When you want to build whole web pages from the data sources as API or bunch of the markdown files, Static Page Generators as [Gridsome](https://gridsome.org/) (VueJS), [Gatsby](https://www.gatsbyjs.org/) (React) or [Hugo](https://gohugo.io/) (Go) will work for you much better. I personally prefer Gridsome or Hugo. Gridsome produces HTML files for every markdown file or API source and then in browser hydrates with javascript. The best solution for SEO.
+When you want to build whole web pages from the data sources as API or bunch of the markdown files, Static Page Generators as [Gridsome](https://gridsome.org/) (VueJS), [Gatsby](https://www.gatsbyjs.org/) (React) or [Hugo](https://gohugo.io/) (Go) will work for you much better. I prefer Gridsome or Hugo. Gridsome produces HTML files for every markdown file or API source and then in browser hydrates with javascript. The best solution for SEO.
 
 ### Typical use cases
 
@@ -63,7 +66,7 @@ This is an example of how you may give instructions on setting up your project l
 1.  Clone the repository
 
     ```bash
-    git clone https://bitbucket.org/cebreus/gulp-dev-stack/
+    git clone https://github.com/cebreus/gulp-devstack/
     ```
 
 2.  Install npm packages
@@ -106,26 +109,38 @@ Produces optimized files in production quality.
 
 2.  See files in `build` folder.
 
+### Export Build
+
+Produces optimized and formated files with good readibility of the code.
+
+1.  Run build task
+
+    ```bash
+    npm run export
+    ```
+
+2.  See files in `build` folder.
+
 ## Roadmap
 
-See the [open issues](https://bitbucket.org/socialauth/login/atlassianid/?next=%2Fcebreus%2Fgulp-dev-stack%2Fissues%3Fstatus%3Dnew%26status%3Dopen) for a list of proposed features (and known issues).
+See the [open issues](https://github.com/cebreus/gulp-devstack/issues/new) for a list of proposed features (and known issues).
 
 ## Contributing
 
-Contributions are what make the open source community such an amazing place to be learn, inspire, and create. Any contributions you make are **greatly appreciated**.
+Contributions are what makes the open-source community such a fantastic place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
 
 1.  Fork the Project
 2.  Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3.  Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
+3.  Commit your changes (`git commit -m 'Add some AmazingFeature'`)
 4.  Push to the Branch (`git push origin feature/AmazingFeature`)
 5.  Open a Pull Request
 
 ## License
 
-Distributed under the MIT License. See `LICENSE` for more information.
+It is distributed under the MIT License. See `LICENSE` for more information.
 
 ## Contact
 
-Your Name - [@cebreus69](https://twitter.com/cebreus69) — cebreus@live.com
+Jaroslav Vrána — [cebreus@live.com](mailto:cebreus@live.com)
 
-Project Link: [https://bitbucket.org/cebreus/gulp-dev-stack](https://bitbucket.org/cebreus/gulp-dev-stack/)
+Project Link: [github.com/cebreus/gulp-devstack](https://github.com/cebreus/gulp-devstack)

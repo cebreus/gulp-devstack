@@ -20,14 +20,14 @@ const replace = require('gulp-replace');
  */
 
 const buildHtml = (params) => {
-  let existsJson;
+  let condition;
 
   try {
     fs.accessSync(params.dataSource);
-    existsJson = true;
+    condition = true;
   } catch (error) {
     console.log("JSON file doesn't exists.");
-    existsJson = false;
+    condition = false;
   }
 
   return gulp
@@ -35,7 +35,7 @@ const buildHtml = (params) => {
     .pipe(plumber())
     .pipe(
       gulpif(
-        existsJson,
+        condition,
         data(function () {
           return JSON.parse(fs.readFileSync(params.dataSource));
         })
@@ -44,14 +44,14 @@ const buildHtml = (params) => {
     .pipe(
       inject(gulp.src(params.injectCss, { read: false }), {
         relative: true,
-        ignorePath: '../../temp',
+        ignorePath: '../../build',
         removeTags: true,
       })
     )
     .pipe(
       inject(gulp.src(params.injectJs, { read: false }), {
         relative: true,
-        ignorePath: '../../temp',
+        ignorePath: '../../build',
         removeTags: true,
       })
     )
@@ -62,6 +62,7 @@ const buildHtml = (params) => {
         params.injectCdnJs.toString().replace(/[, ]+/g, ' ')
       )
     )
+    .pipe(replace(/^(\s*\r?\n){2,}/gm, ''))
     .pipe(prettify())
     .pipe(gulp.dest(params.output))
     .on('end', params.cb);
