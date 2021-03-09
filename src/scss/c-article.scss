@@ -1,0 +1,25 @@
+@import '../../node_modules/bootstrap/scss/functions';
+@import '../../node_modules/bootstrap/scss/mixins';
+@import './variables';
+
+// Obecné formátování obsahu článků
+// --------------
+
+.c-article {
+  // stylelint-disable
+  a:not(.btn) {
+    text-decoration: underline;
+
+    &:hover {
+      text-decoration: none;
+    }
+  }
+  // stylelint-enable
+}
+
+// Vnitřní formátování obsahu článků
+// --------------
+
+.c-article.c-article--detail {
+  color: $blue;
+}
