@@ -1,0 +1,10 @@
+rules:
+  common-misspellings: true
+  diacritics: true
+  no-dead-link: true
+  terminology: true
+  write-good:
+    adverb: false
+    passive: false
+    tooWordy: false
+    weasel: false
