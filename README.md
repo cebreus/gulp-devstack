@@ -15,22 +15,22 @@
 
 <!-- toc -->
 
-*   [Typical use cases](#typical-use-cases)
-*   [Features](#features)
-    *   [Something more under the hood](#something-more-under-the-hood)
-*   [Getting Started](#getting-started)
-    *   [Installation](#installation)
-*   [Project structure](#project-structure)
-*   [Workflow](#workflow)
-    *   [Development](#development)
-    *   [Production Build](#production-build)
-    *   [Export Build](#export-build)
-*   [Updates from devstack to your existing project](#updates-from-devstack-to-your-existing-project)
-*   [Inject devstack to your new project](#inject-devstack-to-your-new-project)
-*   [Roadmap and Known issues](#roadmap-and-known-issues)
-*   [Contributing](#contributing)
-*   [License](#license)
-*   [Contact](#contact)
+- [Typical use cases](#typical-use-cases)
+- [Features](#features)
+  - [Something more under the hood](#something-more-under-the-hood)
+- [Getting Started](#getting-started)
+  - [Installation](#installation)
+- [Project structure](#project-structure)
+- [Workflow](#workflow)
+  - [Development](#development)
+  - [Production Build](#production-build)
+  - [Export Build](#export-build)
+- [Updates from devstack to your existing project](#updates-from-devstack-to-your-existing-project)
+- [Inject devstack to your new project](#inject-devstack-to-your-new-project)
+- [Roadmap and Known issues](#roadmap-and-known-issues)
+- [Contributing](#contributing)
+- [License](#license)
+- [Contact](#contact)
 
 <!-- tocstop -->
 
@@ -303,6 +303,6 @@ It is distributed under the MIT License. See `LICENSE` for more information.
 
 ## Contact
 
-Jaroslav Vrána — <mailto:cebreus@live.com>
+Jaroslav Vrána — cebreus@live.com, [web site](https://www.cebre.us/)
 
 Project Link: [github.com/cebreus/gulp-devstack](https://github.com/cebreus/gulp-devstack)
