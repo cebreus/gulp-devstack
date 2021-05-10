@@ -88,7 +88,7 @@
     "marked": "^2.0.1",
     "nunjucks-date-filter-locale": "^1.4.3",
     "nunjucks-markdown-filter": "^0.1.0",
-    "postcss": "^8.2.8",
+    "postcss": "^8.2.10",
     "postcss-flexbugs-fixes": "^5.0.2",
     "postcss-scss": "^3.0.5",
     "prettier": "^2.2.1",
