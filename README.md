@@ -15,22 +15,22 @@
 
 <!-- toc -->
 
-- [Typical use cases](#typical-use-cases)
-- [Features](#features)
-  - [Something more under the hood](#something-more-under-the-hood)
-- [Getting Started](#getting-started)
-  - [Installation](#installation)
-- [Project structure](#project-structure)
-- [Workflow](#workflow)
-  - [Development](#development)
-  - [Production Build](#production-build)
-  - [Export Build](#export-build)
-- [Updates from devstack to your existing project](#updates-from-devstack-to-your-existing-project)
-- [Inject devstack to your new project](#inject-devstack-to-your-new-project)
-- [Roadmap and Known issues](#roadmap-and-known-issues)
-- [Contributing](#contributing)
-- [License](#license)
-- [Contact](#contact)
+*   [Typical use cases](#typical-use-cases)
+*   [Features](#features)
+    *   [Something more under the hood](#something-more-under-the-hood)
+*   [Getting Started](#getting-started)
+    *   [Installation](#installation)
+*   [Project structure](#project-structure)
+*   [Workflow](#workflow)
+    *   [Development](#development)
+    *   [Production Build](#production-build)
+    *   [Export Build](#export-build)
+*   [Updates from devstack to your existing project](#updates-from-devstack-to-your-existing-project)
+*   [Inject devstack to your new project](#inject-devstack-to-your-new-project)
+*   [Roadmap and Known issues](#roadmap-and-known-issues)
+*   [Contributing](#contributing)
+*   [License](#license)
+*   [Contact](#contact)
 
 <!-- tocstop -->
 
