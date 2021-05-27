@@ -1,6 +1,6 @@
 ---
 type: settings
-copyright: '© 2020 𝕊𝕚𝕥𝕖'
+copyright: '© 2021 𝕊𝕚𝕥𝕖'
 baseUrl: https://www.example.eu
 meta:
   lang: en
