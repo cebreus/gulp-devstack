@@ -167,6 +167,8 @@ const buildHtml = (params) => {
           params.injectCdnJs.toString().replace(/[, ]+/g, ' ')
         )
       )
+      // Remove multi/line comments
+      .pipe(replace(/( )*<!--((.*)|[^<]*|[^!]*|[^-]*|[^>]*)-->\n*/gm, ''))
       .pipe(minify({ collapseWhitespace: true }))
       .pipe(
         gulpif(
