@@ -110,7 +110,7 @@
     "vinyl-ftp": "^0.6.1"
   },
   "engines": {
-    "node": ">=10.0.0"
+    "node": ">=14.0.0"
   },
   "repository": "https://github.com/cebreus/gulp-devstack",
   "homepage": "https://github.com/cebreus/gulp-devstack#readme",
