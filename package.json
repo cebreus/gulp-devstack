@@ -32,7 +32,7 @@
     "@babel/preset-env": "^7.14.2",
     "@commitlint/cli": "^12.1.4",
     "@commitlint/config-conventional": "^12.1.4",
-    "@release-it/conventional-changelog": "^2.0.1",
+    "@release-it/conventional-changelog": "^3.0.1",
     "@visionappscz/stylelint-config-visionapps": "^1.1.0",
     "@visionappscz/stylelint-config-visionapps-order": "^1.1.0",
     "auto-changelog": "^2.3.0",
