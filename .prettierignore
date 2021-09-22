@@ -8,7 +8,6 @@
 .tmp
 build
 dist
-git-release
 nbproject
 node_modules
 ssl
