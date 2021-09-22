@@ -1,59 +1,59 @@
 {% if open_graph.use is defined and open_graph.use === true %}
 
-	{% if open_graph.type is defined and open_graph.type|length > 0 %}
-		<meta property="og:type" content="{{ open_graph.type }}">
-	{% elseif SITE.open_graph.type is defined and SITE.open_graph.type|length > 0 %}
-		<meta property="og:type" content="{{ SITE.open_graph.type }}">
-	{% endif %}
+  {% if open_graph.type is defined and open_graph.type | length > 0 %}
+    <meta property="og:type" content="{{ open_graph.type }}">
+  {% elseif SITE.open_graph.type is defined and SITE.open_graph.type | length > 0 %}
+    <meta property="og:type" content="{{ SITE.open_graph.type }}">
+  {% endif %}
 
-	{% if SITE.open_graph.app_id is defined and SITE.open_graph.app_id|length > 0 %}
-		<meta property="fb:app_id" content="{{ SITE.open_graph.app_id|trim }}">
-	{% endif %}
+  {% if SITE.open_graph.app_id is defined and SITE.open_graph.app_id | length > 0 %}
+    <meta property="fb:app_id" content="{{ SITE.open_graph.app_id | trim }}">
+  {% endif %}
 
-	{% if SITE.open_graph.site_name is defined and SITE.open_graph.site_name|length > 0 %}
-		<meta property="og:site_name" content="{{ SITE.open_graph.site_name|striptags|trim }}">
-	{% endif %}
+  {% if SITE.open_graph.site_name is defined and SITE.open_graph.site_name | length > 0 %}
+    <meta property="og:site_name" content="{{ SITE.open_graph.site_name | striptags | trim }}">
+  {% endif %}
 
-	{% if open_graph.title is defined and open_graph.title|length > 0 %}
-		<meta property="og:title" content="{{ open_graph.title|striptags|trim }}">
-	{% elseif seo.title is defined and seo.title|length > 0 %}
-		<meta property="og:title" content="{{ seo.title|striptags|trim }}">
-	{% elseif title is defined and title|length > 0 %}
-		<meta property="og:title" content="{{ title|striptags|trim }}">
-	{% elseif SITE.open_graph.title is defined and SITE.open_graph.title|length > 0 %}
-		<meta property="og:title" content="{{ SITE.open_graph.title|striptags|trim }}">
-	{% endif %}
+  {% if open_graph.title is defined and open_graph.title | length > 0 %}
+    <meta property="og:title" content="{{ open_graph.title | striptags | trim }}">
+  {% elseif seo.title is defined and seo.title | length > 0 %}
+    <meta property="og:title" content="{{ seo.title | striptags | trim }}">
+  {% elseif title is defined and title | length > 0 %}
+    <meta property="og:title" content="{{ title | striptags | trim }}">
+  {% elseif SITE.open_graph.title is defined and SITE.open_graph.title | length > 0 %}
+    <meta property="og:title" content="{{ SITE.open_graph.title | striptags | trim }}">
+  {% endif %}
 
-	{% if open_graph.description is defined and open_graph.description|length > 0 %}
-		<meta property="og:description" content="{{ open_graph.description|striptags|trim }}">
-	{% elseif seo.description is defined and seo.description|length > 0 %}
-		<meta property="og:description" content="{{ seo.description|striptags|trim }}">
-	{% elseif description is defined and description|length > 0 %}
-		<meta property="og:description" content="{{ description|striptags|trim }}">
-	{% elseif SITE.open_graph.description is defined and SITE.open_graph.description|length > 0 %}
-		<meta property="og:description" content="{{ SITE.open_graph.description|striptags|trim }}">
-	{% endif %}
+  {% if open_graph.description is defined and open_graph.description | length > 0 %}
+    <meta property="og:description" content="{{ open_graph.description | striptags | trim }}">
+  {% elseif seo.description is defined and seo.description | length > 0 %}
+    <meta property="og:description" content="{{ seo.description | striptags | trim }}">
+  {% elseif description is defined and description | length > 0 %}
+    <meta property="og:description" content="{{ description | striptags | trim }}">
+  {% elseif SITE.open_graph.description is defined and SITE.open_graph.description | length > 0 %}
+    <meta property="og:description" content="{{ SITE.open_graph.description | striptags | trim }}">
+  {% endif %}
 
-	{% if open_graph.image is defined and open_graph.image[0]|length > 0 %}
-		{% for item in open_graph.image %}
-			{% set loopIndex = loop.index %}
-			{% if loopIndex == 1 %}
-				<meta property="og:image" content="{{ SITE.baseUrl }}{{ open_graph.image[0] }}">
-				{# <meta property="og:image:type" content="png"> #}
-				{# <meta property="og:image:width" content="1200"> #}
-				{# <meta property="og:image:height" content="627"> #}
-			{% elseif loopIndex <= 9 %}
-				<meta property="og:image" content="{{ SITE.baseUrl }}{{ item }}">
-			{# <meta property="og:image:type" content="png"> #}
-				{# <meta property="og:image:width" content="1200"> #}
-				{# <meta property="og:image:height" content="627"> #}
-			{% endif %}
-		{% endfor %}
-	{% elseif SITE.open_graph.image is defined and SITE.open_graph.image[0]|length > 0 %}
-		<meta property="og:image" content="{{ SITE.baseUrl }}{{ SITE.open_graph.image[0] }}">
-		<meta property="og:image:type" content="png">
-		<meta property="og:image:width" content="1200">
-		<meta property="og:image:height" content="627">
-	{% endif %}
+  {% if open_graph.image is defined and open_graph.image[0] | length > 0 %}
+    {% for item in open_graph.image %}
+      {% set loopIndex = loop.index %}
+      {% if loopIndex == 1 %}
+        <meta property="og:image" content="{{ SITE.baseUrl }}{{ open_graph.image[0] }}">
+        {# <meta property="og:image:type" content="png"> #}
+        {# <meta property="og:image:width" content="1200"> #}
+        {# <meta property="og:image:height" content="627"> #}
+      {% elseif loopIndex <= 9 %}
+        <meta property="og:image" content="{{ SITE.baseUrl }}{{ item }}">
+        {# <meta property="og:image:type" content="png"> #}
+        {# <meta property="og:image:width" content="1200"> #}
+        {# <meta property="og:image:height" content="627"> #}
+      {% endif %}
+    {% endfor %}
+  {% elseif SITE.open_graph.image is defined and SITE.open_graph.image[0] | length > 0 %}
+    <meta property="og:image" content="{{ SITE.baseUrl }}{{ SITE.open_graph.image[0] }}">
+    <meta property="og:image:type" content="png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="627">
+  {% endif %}
 
 {% endif %}
