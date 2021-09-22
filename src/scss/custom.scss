@@ -5,6 +5,11 @@
 @import './variables';
 @import './temp/assets/css/fonts';
 
+// Importy komponent
+// --------------
+
+@import 'c-article';
+
 // Přetížení Bootatrapu
 // --------------
 
@@ -51,8 +56,3 @@ img:not([src$='.svg']) {
   padding-bottom: map-get($spacers, 3);
   color: map-get($grays, '600');
 }
-
-// Importy komponent
-// --------------
-
-@import 'c-article';
