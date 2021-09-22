@@ -1,40 +1,40 @@
 {% if twitter_cards.use is defined and twitter_cards.use === true %}
 
-	{% if twitter_cards.type is defined and twitter_cards.type|length > 0 %}
-		<meta name="twitter:card" content="{{ twitter_cards.type }}">
-	{% elseif SITE.twitter_cards.type is defined and SITE.twitter_cards.type|length > 0 %}
-		<meta property="twitter:card" content="{{ SITE.twitter_cards.type }}">
-	{% endif %}
+  {% if twitter_cards.type is defined and twitter_cards.type | length > 0 %}
+    <meta name="twitter:card" content="{{ twitter_cards.type }}">
+  {% elseif SITE.twitter_cards.type is defined and SITE.twitter_cards.type | length > 0 %}
+    <meta property="twitter:card" content="{{ SITE.twitter_cards.type }}">
+  {% endif %}
 
-	{% if SITE.twitter_cards.site is defined and SITE.twitter_cards.site|length > 0 %}
-		<meta property="twitter:site" content="{{ SITE.twitter_cards.site|trim }}">
-	{% endif %}
+  {% if SITE.twitter_cards.site is defined and SITE.twitter_cards.site | length > 0 %}
+    <meta property="twitter:site" content="{{ SITE.twitter_cards.site | trim }}">
+  {% endif %}
 
-	{% if SITE.twitter_cards.creator is defined and SITE.twitter_cards.creator|length > 0 %}
-		<meta name="twitter:creator" content="{{ SITE.twitter_cards.creator|striptags|trim }}">
-	{% endif %}
+  {% if SITE.twitter_cards.creator is defined and SITE.twitter_cards.creator | length > 0 %}
+    <meta name="twitter:creator" content="{{ SITE.twitter_cards.creator | striptags | trim }}">
+  {% endif %}
 
-	{% if SITE.twitter_cards.title is defined and SITE.twitter_cards.title|length > 0 %}
-		<meta property="twitter:title" content="{{ SITE.twitter_cards.title|striptags|trim }}">
-	{% endif %}
+  {% if SITE.twitter_cards.title is defined and SITE.twitter_cards.title | length > 0 %}
+    <meta property="twitter:title" content="{{ SITE.twitter_cards.title | striptags | trim }}">
+  {% endif %}
 
-	{% if twitter_cards.description is defined and twitter_cards.description|length > 0 %}
-		<meta name="twitter:description" content="{{ twitter_cards.description|striptags|trim }}">
-	{% elseif SITE.twitter_cards.description is defined and SITE.twitter_cards.description|length > 0 %}
-		<meta name="twitter:description" content="{{ SITE.twitter_cards.description|striptags|trim }}">
-	{% endif %}
+  {% if twitter_cards.description is defined and twitter_cards.description | length > 0 %}
+    <meta name="twitter:description" content="{{ twitter_cards.description | striptags | trim }}">
+  {% elseif SITE.twitter_cards.description is defined and SITE.twitter_cards.description | length > 0 %}
+    <meta name="twitter:description" content="{{ SITE.twitter_cards.description|striptags | trim }}">
+  {% endif %}
 
-	{% if twitter_cards.image is defined and twitter_cards.image[0]|length > 0 %}
-		{% for item in twitter_cards.image %}
-			{% set loopIndex = loop.index %}
-			{% if loopIndex == 1 %}
-				<meta property="twitter:image" content="{{ SITE.baseUrl }}{{ twitter_cards.image[0] }}">
-			{% elseif loopIndex <= 9 %}
-				<meta property="twitter:image" content="{{ SITE.baseUrl }}{{ item }}">
-			{% endif %}
-		{% endfor %}
-	{% elseif SITE.twitter_cards.image is defined and SITE.twitter_cards.image[0]|length > 0 %}
-		<meta property="twitter:image" content="{{ SITE.baseUrl }}{{ SITE.twitter_cards.image[0] }}">
-	{% endif %}
+  {% if twitter_cards.image is defined and twitter_cards.image[0] | length > 0 %}
+    {% for item in twitter_cards.image %}
+      {% set loopIndex = loop.index %}
+      {% if loopIndex == 1 %}
+        <meta property="twitter:image" content="{{ SITE.baseUrl }}{{ twitter_cards.image[0] }}">
+      {% elseif loopIndex <= 9 %}
+        <meta property="twitter:image" content="{{ SITE.baseUrl }}{{ item }}">
+      {% endif %}
+    {% endfor %}
+  {% elseif SITE.twitter_cards.image is defined and SITE.twitter_cards.image[0] | length > 0 %}
+    <meta property="twitter:image" content="{{ SITE.baseUrl }}{{ SITE.twitter_cards.image[0] }}">
+  {% endif %}
 
 {% endif %}

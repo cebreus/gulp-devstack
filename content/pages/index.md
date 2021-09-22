@@ -9,8 +9,7 @@ entity_status:
 seo:
   title: 𝑃𝑎𝑔𝑒 SEO Title
   description: 𝑃𝑎𝑔𝑒 SEO Description
-  robots: ''
-  #robots: 𝑃𝑎𝑔𝑒 noindex,nofollow
+  robots: 𝑃𝑎𝑔𝑒 noindex,nofollow
   iclude_to_sitemap: true
   slug: ''
   canonical: 𝑃𝑎𝑔𝑒 Canonical
