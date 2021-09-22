@@ -22,8 +22,8 @@
     "version": "node ./node_modules/auto-changelog/src/index.js -p -t keepachangelog.hbs && npm run text:fix && git add CHANGELOG.md",
     "todo": "./todo.sh",
     "todo:show": "leasot -x -r markdown -A '.txt,coffeeParser' './**/*.{js,html,njk,scss,txt,md,yml}' -i './node_modules/**/*'",
-    "postinstall": "husky install",
-    "pre-commit": "lint-staged"
+    "pre-commit": "node node_modules/lint-staged/bin/lint-staged.js",
+    "prepare": "rm -rf .husky && husky install && npx husky set .husky/pre-commit 'npm run pre-commit' && npx husky set .husky/commit-msg 'npx --no-install commitlint --edit'"
   },
   "dependencies": {
     "bootstrap": "5.0.1"
@@ -83,7 +83,7 @@
     "gulp-uglify": "^3.0.2",
     "gulp-upng": "^1.0.3",
     "html-validate": "^4.12.0",
-    "husky": "^6.0.0",
+    "husky": "^7.0.2",
     "imagemin-mozjpeg": "^9.0.0",
     "leasot": "^12.0.0",
     "lint-staged": "^11.0.0",
