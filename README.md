@@ -1,3 +1,4 @@
+[![Netlify](https://img.shields.io/netlify/80dd73b9-7dff-450b-a038-4fba020d577a)](https://app.netlify.com/sites/gulp-devstack/deploys)
 ![Maintenance](https://img.shields.io/maintenance/yes/2022)
 ![Contributions welcome](https://img.shields.io/badge/contributions-welcome-green.svg)
 
@@ -37,8 +38,8 @@
 ## Typical use cases
 
 *   Developing landing pages or prototypes (`npm run dev`).
-*   Building carefully compiled and formated files for programmers (`npm run export`).
-*   Building the final (production) output bundle ready for deployment (`npm run deploy`).
+*   Building carefully compiled and formated files for collaboration (`npm run export`).
+*   Building the final (production) bundle, ready for deployment (`npm run deploy`).
 
 When you want to build whole web sites from the data sources as API or many markdown files, go with Static Page Generators (SGC). For example [Gridsome](https://gridsome.org/) (VueJS), [Gatsby](https://www.gatsbyjs.org/) (React) or [Hugo](https://gohugo.io/) (Go) will work for you much better.
 
@@ -49,7 +50,7 @@ When you want to build whole web sites from the data sources as API or many mark
 *   Developer-friendly — [ESLint](https://eslint.org/), [Prettier](https://prettier.io/), [Remark](https://remark.js.org/), [Stylelint](https://stylelint.io/) via tasks or with [Husky](https://github.com/typicode/husky) and [Lint staged](https://github.com/okonet/lint-staged).
 *   Separate tasks for Development, Export and Build with automatic renaming and hashing all critical assets.
 *   Ready for implementation Git based CMS as [Forestry.io](https://forestry.io/) or [Netlify CMS](https://www.netlifycms.org/) etc. — Front Matter (Markdown files metadata and content).
-*   HTML temlates uses [Nunjucks](https://mozilla.github.io/nunjucks/). Fully customisable [Bootstrap 4.5.x](https://getbootstrap.com/) extended with [BEM](https://en.bem.info/). JavaScript processed with [Babel](https://babeljs.io/) or injected from CDN or as static files.
+*   HTML temlates uses [Nunjucks](https://mozilla.github.io/nunjucks/). Fully customisable [Bootstrap 5.1.x](https://getbootstrap.com/) extended with [BEM](https://en.bem.info/). JavaScript processed with [Babel](https://babeljs.io/) or injected from CDN or as static files.
 
 ***
 
