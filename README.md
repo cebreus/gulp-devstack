@@ -1,7 +1,7 @@
 ![Maintenance](https://img.shields.io/maintenance/yes/2022)
 ![Contributions welcome](https://img.shields.io/badge/contributions-welcome-green.svg)
 
-[![Codacy Badge](https://app.codacy.com/project/badge/Grade/16e0c62b123d4dbfb27c216f5107f464)](https://www.codacy.com/gh/cebreus/gulp-devstack/dashboard?utm\_source=github.com\&utm\_medium=referral\&utm\_content=cebreus/gulp-devstack\&utm\_campaign=Badge\_Grade)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/16e0c62b123d4dbfb27c216f5107f464)](https://www.codacy.com/gh/cebreus/gulp-devstack/dashboard?utm_source=github.com\&utm_medium=referral\&utm_content=cebreus/gulp-devstack\&utm_campaign=Badge_Grade)
 ![GitHub open issues](https://img.shields.io/github/issues/cebreus/gulp-devstack)
 ![License](https://img.shields.io/github/license/cebreus/gulp-devstack)
 
@@ -67,7 +67,7 @@ When you want to build whole web sites from the data sources as API or many mark
 
 ### Something more under the hood
 
-*   Linting all commit messages by [CommitLint](https://commitlint.js.org/), see more about [Semantic Commit Messages](https://seesparkbox.com/foundry/semantic\_commit\_messages) and [Conventional Commits](https://www.conventionalcommits.org/)
+*   Linting all commit messages by [CommitLint](https://commitlint.js.org/), see more about [Semantic Commit Messages](https://seesparkbox.com/foundry/semantic_commit_messages) and [Conventional Commits](https://www.conventionalcommits.org/)
 *   Commit guide on the CLI by [git-cz](https://github.com/streamich/git-cz)
 *   Automatic releases with [Release It!](https://github.com/release-it/release-it), see more about [Semantic Versioning](https://semver.org/)
 *   Changelog with [Conventional Changelog](https://github.com/conventional-changelog/conventional-changelog)
