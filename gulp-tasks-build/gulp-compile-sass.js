@@ -3,7 +3,7 @@ const plumber = require('gulp-plumber');
 const postcss = require('gulp-postcss');
 const postcssSyntax = require('postcss-scss');
 const replace = require('gulp-replace');
-const sass = require('gulp-sass');
+const sass = require('gulp-sass')(require('sass'));
 const sassGlob = require('gulp-sass-glob');
 
 /**
