@@ -20,30 +20,23 @@ hero:
     [![Build and Deploy](https://github.com/cebreus/gulp-devstack/actions/workflows/blank.yml/badge.svg)](https://github.com/cebreus/gulp-devstack/actions/workflows/blank.yml)
     [![Netlify](https://img.shields.io/netlify/80dd73b9-7dff-450b-a038-4fba020d577a)](https://app.netlify.com/sites/gulp-devstack/deploys)
 entity_status:
-  date: 2021-11-21T11:00:00
+  date: 2020-02-01T11:00
   updated_at: 2021-11-21T12:00:00
   workflow_step: publish
 seo:
-  title: 𝑃𝑎𝑔𝑒 SEO Title
-  description: 𝑃𝑎𝑔𝑒 SEO Description
-  robots: 𝑃𝑎𝑔𝑒 noindex,nofollow
-  iclude_to_sitemap: true
-  slug: ''
-  canonical: 𝑃𝑎𝑔𝑒 Canonical
+  title: Front-end Gulp DevStack
+  description: Gulp stack for building optimized static pages and exports for collaboration between coders and programmers.
+  robots: index,follow
+  canonical: 'https://gulp-devstack.cebre.us/'
 open_graph:
   use: true
   type: website
-  title: 𝑃𝑎𝑔𝑒 Open Graph Title
-  description: 𝑃𝑎𝑔𝑒 Open Graph Description
-  image:
-    - facebook-home.png
-  image_text: 𝑃𝑎𝑔𝑒 Open Graph Image Text
+  title: ''
+  description: ''
 twitter_cards:
   use: true
-  type: 𝑃𝑎𝑔𝑒s ummary_large_image
-  title: 𝑃𝑎𝑔𝑒 Twitter Cards Title
-  description: 𝑃𝑎𝑔𝑒 Twitter Cards Description
-  image: []
+  title: ''
+  description: ''
 ---
 
 ## Typical use cases
