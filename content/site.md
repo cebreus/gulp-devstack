@@ -1,7 +1,7 @@
 ---
 type: settings
 copyright: Code licensed <a href="https://github.com/twbs/bootstrap/blob/main/LICENSE" target="_blank" rel="license noopener">MIT</a>
-baseUrl: https://www.example.eu
+baseUrl: https://gulp-devstack.cebre.us
 meta:
   lang: en
   charset: utf-8
@@ -9,25 +9,25 @@ meta:
 seo:
   title: 𝕊𝕚𝕥𝕖 SEO Title
   description: 𝕊𝕚𝕥𝕖 SEO Description
-  robots: 𝕊𝕚𝕥𝕖 index,follow
-  canonical: https://www.example.eu/
+  robots: index,follow
+  canonical: https://gulp-devstack.cebre.us/
   iclude_to_sitemap: false
 open_graph:
-  use: 𝕊𝕚𝕥𝕖 true
-  type: 𝕊𝕚𝕥𝕖 website
-  app_id: 𝕊𝕚𝕥𝕖 Facebook APP ID
-  site_name: 𝕊𝕚𝕥𝕖 Open Graph Site Name
+  use: true
+  type: website
+  app_id: ''
+  site_name: Gulp DevStack
   title: 𝕊𝕚𝕥𝕖 Open Graph Title
   description: 𝕊𝕚𝕥𝕖 Open Graph Description
   image:
-    - facebook-default.png
+    - /assets/images/gulp-devstack-open-graph.png
   image_text: 𝕊𝕚𝕥𝕖 Open Graph Image Text
 twitter_cards:
   use: false
-  type: 𝕊𝕚𝕥𝕖 summary_large_image
+  type: summary_large_image
   title: 𝕊𝕚𝕥𝕖 Twitter Cards Title
   description: 𝕊𝕚𝕥𝕖 Twitter Cards Title
-  image: []
-  site: '@site'
-  creator: '@creator'
+  image: []    
+  site: '@cebreus69'
+  creator: '@cebreus69'
 ---
