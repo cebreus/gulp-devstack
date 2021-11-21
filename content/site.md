@@ -1,6 +1,6 @@
 ---
 type: settings
-copyright: '© 2021 𝕊𝕚𝕥𝕖'
+copyright: Code licensed <a href="https://github.com/twbs/bootstrap/blob/main/LICENSE" target="_blank" rel="license noopener">MIT</a>
 baseUrl: https://www.example.eu
 meta:
   lang: en
