@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /*.*?
 
-# Sitemap: https://www.example.eu/sitemap.xml
+# Sitemap: https://gulp-devstack.cebre.us/sitemap.xml
