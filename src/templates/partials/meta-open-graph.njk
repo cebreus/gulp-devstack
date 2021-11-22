@@ -20,8 +20,6 @@
     <meta property="og:title" content="{{ seo.title | striptags | trim }}">
   {% elseif title is defined and title | length > 0 %}
     <meta property="og:title" content="{{ title | striptags | trim }}">
-  {% elseif SITE.open_graph.title is defined and SITE.open_graph.title | length > 0 %}
-    <meta property="og:title" content="{{ SITE.open_graph.title | striptags | trim }}">
   {% endif %}
 
   {% if open_graph.description is defined and open_graph.description | length > 0 %}
