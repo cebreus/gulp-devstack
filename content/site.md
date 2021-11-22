@@ -17,16 +17,12 @@ open_graph:
   type: website
   app_id: ''
   site_name: Gulp DevStack
-  title: 𝕊𝕚𝕥𝕖 Open Graph Title
-  description: 𝕊𝕚𝕥𝕖 Open Graph Description
   image:
     - /assets/images/gulp-devstack-open-graph.png
   image_text: 𝕊𝕚𝕥𝕖 Open Graph Image Text
 twitter_cards:
   use: false
   type: summary_large_image
-  title: 𝕊𝕚𝕥𝕖 Twitter Cards Title
-  description: 𝕊𝕚𝕥𝕖 Twitter Cards Title
   image: []    
   site: '@cebreus69'
   creator: '@cebreus69'
