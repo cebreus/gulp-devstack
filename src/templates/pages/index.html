@@ -7,28 +7,21 @@
 
 {% block content %}
 
-  {% if hero %}
-    <main class="o-main py-5">
-      <div class="container pt-md-4 pb-md-3">
-        {% if hero.title is defined and hero.title | length > 0 %}
-          <h1 class="display-4 mb-4">{{ hero.title | safe }}</h1>
-        {% endif %}
-        {% if hero.excerpt is defined and hero.excerpt | length > 0 %}
-          <div class="lead mb-3 mb-md-4 col-12 col-lg-7">{{ hero.excerpt | md | safe }}</div>
-        {% endif %}
-        {% if hero.content is defined and hero.content | length > 0 %}
-          <div class="col-12 col-lg-7">{{ hero.content | md | safe }}</div>
-        {% endif %}
-      </div>
-    </main>
-  {% endif %}
+  <main class="o-main py-5">
+    <div class="container pt-md-4 pb-md-3">
+      <h1 class="display-4 mb-4">{{ title | safe }}</h1>
+      {% if description is defined and description | length > 0 %}
+        <div class="lead mb-3 mb-md-4 col-12 col-lg-7">{{ description | md | safe }}</div>
+      {% endif %}
+    </div>
+  </main>
 
   {% if body %}
     <div class="container pt-5">
       <div class="c-article">
         {{ body | safe }}
       </div>
-    {% endif %}
-  </div>
+    </div>
+  {% endif %}
 
 {% endblock %}
