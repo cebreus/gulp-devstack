@@ -272,17 +272,13 @@ Produces optimized and formated files with good readability of the code.
 ```bash
 git remote add devstack git@github.com:cebreus/gulp-devstack.git
 git fetch devstack
-git merge devstack master --squash --allow-unrelated-histories
+git merge devstack/master --squash --allow-unrelated-histories
 git commit -m "feat: Gulp DevStack init"
+git merge devstack/blankenize --squash --allow-unrelated-histories -X theirs
+git commit -m "refactor: Gulp DevStack clean-up"
 ```
 
-Optional clenup
-
-```bash
-> CHANGELOG.md
-rm LICENSE
-curl https://gist.githubusercontent.com/cebreus/a6010a2a95a4f2375830b0af3193f2f9/raw/cde6d9c68f2605b34eb5b8710bd553e7ad28a678/minimalistic-readme > README.md
-```
+Don't forget to customize for your project by replacing some strings or deleting files like in section "Optional clenup".
 
 ## Roadmap and Known issues
 
