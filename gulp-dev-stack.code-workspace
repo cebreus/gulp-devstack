@@ -77,5 +77,18 @@
       "data-.*",
       "aria-.*"
     ]
+  },
+  "extensions": {
+    "recommendations": [
+      "okitavera.vscode-nunjucks-formatter",
+      "editorconfig.editorconfig",
+      "syler.sass-indented",
+      "mrmlnc.vscode-attrs-sorter",
+      "mikestead.dotenv",
+      "redhat.vscode-yaml",
+      "yzhang.markdown-all-in-one",
+      "dbaeumer.vscode-eslint",
+      "esbenp.prettier-vscode"
+    ]
   }
 }
