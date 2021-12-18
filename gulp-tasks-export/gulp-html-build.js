@@ -149,16 +149,18 @@ const buildHtml = (params) => {
         inject(gulp.src(params.injectCss, { read: false }), {
           relative: false,
           ignorePath: params.injectIgnorePath,
-          addRootSlash: true,
+          addRootSlash: false,
           removeTags: true,
+          addPrefix: '.',
         })
       )
       .pipe(
         inject(gulp.src(params.injectJs, { read: false }), {
           relative: false,
           ignorePath: params.injectIgnorePath,
-          addRootSlash: true,
+          addRootSlash: false,
           removeTags: true,
+          addPrefix: '.',
         })
       )
       .pipe(
@@ -167,6 +169,7 @@ const buildHtml = (params) => {
           params.injectCdnJs.toString().replace(/[, ]+/g, ' ')
         )
       )
+      .pipe(replace(/(href=["'])(\/assets)/g, '$1.$2'))
       .pipe(replace(/^(\s*\r?\n){2,}/gm, ''))
       .pipe(prettify())
       .pipe(
