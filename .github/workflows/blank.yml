@@ -6,18 +6,10 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version: [14.x]
 
     steps:
-      - name: Checkout 🛎️
+      - name: 🚚 Get latest code
         uses: actions/checkout@v2
-
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v2
-        with:
-          node-version: ${{ matrix.node-version }}
 
       - name: Cache dependencies
         id: cache
@@ -30,11 +22,11 @@ jobs:
         if: steps.cache.outputs.cache-hit != 'true'
         run: npm ci
 
-      - name: Build 🔧
+      - name: 🔨 Build
         run: |
           npm run build
 
-      - name: Deploy 🚀
+      - name: 🚀 Deploy
         uses: JamesIves/github-pages-deploy-action@4.1.6
         with:
           branch: gh-pages
