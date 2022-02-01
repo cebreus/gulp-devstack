@@ -1,18 +1,16 @@
+@use 'sass:map';
 @import '../../node_modules/bootstrap/scss/functions';
 @import '../../node_modules/bootstrap/scss/mixins';
 @import './variables';
 @import './temp/assets/css/fonts';
 
-// Components import
-// --------------
-
 // Bootatrap overload
 // --------------
 
-// Set minimum reasonable width on very small devices
+// [1] Set minimum reasonable width on very small devices
 
 body {
-  min-width: 320px;
+  min-width: 320px; // [1]
 }
 
 // Remove viod in the bottom of the alert component
@@ -30,7 +28,7 @@ img:not([src$='.svg']) {
   height: auto;
 }
 
-// Záhlaví webu
+// Page header
 // --------------
 
 .o-header {
@@ -38,18 +36,18 @@ img:not([src$='.svg']) {
   background-color: var(--bs-body-color);
 }
 
-// Hlavní obsah
+// Main content
 // --------------
 
 .o-main {
   background-color: var(--bs-light);
 }
 
-// Zápatí webu
+// Page footer
 // --------------
 
 .o-footer {
-  padding-top: map-get($spacers, 5);
-  padding-bottom: map-get($spacers, 3);
-  color: map-get($grays, '600');
+  padding-top: map.get($spacers, 5);
+  padding-bottom: map.get($spacers, 3);
+  color: map.get($grays, '600');
 }
