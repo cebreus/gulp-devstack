@@ -1,14 +1,14 @@
 plugins:
-  - stylelint-scss
   - stylelint-high-performance-animation
   - stylelint-selector-bem-pattern
 
 extends:
-  - '@visionappscz/stylelint-config-visionapps'
-  - '@visionappscz/stylelint-config-visionapps-order'
-  - stylelint-config-standard
+  - '@visionappscz/stylelint-config'
+  - '@visionappscz/stylelint-config/order'
+  - '@visionappscz/stylelint-config/scss'
 
 rules:
+  indentation: 2
   linebreaks: 'unix'
   unit-allowed-list: ['px', 'rem', '%', 's', 'deg']
 
@@ -24,7 +24,6 @@ rules:
     utilitySelectors: "^\\.u-[a-z]+$"
 
   # Reset for visionapps
-  at-rule-no-unknown: null
-  max-nesting-depth: 3
+  string-quotes: single
   selector-nested-pattern: null
-  scss/at-rule-no-unknown: true
+  selector-class-pattern:
