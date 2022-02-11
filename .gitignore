@@ -76,6 +76,7 @@ Thumbs.db
 ############################
 
 .cache
+.dccache
 .env
 .eslintcache
 .husky
