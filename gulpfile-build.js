@@ -177,7 +177,7 @@ function favicons(done) {
         // Move `favicons.njk` and edit file content
         fs.readFile(
           `${config.faviconBuild}/favicons.njk`,
-          'utf-8',
+          'utf8',
           function (err, data) {
             if (err) throw err;
 
@@ -187,7 +187,7 @@ function favicons(done) {
             fs.writeFile(
               `${config.tplTemplatesBase}/partials/favicons.njk`,
               newValue,
-              'utf-8',
+              'utf8',
               function (err, data) {
                 if (err) {
                   throw err;
