@@ -75,7 +75,7 @@ const buildHtml = (params) => {
                 `${process.cwd()}/${params.dataSource}/${
                   currentFile.dirname
                 }.json`,
-                'utf-8'
+                'utf8'
               )
             );
             oldDataSource = currentFile.dirname;
