@@ -25,12 +25,12 @@ const datasetPrepare = (input, output, cb) => {
             extname: '.json',
           };
         } else if (path.dirname !== '.') {
+          console.log(path.dirname);
           return {
             basename: path.dirname,
             dirname: '/',
             extname: '.json',
           };
-          console.log(path.dirname);
         }
       })
     )
