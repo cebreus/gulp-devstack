@@ -23,7 +23,7 @@ open_graph:
 twitter_cards:
   use: false
   type: summary_large_image
-  image: []    
+  image: []
   site: '@cebreus69'
   creator: '@cebreus69'
 ---
