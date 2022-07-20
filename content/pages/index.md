@@ -11,7 +11,7 @@ hero:
       <a class="btn btn-lg btn-outline-secondary mb-3" href="https://github.com/cebreus/gulp-devstack/releases/latest" target="_blank" rel="license noopener">Download</a>
     </div>
 
-    Currently **v3.4.0** &#160;·&#160; <a class="link-secondary" href="https://github.com/cebreus/gulp-devstack/releases" target="_blank" rel="license noopener">All releases</a>
+    Currently **v3.5.0** &#160;·&#160; <a class="link-secondary" href="https://github.com/cebreus/gulp-devstack/releases" target="_blank" rel="license noopener">All releases</a>
 
     [![Codacy Badge](https://app.codacy.com/project/badge/Grade/16e0c62b123d4dbfb27c216f5107f464)](https://www.codacy.com/gh/cebreus/gulp-devstack/dashboard?utm_source=github.com\&utm_medium=referral\&utm_content=cebreus/gulp-devstack\&utm_campaign=Badge_Grade)
     ![GitHub open issues](https://img.shields.io/github/issues/cebreus/gulp-devstack)
