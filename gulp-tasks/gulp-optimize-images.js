@@ -1,28 +1,32 @@
 const gulp = require('gulp');
 const gulpif = require('gulp-if');
 const imagemin = require('gulp-imagemin');
+const log = require('fancy-log');
 const mozjpeg = require('imagemin-mozjpeg');
 const newer = require('gulp-newer');
-const upng = require('gulp-upng');
 const plumber = require('gulp-plumber');
+const upng = require('gulp-upng');
 
 /**
  * @description Function for optimizing JPEG images
  * @param {string} input Path to JPEG files
  * @param {string} output Path to save files
  * @param {boolean} params.rewriteExisting Switcher for rewriting files
- * @return {stream} Optimized JPEG images
+ * @returns {*} Optimized JPEG images
  */
 
 const optimizeJpg = (input, output, params = {}) => {
-  const rewriteExisting =
+  const rewriteExisting = !!(
     params.rewriteExisting &&
     typeof params.rewriteExisting === 'boolean' &&
     params.rewriteExisting === true
-      ? true
-      : false;
+  );
 
-  return gulp
+  if (params.verbose) {
+    log(`    🟡 Start: ${output}/*.jpg`);
+  }
+
+  gulp
     .src(input)
     .pipe(plumber())
     .pipe(gulpif(!rewriteExisting, newer(output)))
@@ -34,7 +38,13 @@ const optimizeJpg = (input, output, params = {}) => {
         }),
       ])
     )
-    .pipe(gulp.dest(output));
+    .pipe(gulp.dest(output))
+    .on('end', () => {
+      if (params.verbose) {
+        log(`    🟡 End: ${output}/*.jpg`);
+      }
+      params.cb();
+    });
 };
 
 /**
@@ -42,23 +52,32 @@ const optimizeJpg = (input, output, params = {}) => {
  * @param {string} input Path to PNG files
  * @param {string} output Path to save files
  * @param {boolean} params.rewriteExisting Switcher for rewriting files
- * @return {stream} Optimized PNG images
+ * @returns {*} Optimized PNG images
  */
 
 const optimizePng = (input, output, params = {}) => {
-  const rewriteExisting =
+  const rewriteExisting = !!(
     params.rewriteExisting &&
     typeof params.rewriteExisting === 'boolean' &&
     params.rewriteExisting === true
-      ? true
-      : false;
+  );
 
-  return gulp
+  if (params.verbose) {
+    log(`  🟡🟡 Start: ${output}/*.png`);
+  }
+
+  gulp
     .src(input)
     .pipe(plumber())
     .pipe(gulpif(!rewriteExisting, newer(output)))
     .pipe(upng({}))
-    .pipe(gulp.dest(output));
+    .pipe(gulp.dest(output))
+    .on('end', () => {
+      if (params.verbose) {
+        log(`  🟡🟡 End: ${output}/*.png`);
+      }
+      params.cb();
+    });
 };
 
 /**
@@ -66,18 +85,20 @@ const optimizePng = (input, output, params = {}) => {
  * @param {string} input Path to SVG files
  * @param {string} output Path to save files
  * @param {boolean} params.rewriteExisting Switcher for rewriting files
- * @return {stream} Optimized SVG images
+ * @returns {*} Optimized SVG images
  */
 
 const optimizeSvg = (input, output, params = {}) => {
-  const rewriteExisting =
+  const rewriteExisting = !!(
     params.rewriteExisting &&
     typeof params.rewriteExisting === 'boolean' &&
     params.rewriteExisting === true
-      ? true
-      : false;
+  );
 
-  return gulp
+  if (params.verbose) {
+    log(`🟡🟡🟡 Start: ${output}/*.svg`);
+  }
+  gulp
     .src(input)
     .pipe(plumber())
     .pipe(gulpif(!rewriteExisting, newer(output)))
@@ -93,7 +114,13 @@ const optimizeSvg = (input, output, params = {}) => {
         }),
       ])
     )
-    .pipe(gulp.dest(output));
+    .pipe(gulp.dest(output))
+    .on('end', () => {
+      if (params.verbose) {
+        log(`🟡🟡🟡 End: ${output}/*.svg`);
+      }
+      params.cb();
+    });
 };
 
 module.exports = {

@@ -1,9 +1,8 @@
 const gulp = require('gulp');
 const rev = require('gulp-rev');
-const revRewrite = require('gulp-rev-rewrite');
-const revReplace = require('gulp-rev-replace');
 const revDelete = require('gulp-rev-delete-original');
-// const gulpBrotli = require('gulp-brotli');
+const revReplace = require('gulp-rev-replace');
+const revRewrite = require('gulp-rev-rewrite');
 
 /**
  * @description Add version hash to files
@@ -13,7 +12,7 @@ const revDelete = require('gulp-rev-delete-original');
  * @param {string} inputRewrite path to HTML files which you want to rewrite
  * @param {string} manifestFile path to manifest file
  * @param {string} outputRewrite path to save rewrited HTML files
- * @return {stream} Files with version hash
+ * @returns {*} Files with version hash
  */
 
 const revision = (params) => {
@@ -30,7 +29,9 @@ const revision = (params) => {
       .pipe(gulp.dest(params.outputRewrite))
       // .pipe(gulpBrotli())
       // .pipe(gulp.dest(params.outputRewrite))
-      .on('end', params.cb)
+      .on('end', () => {
+        params.cb();
+      })
   );
 };
 module.exports = revision;

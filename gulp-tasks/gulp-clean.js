@@ -5,7 +5,7 @@ const plumber = require('gulp-plumber');
 /**
  * @description Clean function
  * @param {string} input path to folder or file that you want to remove
- * @return {stream} Compiled file
+ * @returns {*} Compiled file
  */
 
 const clean = (input) => {

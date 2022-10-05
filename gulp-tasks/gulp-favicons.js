@@ -1,19 +1,21 @@
-const gulp = require('gulp');
 const favicons = require('gulp-favicons');
+const gulp = require('gulp');
 
 /**
  * @description generate favicon from source file
- * @param {stirng} input path to source icon
+ * @param {string} input path to source icon
  * @param {string} output path to save icons
  * @param {object} params cofiguration for favicon generator
  */
 
-const iconGenerator = (input, output, params, cb) => {
+const iconGenerator = (input, output, params) => {
   return gulp
     .src(input)
-    .pipe(favicons(params))
+    .pipe(favicons(params.config))
     .pipe(gulp.dest(output))
-    .on('end', cb);
+    .on('end', () => {
+      params.cb();
+    });
 };
 
 module.exports = iconGenerator;
