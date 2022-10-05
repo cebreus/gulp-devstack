@@ -15,6 +15,7 @@
   <body data-version="3.5.0" data-template="{{ pageData.template }}">
 
     {% if pageData.page_id === '404' %}
+      {% include "./partials/o-header.njk" %}
       {% block content404 %}{% endblock %}
     {% else %}
       {% include "./partials/o-header.njk" %}
