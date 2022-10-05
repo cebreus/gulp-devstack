@@ -1,15 +1,26 @@
 env:
-  browser: false
-  commonjs: true
-  es6: true
-  node: true
-
+  browser: true
+  commonjs: false
+  es2021: true
+extends:
+  - airbnb-base
+  - plugin:prettier/recommended
+  - plugin:jsdoc/recommended
 plugins:
   - prettier
-
-extends: plugin:prettier/recommended
-
-parser: babel-eslint
+  - require-sort
+  - jsdoc
+  - disable
+overrides:
+  - files:
+      - '*.js'
+    settings:
+      disable/plugins:
+        - jsdoc
 parserOptions:
-  ecmaVersion: 2018
+  ecmaVersion: latest
   sourceType: module
+processor: 'disable/disable'
+rules:
+  'require-sort/require-sort': [warn, { 'ignoreCase': true }]
+  no-param-reassign: ['error', { 'props': false }]
