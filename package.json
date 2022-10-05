@@ -18,7 +18,6 @@
     "text:lint": "npx remark-cli -q .",
     "text:fix": "npx remark-cli -q . -o --",
     "release": "npx release-it",
-    "version": "npx auto-changelog -p -t keepachangelog.hbs && npm run text:fix && git add CHANGELOG.md",
     "todo": "./todo.sh",
     "todo:show": "npx leasot -x -r markdown -A '.txt,coffeeParser' './**/*.{js,html,njk,scss,txt,md,yml}' -i './node_modules/**/*'",
     "pre-commit": "npx lint-staged",
@@ -136,10 +135,5 @@
     "*.scss": [
       "stylelint --fix --allow-empty-input"
     ]
-  },
-  "config": {
-    "commitizen": {
-      "path": "./node_modules/cz-conventional-changelog"
-    }
   }
 }
