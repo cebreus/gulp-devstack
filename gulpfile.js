@@ -12,6 +12,7 @@ const hotReload = require('./gulp-tasks/gulp-hotreload');
 const htmlBuildFnc = require('./gulp-tasks/gulp-html-build');
 const imagesOptimizeFnc = require('./gulp-tasks/gulp-optimize-images');
 const jsProcessFnc = require('./gulp-tasks/gulp-concat-files');
+const todoFnc = require('./gulp-tasks/gulp-todo');
 
 // Variables
 // --------------
@@ -208,10 +209,13 @@ gulp.task('images', images);
 
 gulp.task('fonts', fontLoad);
 
+gulp.task('todo', todoFnc);
+
 gulp.task(
   'serve',
   gulp.series(
     cleanFolders,
+    images,
     copyStatic,
     datasetPrepareSite,
     datasetPreparePages,
@@ -222,7 +226,7 @@ gulp.task(
     compileSassUtils,
     concatJs,
     buildPages,
-    images,
+    todoFnc,
     gulp.parallel(watchFiles, hotReload.browserSync)
   )
 );
