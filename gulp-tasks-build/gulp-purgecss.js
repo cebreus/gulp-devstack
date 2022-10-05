@@ -7,22 +7,35 @@ const purgecss = require('gulp-purgecss');
  * @param {string} inputCss path to source CSS files
  * @param {string} inputHtml path to source HTML files
  * @param {string} outputCss path to folder to save optimized files
- * @return {stream} processed files
+ * @param {object} params
+ * @returns {*} processed files
  */
 
-const purgeCss = (inputCss, inputHtml, outputCss, cb) => {
+const purgeCss = (inputCss, inputHtml, outputCss, params = {}) => {
   return gulp
     .src(inputCss)
     .pipe(plumber())
     .pipe(
       purgecss({
         content: inputHtml,
-        safelist: ['show', 'collapsing'],
+        safelist: {
+          standard: [
+            'active',
+            'collapsing',
+            'fade',
+            'offcanvas-backdrop',
+            'open',
+            'scroll',
+            'show',
+          ],
+        },
         // rejected: true,
       })
     )
     .pipe(gulp.dest(outputCss))
-    .on('end', cb);
+    .on('end', () => {
+      params.cb();
+    });
 };
 
 module.exports = purgeCss;

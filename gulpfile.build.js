@@ -1,8 +1,9 @@
+/* eslint-plugin-disable jsdoc */
 const fs = require('fs');
 const gulp = require('gulp');
-const path = require('path');
-
+const log = require('fancy-log');
 const cleanFnc = require('./gulp-tasks/gulp-clean');
+const config = require('./gulpconfig.build');
 const copyStaticFnc = require('./gulp-tasks/gulp-copy-static');
 const cssCompileFnc = require('./gulp-tasks-build/gulp-compile-sass');
 const cssPurgeFnc = require('./gulp-tasks-build/gulp-purgecss');
@@ -14,17 +15,14 @@ const htmlBuildFnc = require('./gulp-tasks-build/gulp-html-build');
 const htmlValidateFnc = require('./gulp-tasks/gulp-html-validate');
 const imagesOptimizeFnc = require('./gulp-tasks/gulp-optimize-images');
 const jsProcessFnc = require('./gulp-tasks-build/gulp-process-js');
-
 const replaceHashFnc = require('./gulp-tasks-build/gulp-sri-hash');
 const revisionFnc = require('./gulp-tasks-build/gulp-revision');
+require('dotenv').config();
 
 // Variables
 // --------------
 
-const config = require('./gulpconfig-build');
-
-const sleep = (waitTimeInMs = 0) =>
-  new Promise((resolve) => setTimeout(resolve, waitTimeInMs));
+const showLogs = false;
 
 // Gulp functions
 // --------------
@@ -33,16 +31,17 @@ function cleanFolders() {
   return cleanFnc([config.tempBase, config.buildBase]);
 }
 
-function cleanFolderTemp() {
-  return cleanFnc([config.tempBase]);
-}
-
 function copyStatic(done) {
-  sleep().then(() => {
-    return copyStaticFnc('./static/**/*', './static', config.buildBase, () => {
-      done();
-    });
-  });
+  return copyStaticFnc(
+    [`${config.staticBase}/*`, `${config.staticBase}/.*/*`],
+    './static',
+    config.buildBase,
+    {
+      cb: () => {
+        done();
+      },
+    }
+  );
 }
 
 function htmlValidate() {
@@ -50,71 +49,78 @@ function htmlValidate() {
 }
 
 function deployFtp(done) {
-  sleep().then(() => {
-    return deployFtpFnc(
-      `${config.buildBase}/**`,
-      `${config.buildBase}/`,
-      '.',
-      () => {
-        done();
-      }
-    );
+  return deployFtpFnc(`${config.buildBase}/**`, `${config.buildBase}/`, '.', {
+    cb: () => {
+      done();
+    },
   });
 }
 
 // SASS
 
-function compileSassAll() {
+function compileSassAll(done) {
   return cssCompileFnc(
     config.sassAll,
     config.sassBuild,
     'index.min.css',
-    config.postcssPluginsBase
+    config.postcssPluginsBase,
+    {
+      cb: () => {
+        done();
+      },
+    }
   );
 }
 
 function purgecss(done) {
-  sleep().then(() => {
-    return cssPurgeFnc(
-      [`${config.buildBase}/**/*.css`],
-      [`${config.buildBase}/**/*.html`],
-      config.buildBase,
-      () => {
+  return cssPurgeFnc(
+    [`${config.buildBase}/**/*index*.css`],
+    [`${config.buildBase}/**/*.html`],
+    config.buildBase,
+    {
+      cb: () => {
         done();
-      }
-    );
-  });
+      },
+    }
+  );
 }
 
 // JS
 
-function processJs() {
-  return jsProcessFnc(config.jsFiles, config.jsBuild, {
+function processJs(done) {
+  const params = {
     concatFiles: true,
     outputConcatPrefixFileName: 'app',
-  });
+    cb: () => {
+      done();
+    },
+  };
+
+  return jsProcessFnc(config.jsFiles, config.jsBuild, params);
 }
 
 // Dataset
 
 function datasetPrepareSite(done) {
-  sleep().then(() => {
-    datasetPrepareFnc(`${config.contentBase}/site.md`, config.tempBase, () => {
+  return datasetPrepareFnc(`${config.contentBase}/site.md`, config.tempBase, {
+    verbose: showLogs,
+    cb: () => {
       done();
-    });
+    },
   });
 }
 
 function datasetPreparePages(done) {
-  sleep().then(() => {
-    datasetPrepareFnc(
-      config.datasetPagesSource,
-      config.datasetPagesBuild,
-      () => {
+  return datasetPrepareFnc(
+    config.datasetPagesSource,
+    config.datasetPagesBuild,
+    {
+      verbose: showLogs,
+      cb: () => {
         done();
-      }
-    );
-  });
+      },
+    }
+  );
 }
 
 // Templates
@@ -136,113 +142,116 @@ function buildPages(done) {
     },
   };
 
-  sleep().then(() => {
-    htmlBuildFnc(params);
-  });
+  return htmlBuildFnc(params);
 }
 
 // GFX
 
 function images(done) {
-  sleep().then(() => {
-    imagesOptimizeFnc.optimizeJpg(config.imagesJpg, config.gfxBuild);
-  });
-  sleep().then(() => {
-    imagesOptimizeFnc.optimizePng(config.imagesPng, config.gfxBuild);
-  });
-  sleep().then(() => {
-    imagesOptimizeFnc.optimizeSvg(config.imagesSvg, config.gfxBuild);
-  });
+  const params = {
+    verbose: showLogs,
+    cb: () => {
+      done();
+    },
+  };
+
+  imagesOptimizeFnc.optimizeJpg(config.imagesJpg, config.gfxBuild, params);
+  imagesOptimizeFnc.optimizePng(config.imagesPng, config.gfxBuild, params);
+  imagesOptimizeFnc.optimizeSvg(config.imagesSvg, config.gfxBuild, params);
   done();
 }
 
 // Favicons
 
 function favicons(done) {
-  sleep().then(() => {
-    return faviconsFnc(
-      config.faviconSourceFile,
-      config.faviconBuild,
-      config.faviconGenConfig,
-      () => {
-        // Move `favicon.ico` to project root
-        fs.rename(
-          `${config.faviconBuild}/favicon.ico`,
-          `${config.buildBase}/favicon.ico`,
-          function (err) {
-            if (err) throw err;
-          }
-        );
+  return faviconsFnc(
+    config.faviconSourceFile,
+    config.faviconBuild,
+    {
+      config: config.faviconGenConfig,
+      verbose: showLogs,
+      cb: () => {
+        done();
+      },
+    },
+    () => {
+      // Move `favicon.ico` to project root
+      fs.rename(
+        `${config.faviconBuild}/favicon.ico`,
+        `${config.buildBase}/favicon.ico`,
+        (err) => {
+          if (err) throw err;
+        }
+      );
 
-        // Move `favicons.njk` and edit file content
-        fs.readFile(
-          `${config.faviconBuild}/favicons.njk`,
-          'utf8',
-          function (err, data) {
-            if (err) throw err;
+      // Move `favicons.njk` and edit file content
+      fs.readFileSync(
+        `${config.faviconBuild}/favicons.njk`,
+        'utf8',
+        (err, data) => {
+          if (err) throw err;
 
-            // Remove link to moved `favicon.ico`
-            let newValue = data.replace(/<link rel="shortcut icon[^>]*>/g, '');
+          // Remove link to moved `favicon.ico`
+          const newValue = data.replace(/<link rel="shortcut icon[^>]*>/g, '');
 
-            fs.writeFile(
-              `${config.tplTemplatesBase}/partials/favicons.njk`,
-              newValue,
-              'utf8',
-              function (err, data) {
-                if (err) {
-                  throw err;
-                } else {
-                  // console.log('Done!');
+          fs.writeFileSync(
+            `${config.tplTemplatesBase}/partials/favicons.njk`,
+            newValue,
+            'utf8',
+            (err2) => {
+              if (err2) {
+                throw err;
+              } else {
+                // log('Done!');
 
-                  // Remove temp `favicons.njk`
-                  try {
-                    fs.unlinkSync(`${config.faviconBuild}/favicons.njk`);
-                    // console.log('Removed!');
-                  } catch (err) {
-                    console.error(err);
-                  }
+                try {
+                  fs.unlinkSync(`${config.faviconBuild}/favicons.njk`);
+                  // log('Removed!');
+                } catch (err3) {
+                  log.error(err3);
                 }
               }
-            );
-          }
-        );
-      }
-    );
-  });
-  done();
+            }
+          );
+        }
+      );
+    }
+  );
 }
 
 // Fonts
 
 function fontLoad(done) {
-  sleep().then(() => {
-    fontLoadFnc(
-      config.fontloadFile,
-      config.tempBase,
-      config.fontLoadConfig,
-      () => {
-        copyStaticFnc(
-          `${config.tempBase}/assets/font/**/*`,
-          `${config.tempBase}/assets/font`,
-          `${config.buildBase}/assets/font`,
-          () => {
+  return fontLoadFnc(
+    config.fontloadFile,
+    config.tempBase,
+    {
+      config: config.fontLoadConfig,
+      verbose: showLogs,
+      cb: () => {
+        done();
+      },
+    },
+    () => {
+      copyStaticFnc(
+        `${config.tempBase}/assets/font/**/*`,
+        `${config.tempBase}/assets/font`,
+        `${config.buildBase}/assets/font`,
+        {
+          cb: () => {
             done();
-          }
-        );
-      }
-    );
-  });
+          },
+        }
+      );
+    }
+  );
 }
 
 function replaceHash(done) {
-  sleep().then(() => {
-    return replaceHashFnc(
-      `${config.buildBase}/**/*.html`,
-      config.buildBase,
-      () => {
-        done();
-      }
-    );
+  return replaceHashFnc(`${config.buildBase}/**/*.html`, config.buildBase, {
+    cb: () => {
+      done();
+    },
   });
 }
 
@@ -261,9 +270,7 @@ function revision(done) {
     },
   };
 
-  sleep().then(() => {
-    return revisionFnc(params);
-  });
+  return revisionFnc(params);
 }
 
 // Gulp tasks
@@ -290,6 +297,7 @@ gulp.task(
   'build',
   gulp.series(
     cleanFolders,
+    images,
     copyStatic,
     datasetPrepareSite,
     datasetPreparePages,
@@ -301,8 +309,7 @@ gulp.task(
     purgecss,
     revision,
     replaceHash,
-    images,
-    cleanFolderTemp
+    htmlValidate
   )
 );
 

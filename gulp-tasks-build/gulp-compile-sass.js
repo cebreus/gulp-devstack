@@ -1,4 +1,6 @@
 const gulp = require('gulp');
+const gulpConcat = require('gulp-concat');
+const gulpEmptyPipe = require('gulp-empty-pipe');
 const plumber = require('gulp-plumber');
 const postcss = require('gulp-postcss');
 const postcssSyntax = require('postcss-scss');
@@ -8,24 +10,21 @@ const sassGlob = require('gulp-sass-glob');
 
 /**
  * @description Compiling SCSS files into CSS files
- * @param {string,object} input Path with filter to source files
+ * @param {string} input Path with filter to source files
  * @param {string} output Path to save compiled files
  * @param {string} outputConcatFileName Output file name
  * @param {object} postcssPluginsBase Postcss plugins
- * @return {stream} Compiled file
+ * @returns {*} Compiled file
  */
 
 const compileSass = (
   input,
   output,
   outputConcatFileName,
-  postcssPluginsBase
+  postcssPluginsBase,
+  params = {}
 ) => {
-  let gulpConcat = require('gulp-concat');
-
-  if (!outputConcatFileName) {
-    gulpConcat = require('gulp-empty-pipe');
-  }
+  const processFile = outputConcatFileName ? gulpConcat : gulpEmptyPipe;
 
   return gulp
     .src(input)
@@ -33,10 +32,14 @@ const compileSass = (
     .pipe(sassGlob())
     .pipe(sass())
     .on('error', sass.logError)
-    .pipe(replace(/\/\*\!/g, '/*'))
+    .pipe(replace(/\/\*!/g, '/*'))
+    .pipe(replace('@charset "UTF-8";', ''))
     .pipe(postcss(postcssPluginsBase, { syntax: postcssSyntax }))
-    .pipe(gulpConcat(outputConcatFileName))
-    .pipe(gulp.dest(output));
+    .pipe(processFile(outputConcatFileName))
+    .pipe(gulp.dest(output))
+    .on('end', () => {
+      params.cb();
+    });
 };
 
 module.exports = compileSass;

@@ -1,5 +1,4 @@
 const autoprefixer = require('autoprefixer');
-const flexbugsFixes = require('postcss-flexbugs-fixes');
 
 // Paths
 // --------------
@@ -8,6 +7,7 @@ const devBase = './src';
 const buildBase = './temp';
 const tempBase = './temp';
 const contentBase = './content';
+const staticBase = './static';
 
 // SASS
 // --------------
@@ -15,14 +15,17 @@ const contentBase = './content';
 const sassBase = `${devBase}/scss`;
 const sassBuild = `${buildBase}/assets/css`;
 const sassAll = [`${sassBase}/*.scss`, `!${sassBase}/_*.scss`];
+// TODO: je potřeba _variables.scss?
 const sassCustom = [
   `${sassBase}/*.scss`,
-  `${sassBase}/_variables.scss`, // TODO: jw potřeba _variables.scss?
+  `${sassBase}/_variables.scss`,
   `!${sassBase}/u-*.scss`,
   `!${sassBase}/bootstrap.scss`,
 ];
-const sassCore = [`${sassBase}/bootstrap.scss`, `${sassBase}/_variables.scss`]; // TODO: je potřeba _variables.scss?
-const sassUtils = [`${sassBase}/u-*.scss`, `${sassBase}/_variables.scss`]; // TODO: je potřeba _variables.scss?
+// TODO: je potřeba _variables.scss?
+const sassCore = [`${sassBase}/bootstrap.scss`, `${sassBase}/_variables.scss`];
+// TODO: je potřeba _variables.scss?
+const sassUtils = [`${sassBase}/u-*.scss`, `${sassBase}/_variables.scss`];
 const injectCss = `${sassBuild}/*.css`;
 
 // JavaScript
@@ -71,7 +74,6 @@ const imagesSvg = [`${svgBase}/*.svg`, `!${devBase}/favicon/**/*.*`];
 // --------------
 
 const postcssPluginsBase = [
-  flexbugsFixes,
   autoprefixer({
     grid: true,
   }),
@@ -114,6 +116,7 @@ module.exports = {
   sassCore,
   sassCustom,
   sassUtils,
+  staticBase,
   tempBase,
   tplBase,
   tplBuild,

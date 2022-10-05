@@ -1,6 +1,4 @@
-const gulp = require('gulp');
 const browsersync = require('browser-sync').create();
-
 const config = require('../gulpconfig');
 
 /**
@@ -21,12 +19,14 @@ function browserSync() {
 /**
  * @description BrowserSync reload
  */
-
 function browserSyncRefresh(done) {
   browsersync.reload();
   done();
 }
 
+/**
+ *
+ */
 function browserSyncReload() {
   browsersync.reload();
 }

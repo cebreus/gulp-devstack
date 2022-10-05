@@ -1,23 +1,22 @@
-const fs = require('fs');
+/* eslint-plugin-disable jsdoc */
 const gulp = require('gulp');
-const path = require('path');
-
 const cleanFnc = require('./gulp-tasks/gulp-clean');
+const config = require('./gulpconfig');
 const copyStaticFnc = require('./gulp-tasks/gulp-copy-static');
 const cssCompileFnc = require('./gulp-tasks/gulp-compile-sass');
-const datasetBuildFnc = require('./gulp-tasks/gulp-dataset-build');
 const datasetPrepareFnc = require('./gulp-tasks/gulp-dataset-prepare');
 const fontLoadFnc = require('./gulp-tasks/gulp-font-load');
 const hotReload = require('./gulp-tasks/gulp-hotreload');
 const htmlBuildFnc = require('./gulp-tasks/gulp-html-build');
 const imagesOptimizeFnc = require('./gulp-tasks/gulp-optimize-images');
-const jsProcessFnc = require('./gulp-tasks/gulp-concat-files');
+const jsProcessFnc = require('./gulp-tasks-build/gulp-process-js');
 const todoFnc = require('./gulp-tasks/gulp-todo');
+require('dotenv').config();
 
 // Variables
 // --------------
 
-const config = require('./gulpconfig');
+const showLogs = 'brief';
 
 // Gulp functions
 // --------------
@@ -27,67 +26,96 @@ function cleanFolders() {
 }
 
 function copyStatic(done) {
-  return copyStaticFnc('./static/**/*', './static', config.buildBase, () => {
-    done();
-  });
+  return copyStaticFnc(
+    [`${config.staticBase}/*`, `${config.staticBase}/.*/*`],
+    config.staticBase,
+    config.buildBase,
+    {
+      cb: () => {
+        done();
+      },
+    }
+  );
 }
 
 // SASS
 
-function compileSassCore() {
+function compileSassCore(done) {
   return cssCompileFnc(
     config.sassCore,
     config.sassBuild,
     'bootstrap.css',
-    config.postcssPluginsBase
+    config.postcssPluginsBase,
+    {
+      cb: () => {
+        done();
+      },
+    }
   );
 }
 
-function compileSassCustom() {
+function compileSassCustom(done) {
   return cssCompileFnc(
     config.sassCustom,
     config.sassBuild,
     'custom.css',
-    config.postcssPluginsBase
+    config.postcssPluginsBase,
+    {
+      cb: () => {
+        done();
+      },
+    }
   );
 }
 
-function compileSassUtils() {
+function compileSassUtils(done) {
   return cssCompileFnc(
     config.sassUtils,
     config.sassBuild,
     'utils.css',
-    config.postcssPluginsBase
+    config.postcssPluginsBase,
+    {
+      cb: () => {
+        done();
+      },
+    }
   );
 }
 
 // JS
 
-function concatJs() {
-  return jsProcessFnc(config.jsFiles, config.jsBuild, 'app.js');
+function processJs(done) {
+  const params = {
+    concatFiles: false,
+    outputConcatPrefixFileName: 'app',
+    cb: () => {
+      done();
+    },
+  };
+
+  return jsProcessFnc(config.jsFiles, config.jsBuild, params);
 }
 
 // Dataset
 
 function datasetPrepareSite(done) {
-  datasetPrepareFnc(`${config.contentBase}/site.md`, config.tempBase, () => {
-    done();
+  return datasetPrepareFnc(`${config.contentBase}/site.md`, config.tempBase, {
+    verbose: showLogs,
+    cb: () => {
+      done();
+    },
   });
 }
 
 function datasetPreparePages(done) {
-  datasetPrepareFnc(config.datasetPagesSource, config.datasetPagesBuild, () => {
-    done();
-  });
-}
-
-function datasetBuild(done) {
-  datasetBuildFnc(
-    [`${config.tempBase}/site.json`, `${config.datasetPagesBuild}/*.json`],
-    config.tempBase,
-    '_dataset-site',
-    () => {
-      done();
+  return datasetPrepareFnc(
+    config.datasetPagesSource,
+    config.datasetPagesBuild,
+    {
+      verbose: showLogs,
+      cb: () => {
+        done();
+      },
     }
   );
 }
@@ -110,35 +138,37 @@ function buildPages(done) {
       done();
     },
   };
-  htmlBuildFnc(params);
+
+  return htmlBuildFnc(params);
 }
 
 // GFX
 
 function images(done) {
-  imagesOptimizeFnc.optimizeJpg(config.imagesJpg, config.gfxBuild, {
-    rewriteExisting: true,
-  });
-  imagesOptimizeFnc.optimizePng(config.imagesPng, config.gfxBuild, {
-    rewriteExisting: true,
-  });
-  imagesOptimizeFnc.optimizeSvg(config.imagesSvg, config.gfxBuild, {
-    rewriteExisting: true,
-  });
-  done();
+  const params = {
+    verbose: showLogs,
+    cb: () => {
+      done();
+    },
+  };
+
+  imagesOptimizeFnc.optimizeJpg(config.imagesJpg, config.gfxBuild, params);
+  imagesOptimizeFnc.optimizePng(config.imagesPng, config.gfxBuild, params);
+  imagesOptimizeFnc.optimizeSvg(config.imagesSvg, config.gfxBuild, params);
+
+  return done();
 }
 
 // Fonts
 
 function fontLoad(done) {
-  fontLoadFnc(
-    config.fontloadFile,
-    config.tempBase,
-    config.fontLoadConfig,
-    () => {
+  fontLoadFnc(config.fontloadFile, config.tempBase, {
+    config: config.fontLoadConfig,
+    verbose: showLogs,
+    cb: () => {
       done();
-    }
-  );
+    },
+  });
 }
 
 // Watch
@@ -166,7 +196,7 @@ function watchFiles() {
 
   gulp.watch(
     config.jsFiles,
-    gulp.series(concatJs, hotReload.browserSyncRefresh)
+    gulp.series(processJs, hotReload.browserSyncRefresh)
   );
 
   // Watch Templates
@@ -196,7 +226,7 @@ gulp.task(
   gulp.parallel(compileSassCore, compileSassCustom, compileSassUtils)
 );
 
-gulp.task('js', concatJs);
+gulp.task('js', processJs);
 
 gulp.task('dataset', gulp.parallel(datasetPrepareSite, datasetPreparePages));
 
@@ -219,12 +249,11 @@ gulp.task(
     copyStatic,
     datasetPrepareSite,
     datasetPreparePages,
-    datasetBuild,
     fontLoad,
     compileSassCore,
     compileSassCustom,
     compileSassUtils,
-    concatJs,
+    processJs,
     buildPages,
     todoFnc,
     gulp.parallel(watchFiles, hotReload.browserSync)

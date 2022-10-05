@@ -177,11 +177,11 @@ When you want to build whole web sites from the data sources as API or many mark
     *   `.stylelintrc.yml` — [Stylelint](https://stylelint.io/) configuration to specify and configure rules of CSS (SCSS) linting. See used plugins! [Further info](https://stylelint.io/user-guide/configuration/)
     *   `commitlint.config.js` — [commitlint](https://commitlint.js.org/) configuration to help adhering to a commit convention.
     *   `gulpconfig.js` — configuration for 🛠️ **development** Gulp file `gulpfile.js`. Contains variables and setting which are specific for Development workflow purposes.
-    *   `gulpconfig-build.js` — configuration for 💯 **build** Gulp file `gulpfile-build.js`. Contains variables and setting which are specific for Build workflow purposes.
-    *   `gulpconfig-export.js` — configuration for 👁️ **export** Gulp file `gulpfile-export.js`. Contains variables and setting which are specific for Export workflow purposes.
+    *   `gulpconfig-build.js` — configuration for 💯 **build** Gulp file `gulpfile.build.js`. Contains variables and setting which are specific for Build workflow purposes.
+    *   `gulpconfig-export.js` — configuration for 👁️ **export** Gulp file `gulpfile.export.js`. Contains variables and setting which are specific for Export workflow purposes.
     *   `gulpfile.js` — [Gulp](https://gulpjs.com/) 🛠️ **development** configuration and definition of automation tasks. [Further info](https://www.sitepoint.com/introduction-gulp-js/)
-    *   `gulpfile-build.js` — [Gulp](https://gulpjs.com/) 💯 **build** configuration and definition of automation tasks. [Further info](https://www.sitepoint.com/introduction-gulp-js/)
-    *   `gulpfile-export.js` — [Gulp](https://gulpjs.com/) 👁️ **export** configuration and definition of automation tasks. [Further info](https://www.sitepoint.com/introduction-gulp-js/)
+    *   `gulpfile.build.js` — [Gulp](https://gulpjs.com/) 💯 **build** configuration and definition of automation tasks. [Further info](https://www.sitepoint.com/introduction-gulp-js/)
+    *   `gulpfile.export.js` — [Gulp](https://gulpjs.com/) 👁️ **export** configuration and definition of automation tasks. [Further info](https://www.sitepoint.com/introduction-gulp-js/)
     *   `CHANGELOG.md` — list of the notable changes in this project.
     *   `LICENSE` — Open source license of [Git](https://git-scm.com/) repository. It enables others to freely use, change and distribute the project in the repository. [Further info](https://help.github.com/articles/adding-a-license-to-a-repository/)
     *   `package.json` — [NPM](https://www.npmjs.com/) packages specifics. It lists the packages (with their versions) your project depends on. [Further info](https://docs.npmjs.com/files/package.json)

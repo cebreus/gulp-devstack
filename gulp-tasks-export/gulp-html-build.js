@@ -1,13 +1,19 @@
+const data = require('gulp-data');
+const dateFilter = require('nunjucks-date-filter-locale');
 const fs = require('fs');
 const gulp = require('gulp');
 const gulpif = require('gulp-if');
-const data = require('gulp-data');
 const inject = require('gulp-inject');
+const minify = require('gulp-htmlmin');
+
+const log = require('fancy-log');
+const markdown = require('nunjucks-markdown-filter');
 const nunjucksRender = require('gulp-nunjucks-render');
 const plumber = require('gulp-plumber');
-const prettify = require('gulp-jsbeautifier');
-const replace = require('gulp-replace');
+const prettify = require('gulp-html-beautify');
 const rename = require('gulp-rename');
+const replace = require('gulp-replace');
+require('dotenv').config();
 
 /**
  * @description Compile Nunjucks templates and replaces variable from JSON
@@ -16,21 +22,19 @@ const rename = require('gulp-rename');
  * @param {string} dataSource Input file/path with data structure
  * @param {string} rename Custom name of file
  * @param {string} injectCss Path to css files which you want inject
- * @param {array} injectJs Path to JS files which you want inject
- * @param {array} injectCdnJs Path to CDN JS files which you want inject
- * @return {stream} Compiled file
+ * @param {Array} injectJs Path to JS files which you want inject
+ * @param {Array} injectCdnJs Path to CDN JS files which you want inject
+ * @returns {*} Compiled file
  */
 
 const buildHtml = (params) => {
-  const dateFilter = require('nunjucks-date-filter-locale');
-  const markdown = require('nunjucks-markdown-filter');
+  // eslint-disable-next-line global-require, import/no-dynamic-require
   const localeSettings = require(`.${params.siteConfig}`);
+  const renameCondition = !!params.rename;
   dateFilter.setLocale(localeSettings.meta.lang);
-
+  let currentFile = '';
   let existsJson = false;
   let findJson = true;
-  let currentFile = '';
-  let renameCondition = params.rename ? true : false;
   let oldDataSource = '';
 
   if (params.dataSource.includes('.json')) {
@@ -44,14 +48,11 @@ const buildHtml = (params) => {
         existsJson = true;
         findJson = false;
       } catch (error) {
-        console.log(`buildHtml(): JSON file ${element} doesn't exists.`);
+        log.error(`buildHtml(): JSON file ${element} doesn't exists.`);
         existsJson = false;
         findJson = false;
       }
     });
-  } else {
-    let existsJson = false;
-    let findJson = true;
   }
 
   nunjucksRender.nunjucks.configure(params.templates, {
@@ -87,7 +88,7 @@ const buildHtml = (params) => {
       )
       // Add access to site configuration
       .pipe(
-        data(function () {
+        data(() => {
           let file = params.siteConfig;
           file = {
             SITE: {
@@ -100,7 +101,7 @@ const buildHtml = (params) => {
       .pipe(
         gulpif(
           existsJson,
-          data(function () {
+          data(() => {
             let file;
             params.dataSource.forEach((element) => {
               file = {
@@ -115,21 +116,20 @@ const buildHtml = (params) => {
       .pipe(
         gulpif(
           findJson,
-          data(function () {
+          data(() => {
             if (currentFile.dirname === '.') {
               return JSON.parse(
                 fs.readFileSync(
                   `${process.cwd()}/${params.dataSource}/index.json`
                 )
               );
-            } else {
-              const file = JSON.parse(
-                fs.readFileSync(
-                  `${process.cwd()}/${params.dataSource}/${oldDataSource}.json`
-                )
-              );
-              return file;
             }
+            const file = JSON.parse(
+              fs.readFileSync(
+                `${process.cwd()}/${params.dataSource}/${oldDataSource}.json`
+              )
+            );
+            return file;
           })
         )
       )
@@ -139,39 +139,65 @@ const buildHtml = (params) => {
           manageEnv: (enviroment) => {
             enviroment.addFilter('date', dateFilter);
             enviroment.addFilter('md', markdown);
-            enviroment.addGlobal('toDate', function (date) {
+            enviroment.addFilter(
+              'unique',
+              (arr) =>
+                (arr instanceof Array &&
+                  arr.filter((e, i, arr1) => arr1.indexOf(e) === i)) ||
+                arr
+            );
+            enviroment.addGlobal('toDate', (date) => {
               return date ? new Date(date) : new Date();
             });
           },
         })
       )
       .pipe(
-        inject(gulp.src(params.injectCss, { read: false }), {
-          relative: false,
-          ignorePath: params.injectIgnorePath,
-          addRootSlash: false,
-          removeTags: true,
-          addPrefix: '.',
-        })
+        inject(
+          gulp.src(params.injectCss, {
+            read: false,
+          }),
+          {
+            relative: false,
+            ignorePath: params.injectIgnorePath,
+            addRootSlash: true,
+            removeTags: true,
+            quiet: true,
+          }
+        )
       )
       .pipe(
-        inject(gulp.src(params.injectJs, { read: false }), {
-          relative: false,
-          ignorePath: params.injectIgnorePath,
-          addRootSlash: false,
-          removeTags: true,
-          addPrefix: '.',
-        })
+        inject(
+          gulp.src(params.injectJs, {
+            read: false,
+          }),
+          {
+            relative: false,
+            ignorePath: params.injectIgnorePath,
+            addRootSlash: true,
+            removeTags: true,
+          }
+        )
       )
+      .pipe(replace(/(href=["'])(\/assets)/g, '$1.$2'))
+      .pipe(replace(/( )*<!--((.*)|[^<]*|[^!]*|[^-]*|[^>]*)-->\n*/gm, ''))
       .pipe(
         replace(
           '<!-- inject: bootstrap js -->',
           params.injectCdnJs.toString().replace(/[, ]+/g, ' ')
         )
       )
-      .pipe(replace(/(href=["'])(\/assets)/g, '$1.$2'))
-      .pipe(replace(/^(\s*\r?\n){2,}/gm, ''))
-      .pipe(prettify())
+      // Minify HTML - fix HTML structure like missng closing tags
+      .pipe(minify({ collapseWhitespace: true }))
+      // Beautify HTML
+      .pipe(
+        prettify({
+          indentSize: 4,
+          indent_char: ' ',
+          indent_with_tabs: false,
+          preserve_newlines: false,
+        })
+      )
       .pipe(
         gulpif(
           renameCondition,
@@ -183,7 +209,9 @@ const buildHtml = (params) => {
         )
       )
       .pipe(gulp.dest(params.output))
-      .on('end', params.cb)
+      .on('end', () => {
+        params.cb();
+      })
   );
 };
 

@@ -1,14 +1,14 @@
 const autoprefixer = require('autoprefixer');
-const cssnano = require('cssnano');
-const flexbugsFixes = require('postcss-flexbugs-fixes');
+require('dotenv').config();
 
 // Paths
 // --------------
 
 const devBase = './src';
-const buildBase = './build';
+const buildBase = './export';
 const tempBase = './temp';
 const contentBase = './content';
+const staticBase = './static';
 
 // SASS
 // --------------
@@ -68,13 +68,10 @@ const imagesSvg = [`${svgBase}/*.svg`, `!${devBase}/favicon/**/*.*`];
 // --------------
 
 const postcssPluginsBase = [
-  flexbugsFixes,
   autoprefixer({
     grid: true,
   }),
-  cssnano(),
 ];
-
 const fontloadFile = `${devBase}/fonts.list`;
 const fontLoadConfig = {
   fontsDir: 'assets/font/',
@@ -116,17 +113,11 @@ const faviconGenConfig = {
   },
 };
 
-// Files that need to be removed
-// --------------
-
-const buildRevManifest = `${tempBase}/rev-manifest.json`;
-
 // Exports
 // --------------
 
 module.exports = {
   buildBase,
-  buildRevManifest,
   contentBase,
   datasetPagesBuild,
   datasetPagesSource,
@@ -150,6 +141,7 @@ module.exports = {
   sassAll,
   sassBase,
   sassBuild,
+  staticBase,
   tempBase,
   tplBase,
   tplBuild,
