@@ -16,11 +16,6 @@ git:
   push: true
   pushArgs: '--follow-tags'
   pushRepo: origin
-npm:
-  publish: false
-  publishPath: '.'
-  access:
-  otp:
 github:
   release: false
   releaseName: Release ${version}
@@ -34,8 +29,27 @@ github:
   proxy:
 gitlab:
   release: false
-  releaseName: Release ${version}
-  releaseNotes:
-  tokenRef: GITLAB_TOKEN
-  assets:
-  origin:
+npm:
+  publish: false
+plugins:
+  '@release-it/conventional-changelog':
+    infile: CHANGELOG.md
+    header: '# Front-end Gulp DevStack Changelog'
+    writerOpts:
+      groupBy: scope
+    preset:
+      name: conventionalcommits
+      types:
+        - type: feat
+          section: Features
+        - type: fix
+          section: Bug Fixes
+        - {}
+  '@j-ulrich/release-it-regex-bumper':
+    out:
+      - file: content/pages/index.md
+        search: v\d+\.\d+\.\d+
+        replace: v{{versionWithoutPrerelease}}
+      - file: src/templates/layout-default.html
+        search: data-version="\d+\.\d+\.\d+
+        replace: data-version="{{versionWithoutPrerelease}}
