@@ -31,6 +31,10 @@ function cleanFolders() {
   return cleanFnc([config.tempBase, config.buildBase]);
 }
 
+function cleanupBuild() {
+  return cleanFnc([`${config.buildBase}/assets/favicons/favicons.njk`]);
+}
+
 function copyStatic(done) {
   return copyStaticFnc(
     [`${config.staticBase}/*`, `${config.staticBase}/.*/*`],
@@ -309,7 +313,8 @@ gulp.task(
     purgecss,
     revision,
     replaceHash,
-    htmlValidate
+    htmlValidate,
+    cleanupBuild
   )
 );
 
