@@ -116,17 +116,11 @@ const faviconGenConfig = {
   },
 };
 
-// Files that need to be removed
-// --------------
-
-const buildRevManifest = `${tempBase}/rev-manifest.json`;
-
 // Exports
 // --------------
 
 module.exports = {
   buildBase,
-  buildRevManifest,
   contentBase,
   datasetPagesBuild,
   datasetPagesSource,
