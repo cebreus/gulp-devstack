@@ -83,7 +83,7 @@
     "gulp-uglify": "^3.0.2",
     "gulp-upng": "^1.0.3",
     "imagemin-mozjpeg": "^9.0.0",
-    "marked": "^4.0.12",
+    "marked": "^4.2.0",
     "nunjucks-date-filter-locale": "^1.4.3",
     "nunjucks-markdown-filter": "^0.1.0",
     "postcss": "^8.4.4",
