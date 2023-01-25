@@ -6,6 +6,7 @@ extends:
   - '@visionappscz/stylelint-config'
   - '@visionappscz/stylelint-config/order'
   - '@visionappscz/stylelint-config/scss'
+  - stylelint-config-recommended-scss
 
 rules:
   indentation: 2
