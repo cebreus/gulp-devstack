@@ -1,5 +1,5 @@
 [![Netlify](https://img.shields.io/netlify/80dd73b9-7dff-450b-a038-4fba020d577a)](https://app.netlify.com/sites/gulp-devstack/deploys)
-![Maintenance](https://img.shields.io/maintenance/yes/2022)
+![Maintenance](https://img.shields.io/maintenance/yes/2024)
 ![Contributions welcome](https://img.shields.io/badge/contributions-welcome-green.svg)
 
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/16e0c62b123d4dbfb27c216f5107f464)](https://www.codacy.com/gh/cebreus/gulp-devstack/dashboard?utm_source=github.com\&utm_medium=referral\&utm_content=cebreus/gulp-devstack\&utm_campaign=Badge_Grade)
