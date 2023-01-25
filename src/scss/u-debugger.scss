@@ -1,6 +1,6 @@
-@import "../../node_modules/bootstrap/scss/functions";
-@import "../../node_modules/bootstrap/scss/mixins";
-@import "./variables";
+@import '../../node_modules/bootstrap/scss/functions';
+@import '../../node_modules/bootstrap/scss/mixins';
+@import './variables';
 
 $pink1: #880e4f !default;
 $pink2: #c51162 !default;
@@ -9,32 +9,32 @@ $green2: #00c853 !default;
 $amber1: #ff6f00 !default;
 $amber2: #ffab00 !default;
 
-@mixin viz($colorDark: #263238, $colorLight: #607d8b) {
-  box-shadow: inset 0 0 0 4px rgba($colorDark, 0.5);
+@mixin viz($color-dark: #263238, $color-light: #607d8b) {
+  box-shadow: inset 0 0 0 4px rgba($color-dark, 0.5);
 
   &:hover {
-    box-shadow: inset 0 0 0 5px rgba($colorDark, 0.9);
+    box-shadow: inset 0 0 0 5px rgba($color-dark, 0.9);
   }
 
   &::before {
     border-top-width: 0;
     border-left-width: 0;
-    background: $colorDark;
+    background: $color-dark;
   }
 
-  &[class*="__"] {
-    box-shadow: inset 0 0 0 4px rgba($colorLight, 0.5);
+  &[class*='__'] {
+    box-shadow: inset 0 0 0 4px rgba($color-light, 0.5);
 
     &:hover {
       border-radius: 8px 0 8px 8px;
-      box-shadow: inset 0 0 0 5px rgba($colorLight, 0.9);
+      box-shadow: inset 0 0 0 5px rgba($color-light, 0.9);
     }
 
     &::before {
       right: 0;
       left: auto;
       border-radius: 0 0 0 0.5rem;
-      background: $colorLight;
+      background: $color-light;
     }
   }
 }
@@ -45,9 +45,9 @@ $amber2: #ffab00 !default;
       border: dashed $red 5px;
     }
 
-    [class^="o-"],
-    [class^="c-"],
-    [class^="u-"] {
+    [class^='o-'],
+    [class^='c-'],
+    [class^='u-'] {
       position: relative;
       transition: box-shadow 0.2s ease-in-out, border-radius 0.2s ease-in-out;
 
@@ -64,15 +64,15 @@ $amber2: #ffab00 !default;
         text-transform: initial;
         white-space: nowrap;
         color: white;
-        border-radius: 0 0 0.5rem 0;
+        border-radius: 0 0 0.5rem;
       }
     }
 
-    [class^="c-"] {
+    [class^='c-'] {
       @include viz($green1, $green2);
     }
 
-    [class^="o-"] {
+    [class^='o-'] {
       box-shadow: inset 0 0 0 4px rgba($pink1, 0.5);
 
       &:hover {
@@ -83,12 +83,12 @@ $amber2: #ffab00 !default;
         background: $pink1;
       }
 
-      [class^="c-"] {
+      [class^='c-'] {
         transform: translateY(4px) translateX(4px);
       }
     }
 
-    [class^="u-"] {
+    [class^='u-'] {
       @include viz($amber1, $amber2);
     }
   }

@@ -1,36 +1,38 @@
+@import '../../node_modules/bootstrap/scss/functions';
+@import '../../node_modules/bootstrap/scss/mixins';
+@import './variables';
+
 $row-col-widths: () !default;
+$form-row-col-widths: () !default;
+$gutter-color:rgb(255 0 255 / 30%);
+$snippet-color: #fff;
+$snippet-bg: rgb(255 0 255 / 90%);
 
 // stylelint-disable-next-line scss/dollar-variable-default
-$row-col-widths: map-merge(
-    (
-      xs: 7.9%,
-      sm: 7.9%,
-      md: 8%,
-      lg: 8.08%,
-      xl: 8.12%
-    ),
-    $row-col-widths
+$row-col-widths: map.merge(
+  (
+    xs: 7.9%,
+    sm: 7.9%,
+    md: 8%,
+    lg: 8.08%,
+    xl: 8.12%
+  ),
+  $row-col-widths
 );
 
-$form-row-col-widths: () !default;
-
 // stylelint-disable-next-line scss/dollar-variable-default
-$form-row-col-widths: map-merge(
-    (
-      xs: 8.18%,
-      sm: 8.18%,
-      md: 8.22%,
-      lg: 8.245%,
-      xl: 8.26%
-    ),
-    $form-row-col-widths
+$form-row-col-widths: map.merge(
+  (
+    xs: 8.18%,
+    sm: 8.18%,
+    md: 8.22%,
+    lg: 8.245%,
+    xl: 8.26%
+  ),
+  $form-row-col-widths
 );
 
 @media screen {
-  @import '../../node_modules/bootstrap/scss/functions';
-  @import '../../node_modules/bootstrap/scss/mixins';
-  @import './variables';
-
   @if $show-grid == true or $show-grid != info {
     .row,
     .form-row {
@@ -57,13 +59,12 @@ $form-row-col-widths: map-merge(
         right: -$grid-gutter-width / 2;
         left: -$grid-gutter-width / 2;
 
-        @each $breakpoint in map-keys($grid-breakpoints) {
+        @each $breakpoint in map.keys($grid-breakpoints) {
           @include media-breakpoint-up($breakpoint) {
-            background: repeating-linear-gradient(to right, transparent, transparent $grid-gutter-width, rgba(255, 0, 255, 0.3) $grid-gutter-width, rgba(255, 0, 255, 0.3) #{map-get($row-col-widths, $breakpoint)});
+            background: repeating-linear-gradient(to right, transparent, transparent $grid-gutter-width, $gutter-color $grid-gutter-width, $gutter-color #{map.get($row-col-widths, $breakpoint)});
           }
         }
       }
-      // vnoreny grid nejde rozumne udelat díky dynamicke sirce, mozna pres SVG
     }
 
     .form-row {
@@ -71,9 +72,9 @@ $form-row-col-widths: map-merge(
         right: -5px;
         left: -5px;
 
-        @each $breakpoint in map-keys($grid-breakpoints) {
+        @each $breakpoint in map.keys($grid-breakpoints) {
           @include media-breakpoint-up($breakpoint) {
-            background: repeating-linear-gradient(to right, transparent, transparent $form-grid-gutter-width, rgba(255, 0, 255, 0.3) $form-grid-gutter-width, rgba(255, 0, 255, 0.3) #{map-get($form-row-col-widths, $breakpoint)});
+            background: repeating-linear-gradient(to right, transparent, transparent $form-grid-gutter-width, $gutter-color $form-grid-gutter-width, $gutter-color #{map.get($form-row-col-widths, $breakpoint)});
           }
         }
       }
@@ -92,14 +93,13 @@ $form-row-col-widths: map-merge(
       line-height: 1;
       font-family: monospace;
       white-space: pre;
-      //text-transform: uppercase;
-      color: #fff;
-      background: rgba(#f0f, 0.8);
+      color: $snippet-color;
+      background: $snippet-bg;
 
-      @each $breakpoint in map-keys($grid-breakpoints) {
+      @each $breakpoint in map.keys($grid-breakpoints) {
         @include media-breakpoint-up($breakpoint) {
           // stylelint-disable-next-line
-          content: '#{to-upper-case(#{$breakpoint})} #{map-get($grid-breakpoints, $breakpoint)} \Amaska: ' attr(data-template);
+          content: '#{to-upper-case(#{$breakpoint})} #{map.get($grid-breakpoints, $breakpoint)} \Amaska: ' attr(data-template);
         }
       }
     }
