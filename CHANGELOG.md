@@ -1,5 +1,13 @@
 # Front-end Gulp DevStack Changelog
 
+## Release [4.1.0](https://github.com/cebreus/gulp-devstack/compare/4.0.0...4.1.0) (2023-01-29)
+
+> Code clen-up, npm up, extended code maintenance, Stylelint fixes, Babel update.
+
+### 🚀 New Features
+
+*   feat: update Bootstrap to 5.2.3
+
 ## Release [4.0.0](https://github.com/cebreus/gulp-devstack/compare/3.5.0...4.0.0) (2022-10-05)
 
 ### ⚠️ BREAKING CHANGES
