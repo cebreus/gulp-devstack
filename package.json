@@ -114,7 +114,7 @@
     "html-validate": "^7.13.2",
     "husky": "^8.0.3",
     "lint-staged": "^13.1.2",
-    "release-it": "^15.7.0",
+    "release-it": "^15.9.0",
     "remark": "^14.0.2",
     "remark-cli": "^11.0.0",
     "remark-frontmatter": "^4.0.1",
