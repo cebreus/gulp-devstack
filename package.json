@@ -62,7 +62,7 @@
     "gulp-html-validate": "^0.2.0",
     "gulp-htmlmin": "^5.0.1",
     "gulp-if": "^3.0.0",
-    "gulp-imagemin": "^7.1.0",
+    "gulp-imagemin": "^8.0.0",
     "gulp-inject": "^5.0.5",
     "gulp-jsbeautifier": "^3.0.1",
     "gulp-json-editor": "^2.5.6",
