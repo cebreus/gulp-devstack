@@ -1,5 +1,9 @@
 # Front-end Gulp DevStack Changelog
 
+## 4.1.1 (2023-03-29)
+
+> pnpm up
+
 ## Release [4.1.0](https://github.com/cebreus/gulp-devstack/compare/4.0.0...4.1.0) (2023-01-29)
 
 > Code clen-up, npm up, extended code maintenance, Stylelint fixes, Babel update.
