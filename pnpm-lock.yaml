@@ -8,6 +8,7 @@ specifiers:
   '@commitlint/config-conventional': ^17.4.4
   '@j-ulrich/release-it-regex-bumper': ^4.1.1
   '@release-it/conventional-changelog': ^5.1.1
+  '@snyk/protect': latest
   '@visionappscz/stylelint-config': ^3.0.0
   autoprefixer: ^10.4.14
   bootstrap: 5.2.3
@@ -89,6 +90,7 @@ specifiers:
 dependencies:
   '@babel/core': 7.21.3
   '@babel/eslint-parser': 7.21.3_zhdnyyhch632orqfsceizhvbw4
+  '@snyk/protect': 1.1130.0
   autoprefixer: 10.4.14_postcss@8.4.21
   bootstrap: 5.2.3
   browser-sync: 2.29.1
@@ -2261,6 +2263,12 @@ packages:
     resolution: {integrity: sha512-CX6t4SYQ37lzxicAqsBtxA3OseeoVrh9cSJ5PFYam0GksYlupRfy1A+Q4aYD3zvcfECLc0zO2u+ZnR2UYKvCrw==}
     engines: {node: '>=14.16'}
     dev: true
+
+  /@snyk/protect/1.1130.0:
+    resolution: {integrity: sha512-a/3Q+GZjzooaW6wC0CypOrz5QthRN9WqJPMnziO8UJ2wAQX9NSDM0ZMdelW/JVo5cLo3rn3F4MeFSamB8YQiYg==}
+    engines: {node: '>=10'}
+    hasBin: true
+    dev: false
 
   /@socket.io/component-emitter/3.1.0:
     resolution: {integrity: sha512-+9jVqKhRSpsc591z5vX+X5Yyw+he/HCB4iQ/RYxw35CEPaY1gnsNE43nf9n9AaYjAQrTiI/mOwKUKdUs9vf7Xg==}
