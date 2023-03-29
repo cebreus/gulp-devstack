@@ -1,8 +1,12 @@
 # Front-end Gulp DevStack Changelog
 
-## 4.1.1 (2023-03-29)
+## 4.2.0 (<https://github.com/cebreus/gulp-devstack/compare/4.1.1...4.2.0>) (2023-03-29)
 
-> pnpm up
+> pnpm upr because of securitx reasons; gulp-imagemin v7 > 8
+
+## 4.1.1 (<https://github.com/cebreus/gulp-devstack/compare/4.1.0...4.1.1>) (2023-03-29)
+
+> pnpm upr because of securitx reasons
 
 ## Release [4.1.0](https://github.com/cebreus/gulp-devstack/compare/4.0.0...4.1.0) (2023-01-29)
 
