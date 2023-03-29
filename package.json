@@ -22,7 +22,8 @@
     "todo": "node ./node_modules/gulp/bin/gulp.js -f gulpfile.js todo",
     "todo:show": "npx leasot -x -r markdown -A '.txt,coffeeParser' './**/*.{js,html,njk,scss,txt,md,yml}' -i './node_modules/**/*'",
     "pre-commit": "npx lint-staged",
-    "prepare": "rm -rf .husky && npx husky install && npx husky set .husky/pre-commit 'npm run pre-commit' && npx husky set .husky/commit-msg 'npx --no-install commitlint --edit'"
+    "prepare": "npm run snyk-protect && rm -rf .husky && npx husky install && npx husky set .husky/pre-commit 'npm run pre-commit' && npx husky set .husky/commit-msg 'npx --no-install commitlint --edit'",
+    "snyk-protect": "snyk-protect"
   },
   "repository": {
     "type": "git",
@@ -62,7 +63,7 @@
     "gulp-html-validate": "^0.2.0",
     "gulp-htmlmin": "^5.0.1",
     "gulp-if": "^3.0.0",
-    "gulp-imagemin": "^7.1.0",
+    "gulp-imagemin": "^8.0.0",
     "gulp-inject": "^5.0.5",
     "gulp-jsbeautifier": "^3.0.1",
     "gulp-json-editor": "^2.5.6",
@@ -93,7 +94,8 @@
     "prettier": "^2.8.7",
     "sass": "^1.60.0",
     "through2": "^4.0.2",
-    "vinyl-ftp": "^0.6.1"
+    "vinyl-ftp": "^0.6.1",
+    "@snyk/protect": "latest"
   },
   "devDependencies": {
     "@babel/core": "^7.18.2",
@@ -146,5 +148,6 @@
     "*.scss": [
       "stylelint --fix --allow-empty-input"
     ]
-  }
+  },
+  "snyk": true
 }
