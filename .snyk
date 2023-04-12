@@ -18,3 +18,6 @@ patch:
         patched: '2023-03-29T21:37:59.737Z'
     - gulp-upng > gulp > vinyl-fs > glob-watcher > gaze > globule > glob > minimatch:
         patched: '2023-03-29T21:37:59.737Z'
+  'npm:marked:20170112':
+    - nunjucks-markdown-filter > marked:
+        patched: '2023-04-12T18:11:44.005Z'
