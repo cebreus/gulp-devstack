@@ -57,7 +57,7 @@
     "gulp-concat": "^2.6.1",
     "gulp-data": "^1.3.1",
     "gulp-empty-pipe": "^5.0.0",
-    "gulp-favicons": "^3.0.0",
+    "gulp-favicons": "^4.0.0",
     "gulp-google-webfonts": "^4.1.0",
     "gulp-html-beautify": "^1.0.1",
     "gulp-html-validate": "^0.2.0",
