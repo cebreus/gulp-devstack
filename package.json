@@ -95,7 +95,7 @@
     "sass": "^1.60.0",
     "through2": "^4.0.2",
     "vinyl-ftp": "^0.6.1",
-    "@snyk/protect": "latest"
+    "@snyk/protect": "1.1142.0"
   },
   "devDependencies": {
     "@babel/core": "^7.18.2",
