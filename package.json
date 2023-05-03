@@ -92,7 +92,7 @@
     "postcss": "^8.4.21",
     "postcss-scss": "^4.0.6",
     "prettier": "^2.8.7",
-    "sass": "^1.60.0",
+    "sass": "^1.62.0",
     "through2": "^4.0.2",
     "vinyl-ftp": "^0.6.1",
     "@snyk/protect": "latest"
