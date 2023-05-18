@@ -1,4 +1,3 @@
-const favicons = require('gulp-favicons');
 const gulp = require('gulp');
 
 /**
@@ -8,10 +7,12 @@ const gulp = require('gulp');
  * @param {object} params cofiguration for favicon generator
  */
 
-const iconGenerator = (input, output, params) => {
+const iconGenerator = async (input, output, params) => {
+  const favicons = await import('gulp-favicons');
+
   return gulp
     .src(input)
-    .pipe(favicons(params.config))
+    .pipe(favicons.default(params.config))
     .pipe(gulp.dest(output))
     .on('end', () => {
       params.cb();
