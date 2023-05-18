@@ -98,8 +98,8 @@ dependencies:
     specifier: ^1.1.4
     version: 1.1.4
   gulp-rev:
-    specifier: ^9.0.0
-    version: 9.0.0
+    specifier: ^10.0.0
+    version: 10.0.0(gulp@4.0.2)
   gulp-rev-delete-original:
     specifier: ^0.2.3
     version: 0.2.3
@@ -4657,6 +4657,11 @@ packages:
       lodash: 4.17.21
     dev: false
 
+  /easy-transform-stream@1.0.0:
+    resolution: {integrity: sha512-kIEXvPNtqUQ/lrgkULIP0/l2m88Ahlk2ySZhmuLdRidXBIEPyHuDgDt04b9DvnCy+nIQDjpygVft+Op3PZFUQg==}
+    engines: {node: '>=14.16'}
+    dev: false
+
   /eazy-logger@4.0.1:
     resolution: {integrity: sha512-2GSFtnnC6U4IEKhEI7+PvdxrmjJ04mdsj3wHZTFiw0tUtG4HCWzTr13ZYTk8XOGnA1xQMaDljoBOYlk3D/MMSw==}
     engines: {node: '>= 0.8.0'}
@@ -5688,11 +5693,9 @@ packages:
     engines: {node: '>=0.10.0'}
     dev: false
 
-  /first-chunk-stream@2.0.0:
-    resolution: {integrity: sha512-X8Z+b/0L4lToKYq+lwnKqi9X/Zek0NibLpsJgVsSxpoYq7JtiCtRb5HqKVEjEw/qAb/4AKKRLOwwKHlWNpm2Eg==}
-    engines: {node: '>=0.10.0'}
-    dependencies:
-      readable-stream: 2.3.8
+  /first-chunk-stream@5.0.0:
+    resolution: {integrity: sha512-WdHo4ejd2cG2Dl+sLkW79SctU7mUQDfr4s1i26ffOZRs5mgv+BRttIM9gwcq0rDbemo0KlpVPaa3LBVLqPXzcQ==}
+    engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
     dev: false
 
   /flagged-respawn@1.0.1:
@@ -6765,18 +6768,24 @@ packages:
       through2: 4.0.2
     dev: false
 
-  /gulp-rev@9.0.0:
-    resolution: {integrity: sha512-Ytx/uzDA2xNxHlPG8GReS1ut00msd0HlKDk9Ai/0xF2yvg+DAeGRAviCFlQzQmdZtqAoXznYspwWoGEoxDvhyA==}
-    engines: {node: '>=6'}
+  /gulp-rev@10.0.0(gulp@4.0.2):
+    resolution: {integrity: sha512-5mP6oOGp1DUzBQuiy9IrtyAWHWUOz2n1qLUHfo7LU0p111t7sTkUhKW01b70B2MsDWgScTdz6sGLg76KCbqclw==}
+    engines: {node: '>=16'}
+    peerDependencies:
+      gulp: '>=4'
+    peerDependenciesMeta:
+      gulp:
+        optional: true
     dependencies:
-      modify-filename: 1.1.0
-      plugin-error: 1.0.1
-      rev-hash: 2.0.0
-      rev-path: 2.0.0
-      sort-keys: 2.0.0
-      through2: 2.0.5
-      vinyl: 2.2.1
-      vinyl-file: 3.0.0
+      easy-transform-stream: 1.0.0
+      gulp: 4.0.2
+      modify-filename: 2.0.0
+      plugin-error: 2.0.1
+      rev-hash: 4.0.0
+      rev-path: 3.0.0
+      sort-keys: 5.0.0
+      vinyl: 3.0.0
+      vinyl-file: 5.0.0
     dev: false
 
   /gulp-sass-glob@1.1.0:
@@ -7748,7 +7757,6 @@ packages:
   /is-plain-obj@4.1.0:
     resolution: {integrity: sha512-+Pgi+vMuUNkJyExiMBt5IlFoMyKnr5zhJ4Uspz58WOhBF5QoIZkFyNHIbBAtHwzVAgk5RtndVNsDRN61/mmDqg==}
     engines: {node: '>=12'}
-    dev: true
 
   /is-plain-object@2.0.4:
     resolution: {integrity: sha512-h5PpgXkWitc38BBMYawTYMWJHFZJVnBquFE57xFpjB8pJFiF6gZ+bU+WyI/yqXiFR5mdLsgYNaPe8uao6Uv9Og==}
@@ -9424,9 +9432,9 @@ packages:
       minimist: 1.2.8
     dev: false
 
-  /modify-filename@1.1.0:
-    resolution: {integrity: sha512-EickqnKq3kVVaZisYuCxhtKbZjInCuwgwZWyAmRIp1NTMhri7r3380/uqwrUHfaDiPzLVTuoNy4whX66bxPVog==}
-    engines: {node: '>=0.10.0'}
+  /modify-filename@2.0.0:
+    resolution: {integrity: sha512-VX9/MdgUN9StpSLImJ0+AyV2dxJJtyojIwRHF/Ja942tW7FTzxXI186jDSTk4k5wj2+59a4bRzFnJUgMSi+ygg==}
+    engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
     dev: false
 
   /modify-values@1.0.1:
@@ -12309,16 +12317,16 @@ packages:
     resolution: {integrity: sha512-U9nH88a3fc/ekCF1l0/UP1IosiuIjyTh7hBvXVMHYgVcfGvt897Xguj2UOLDeI5BG2m7/uwyaLVT6fbtCwTyzw==}
     engines: {iojs: '>=1.0.0', node: '>=0.10.0'}
 
-  /rev-hash@2.0.0:
-    resolution: {integrity: sha512-U6EkYZI87C3B5KS46HAEy+g+rtueIdfF9Zb6XBlGe3R/RaF3V8drN7nRFm7/swHOK1zQLGvIYwQ4Q6WDAAlynw==}
-    engines: {node: '>=4'}
+  /rev-hash@4.0.0:
+    resolution: {integrity: sha512-5w/auZRs65pf1AkZIbfICeorQfOCb6XVWaHmDEbkMyjmyRMxck+W0Erdj9zffuBRXxn5cbKfgmWQ9GpgR8dFZQ==}
+    engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
     dev: false
 
-  /rev-path@2.0.0:
-    resolution: {integrity: sha512-G5R2L9gYu9kEuqPfIFgO9gO+OhBWOAT83HyauOQmGHO6y9Fsa4acv+XsmNhNDrod0HDh1/VxJRmsffThzeHJlQ==}
-    engines: {node: '>=4'}
+  /rev-path@3.0.0:
+    resolution: {integrity: sha512-2fUuv6IC7Z+Vj+DXEunJYJDZuwSsaJJHeLar3n2PGvHSH7j5+Xpd/Xh7PenekH4WQhxFuHtsGwd1dCh/HvT6Gw==}
+    engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
     dependencies:
-      modify-filename: 1.1.0
+      modify-filename: 2.0.0
     dev: false
 
   /rfdc@1.3.0:
@@ -12819,6 +12827,13 @@ packages:
       is-plain-obj: 1.1.0
     dev: false
 
+  /sort-keys@5.0.0:
+    resolution: {integrity: sha512-Pdz01AvCAottHTPQGzndktFNdbRA75BgOfeT1hH+AMnJFv8lynkPi42rfeEhpx1saTEI3YNMWxfqu0sFD1G8pw==}
+    engines: {node: '>=12'}
+    dependencies:
+      is-plain-obj: 4.1.0
+    dev: false
+
   /sort-object@0.0.6:
     resolution: {integrity: sha512-hZhnkwm+OnCAM0mIk39b2N9paVG6idNh68y7i9CydEXHTpyJxSwAdGyE2GS3LAvEqSWdFP3OXUKEdJ6kjrA8Vg==}
     engines: {node: '>= 0.8.0'}
@@ -13085,19 +13100,19 @@ packages:
     dependencies:
       ansi-regex: 6.0.1
 
-  /strip-bom-buf@1.0.0:
-    resolution: {integrity: sha512-1sUIL1jck0T1mhOLP2c696BIznzT525Lkub+n4jjMHjhjhoAQA6Ye659DxdlZBr0aLDMQoTxKIpnlqxgtwjsuQ==}
-    engines: {node: '>=4'}
+  /strip-bom-buf@3.0.1:
+    resolution: {integrity: sha512-iJaWw2WroigLHzQysdc5WWeUc99p7ea7AEgB6JkY8CMyiO1yTVAA1gIlJJgORElUIR+lcZJkNl1OGChMhvc2Cw==}
+    engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
     dependencies:
       is-utf8: 0.2.1
     dev: false
 
-  /strip-bom-stream@2.0.0:
-    resolution: {integrity: sha512-yH0+mD8oahBZWnY43vxs4pSinn8SMKAdml/EOGBewoe1Y0Eitd0h2Mg3ZRiXruUW6L4P+lvZiEgbh0NgUGia1w==}
-    engines: {node: '>=0.10.0'}
+  /strip-bom-stream@5.0.0:
+    resolution: {integrity: sha512-Yo472mU+3smhzqeKlIxClre4s4pwtYZEvDNQvY/sJpnChdaxmKuwU28UVx/v1ORKNMxkmj1GBuvxJQyBk6wYMQ==}
+    engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
     dependencies:
-      first-chunk-stream: 2.0.0
-      strip-bom: 2.0.0
+      first-chunk-stream: 5.0.0
+      strip-bom-buf: 3.0.1
     dev: false
 
   /strip-bom@1.0.0:
@@ -14334,15 +14349,14 @@ packages:
       vfile-message: 3.1.4
     dev: true
 
-  /vinyl-file@3.0.0:
-    resolution: {integrity: sha512-BoJDj+ca3D9xOuPEM6RWVtWQtvEPQiQYn82LvdxhLWplfQsBzBqtgK0yhCP0s1BNTi6dH9BO+dzybvyQIacifg==}
-    engines: {node: '>=4'}
+  /vinyl-file@5.0.0:
+    resolution: {integrity: sha512-MvkPF/yA1EX7c6p+juVIvp9+Lxp70YUfNKzEWeHMKpUNVSnTZh2coaOqLxI0pmOe2V9nB+OkgFaMDkodaJUyGw==}
+    engines: {node: '>=14.16'}
     dependencies:
-      graceful-fs: 4.2.11
-      pify: 2.3.0
-      strip-bom-buf: 1.0.0
-      strip-bom-stream: 2.0.0
-      vinyl: 2.2.1
+      '@types/vinyl': 2.0.7
+      strip-bom-buf: 3.0.1
+      strip-bom-stream: 5.0.0
+      vinyl: 3.0.0
     dev: false
 
   /vinyl-fs@0.3.14:
