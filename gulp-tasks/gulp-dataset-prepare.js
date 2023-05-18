@@ -14,6 +14,11 @@ const through2 = require('through2');
  * @returns {*} Processed files
  */
 
+marked.setOptions({
+  mangle: false,
+  headerIds: false,
+});
+
 const datasetPrepare = (input, output, params = {}) => {
   const files = [];
 
