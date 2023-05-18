@@ -1,5 +1,4 @@
 const gulp = require('gulp');
-const rev = require('gulp-rev');
 const revDelete = require('gulp-rev-delete-original');
 const revReplace = require('gulp-rev-replace');
 const revRewrite = require('gulp-rev-rewrite');
@@ -15,11 +14,13 @@ const revRewrite = require('gulp-rev-rewrite');
  * @returns {*} Files with version hash
  */
 
-const revision = (params) => {
+const revision = async (params) => {
+  const rev = await import('gulp-rev');
+
   return (
     gulp
       .src(params.inputRevision)
-      .pipe(rev())
+      .pipe(rev.default())
       .pipe(revReplace())
       .pipe(revDelete())
       .pipe(gulp.dest(params.outputRevision))
