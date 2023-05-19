@@ -219,19 +219,12 @@ function favicons(done) {
 // Fonts
 
 function fontLoad(done) {
-  return fontLoadFnc(
-    config.fontloadFile,
-    config.tempBase,
-    {
-      config: config.fontLoadConfig,
-      verbose: showLogs,
-      cb: () => {
-        done();
-      },
-    },
-    () => {
+  return fontLoadFnc(config.fontloadFile, config.tempBase, {
+    config: config.fontLoadConfig,
+    verbose: showLogs,
+    cb: () => {
       copyStaticFnc(
-        `${config.tempBase}/assets/font/**/*`,
+        `${config.tempBase}/assets/font/*`,
         `${config.tempBase}/assets/font`,
         `${config.buildBase}/assets/font`,
         {
@@ -240,8 +233,8 @@ function fontLoad(done) {
           },
         }
       );
-    }
-  );
+    },
+  });
 }
 
 // Gulp tasks
