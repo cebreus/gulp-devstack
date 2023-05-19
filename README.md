@@ -1,3 +1,4 @@
+[![Build\&Deploy GitHub pages](https://github.com/cebreus/gulp-devstack/actions/workflows/github-pages-deploy.yml/badge.svg)](https://github.com/cebreus/gulp-devstack/actions/workflows/github-pages-deploy.yml)
 [![Netlify](https://img.shields.io/netlify/80dd73b9-7dff-450b-a038-4fba020d577a)](https://app.netlify.com/sites/gulp-devstack/deploys)
 ![Maintenance](https://img.shields.io/maintenance/yes/2024)
 ![Contributions welcome](https://img.shields.io/badge/contributions-welcome-green.svg)
