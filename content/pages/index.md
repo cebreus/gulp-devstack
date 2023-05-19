@@ -17,7 +17,7 @@ hero:
     ![GitHub open issues](https://img.shields.io/github/issues/cebreus/gulp-devstack)
     ![License](https://img.shields.io/github/license/cebreus/gulp-devstack)
 
-    [![Build and Deploy](https://github.com/cebreus/gulp-devstack/actions/workflows/blank.yml/badge.svg)](https://github.com/cebreus/gulp-devstack/actions/workflows/blank.yml)
+    [![Build\&Deploy GitHub pages](https://github.com/cebreus/gulp-devstack/actions/workflows/github-pages-deploy.yml/badge.svg)](https://github.com/cebreus/gulp-devstack/actions/workflows/github-pages-deploy.yml)
     [![Netlify](https://img.shields.io/netlify/80dd73b9-7dff-450b-a038-4fba020d577a)](https://app.netlify.com/sites/gulp-devstack/deploys)
 entity_status:
   date: 2020-02-01T11:00
