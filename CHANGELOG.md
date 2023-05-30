@@ -1,5 +1,9 @@
 # Front-end Gulp DevStack Changelog
 
+## Release [4.3.1](https://github.com/cebreus/gulp-devstack/compare/4.2.0...4.3.1) (2023-05-30)
+
+> Security update, README fix.
+
 ## Release [4.3.0](https://github.com/cebreus/gulp-devstack/compare/4.2.0...4.3.0) (2023-05-18)
 
 > Security update and minor improvements made. Deployment fixed.
