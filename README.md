@@ -12,8 +12,8 @@
 > Gulp stack for building optimized static pages and exports for collaboration between coders and programmers.
 
 <br>
-
-**Table of contents** (click to expand)
+<details>
+  <summary><b>Table of contents</b> (click to expand)</summary>
 
 <!-- toc -->
 
@@ -35,6 +35,9 @@
 *   [Contact](#contact)
 
 <!-- tocstop -->
+
+</details>
+<br>
 
 ## Typical use cases
 
