@@ -49,7 +49,7 @@
     "bootstrap": "5.2.3",
     "browser-sync": "^2.29.3",
     "cssnano": "^6.0.1",
-    "dotenv": "^16.0.3",
+    "dotenv": "^16.1.4",
     "fancy-log": "^2.0.0",
     "gulp": "^4.0.2",
     "gulp-babel": "^8.0.0",
