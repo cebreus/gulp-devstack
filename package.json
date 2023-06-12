@@ -43,8 +43,8 @@
     "bootstrap"
   ],
   "dependencies": {
-    "@babel/core": "^7.22.1",
-    "@babel/eslint-parser": "^7.21.8",
+    "@babel/core": "^7.22.5",
+    "@babel/eslint-parser": "^7.22.5",
     "autoprefixer": "^10.4.14",
     "bootstrap": "5.2.3",
     "browser-sync": "^2.29.3",
@@ -86,19 +86,19 @@
     "gulp-uglify": "^3.0.2",
     "gulp-upng": "^1.0.3",
     "imagemin-mozjpeg": "^9.0.0",
-    "marked": "^5.0.5",
+    "marked": "^5.1.0",
     "nunjucks-date-filter-locale": "^1.4.3",
     "nunjucks-markdown-filter": "^0.1.0",
     "postcss": "^8.4.24",
     "postcss-scss": "^4.0.6",
     "prettier": "^2.8.8",
-    "sass": "^1.63.2",
+    "sass": "^1.63.3",
     "through2": "^4.0.2",
     "vinyl-ftp": "^0.6.1"
   },
   "devDependencies": {
     "@babel/core": "^7.21.8",
-    "@babel/preset-env": "^7.22.4",
+    "@babel/preset-env": "^7.22.5",
     "@commitlint/cli": "^17.6.5",
     "@commitlint/config-conventional": "^17.6.5",
     "@j-ulrich/release-it-regex-bumper": "^4.1.1",
