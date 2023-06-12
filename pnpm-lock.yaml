@@ -11,8 +11,8 @@ dependencies:
     specifier: ^10.4.14
     version: 10.4.14(postcss@8.4.24)
   bootstrap:
-    specifier: 5.2.3
-    version: 5.2.3(@popperjs/core@2.11.8)
+    specifier: 5.3.0
+    version: 5.3.0(@popperjs/core@2.11.8)
   browser-sync:
     specifier: ^2.29.3
     version: 2.29.3
@@ -176,7 +176,7 @@ devDependencies:
     version: 5.1.1(release-it@15.11.0)
   '@snyk/protect':
     specifier: latest
-    version: 1.1175.0
+    version: 1.1177.0
   '@visionappscz/stylelint-config':
     specifier: ^3.0.0
     version: 3.0.0(postcss@8.4.24)(stylelint@14.16.1)
@@ -2060,8 +2060,8 @@ packages:
     engines: {node: '>=14.16'}
     dev: true
 
-  /@snyk/protect@1.1175.0:
-    resolution: {integrity: sha512-a7Kd79MMYoW1k/cevdjV9MuUcEfRjdABSxBl49fpcHmmGcz+fUd4fjXiiyJxZE/OqYwlAVr7GwHEbitSko1cVA==}
+  /@snyk/protect@1.1177.0:
+    resolution: {integrity: sha512-hmwgWQTB+Fj+iQuL7jrup/qVJ+AI8txN6CqsvIAr/q7eMjccqkgs9kDIEan9UOPSWdZ0cGBlBzaQOEJgVTttmw==}
     engines: {node: '>=10'}
     hasBin: true
     dev: true
@@ -2926,6 +2926,7 @@ packages:
 
   /bindings@1.5.0:
     resolution: {integrity: sha512-p2q/t/mhvuOj/UeLlV6566GD/guowlr0hHxClI0W9m7MWYkL1F0hLo+0Aexs9HSPCtR1SXQ0TD3MMKrXZajbiQ==}
+    requiresBuild: true
     dependencies:
       file-uri-to-path: 1.0.0
     dev: false
@@ -2957,10 +2958,10 @@ packages:
     resolution: {integrity: sha512-JZOSA7Mo9sNGB8+UjSgzdLtokWAky1zbztM3WRLCbZ70/3cTANmQmOdR7y2g+J0e2WXywy1yS468tY+IruqEww==}
     dev: false
 
-  /bootstrap@5.2.3(@popperjs/core@2.11.8):
-    resolution: {integrity: sha512-cEKPM+fwb3cT8NzQZYEu4HilJ3anCrWqh3CHAok1p9jXqMPsPTBhU25fBckEJHJ/p+tTxTFTsFQGM+gaHpi3QQ==}
+  /bootstrap@5.3.0(@popperjs/core@2.11.8):
+    resolution: {integrity: sha512-UnBV3E3v4STVNQdms6jSGO2CvOkjUMdDAVR2V5N4uCMdaIkaQjbcEAMqRimDHIs4uqBYzDAKCQwCB+97tJgHQw==}
     peerDependencies:
-      '@popperjs/core': ^2.11.6
+      '@popperjs/core': ^2.11.7
     dependencies:
       '@popperjs/core': 2.11.8
     dev: false
@@ -5623,6 +5624,7 @@ packages:
 
   /file-uri-to-path@1.0.0:
     resolution: {integrity: sha512-0Zt+s3L7Vf1biwWZ29aARiVYLx7iMGnEUl9x33fbB/j3jR81u/O2LbqK+Bm1CDSNDKVtJ/YjwY7TUd5SkeLQLw==}
+    requiresBuild: true
     dev: false
     optional: true
 
@@ -9579,6 +9581,7 @@ packages:
 
   /nan@2.17.0:
     resolution: {integrity: sha512-2ZTgtl0nJsO0KQCjEpxcIr5D+Yv90plTitZt9JBfQvVJDS5seMl3FOvsh3+9CoYWXf/1l5OaZzzF6nDm4cagaQ==}
+    requiresBuild: true
     dev: false
     optional: true
 
