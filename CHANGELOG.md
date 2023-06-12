@@ -1,30 +1,41 @@
 # Front-end Gulp DevStack Changelog
 
-## Release [4.3.1](https://github.com/cebreus/gulp-devstack/compare/4.2.0...4.3.1) (2023-05-30)
+## [4.4.0](https://github.com/cebreus/gulp-devstack/compare/4.0.0...4.4.0) (2023-06-12)
 
-> Security update, README fix.
+> It contains Bootstrap 5.3.0, security updates and major package upgrades.
 
-## Release [4.3.0](https://github.com/cebreus/gulp-devstack/compare/4.2.0...4.3.0) (2023-05-18)
+### 🚀 New Features
 
-> Security update and minor improvements made. Deployment fixed.
+*   feat: upgrade Bootstrap to 5.3.0
+*   feat: new GitHub action for deployment to GitHub Pages
 
-## Release [4.2.0](https://github.com/cebreus/gulp-devstack/compare/4.1.1...4.2.0) (2023-03-29)
+## Release [4.3.1](https://github.com/cebreus/gulp-devstack/compare/4.0.0...4.3.1) (2023-05-30)
 
-> Security updates and minor improvements have been made. Gulp-imagemin has been upgraded to version 8.
+> Security updates, README fix.
 
-## Release [4.1.1](https://github.com/cebreus/gulp-devstack/compare/4.1.0...4.1.1) (2023-03-29)
+## Release [4.3.0](https://github.com/cebreus/gulp-devstack/compare/4.0.0...4.3.0) (2023-05-18)
+
+> Security updates and minor fixes.
+
+## Release [4.2.0](https://github.com/cebreus/gulp-devstack/compare/4.0.0...4.2.0) (2023-03-29)
+
+> Security updates, minor enhancements and upgrade of gulp-imagemin to version 8.
+
+## Release [4.1.1](https://github.com/cebreus/gulp-devstack/compare/4.0.0...4.1.1) (2023-03-29)
 
 > Security updates.
 
 ## Release [4.1.0](https://github.com/cebreus/gulp-devstack/compare/4.0.0...4.1.0) (2023-01-29)
 
-> Code clean-up, security fixes, vast code maintenance, Stylelint fixes, Babel update.
+> Code cleanup, security fixes, major code maintenance, Stylelint fixes and Babel upgrade.
 
 ### 🚀 New Features
 
 *   feat: update Bootstrap to 5.2.3
 
 ## Release [4.0.0](https://github.com/cebreus/gulp-devstack/compare/3.5.0...4.0.0) (2022-10-05)
+
+> **Major release!** Refactored all Gulp tasks and scripts. Contains Bootstrap 5.2.2 and security updates.
 
 ### ⚠️ BREAKING CHANGES
 
@@ -47,12 +58,16 @@
 
 ## Release [3.5.0](https://github.com/cebreus/gulp-devstack/compare/3.4.0...3.5.0) (2022-06-20)
 
+> Security updates, Bootstrap 5.2.0 and minor fixes and refactors.
+
 *   feat: update Bootstrap to 5.2.0
 *   refactor: calling if the npm scripts
 *   fix: unresolved variable
 *   fix: fs-read() encoding to 'utf8'
 
 ## Release [3.4.0](https://github.com/cebreus/gulp-devstack/compare/3.3.1...3.4.0) (2022-02-02)
+
+> Update to Node.js 16 and cross-platform fixes.
 
 *   Node.js 16
 *   Prefix relative paths in export with '.'
@@ -61,7 +76,7 @@
 
 ## Release [3.3.1](https://github.com/cebreus/gulp-devstack/compare/3.3.0...3.3.1) (2021-12-01)
 
-Minor npm up and minor updates in README.
+> Security and README updates.
 
 ## Release [3.3.0](https://github.com/cebreus/gulp-devstack/compare/3.2.0...3.3.0) (2021-11-22)
 
