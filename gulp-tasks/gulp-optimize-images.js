@@ -1,7 +1,6 @@
 const gulp = require('gulp');
 const gulpif = require('gulp-if');
 const log = require('fancy-log');
-const mozjpeg = require('imagemin-mozjpeg');
 const newer = require('gulp-newer');
 const plumber = require('gulp-plumber');
 const upng = require('gulp-upng');
@@ -44,6 +43,7 @@ async function processImages(input, output, plugins, params = {}) {
 }
 
 const optimizeJpg = async (input, output, params = {}) => {
+  const mozjpeg = await loadPlugin('imagemin-mozjpeg');
   const plugins = [
     mozjpeg({
       quantTable: 3,

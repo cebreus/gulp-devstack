@@ -7,19 +7,12 @@
 // Importy komponent
 // --------------
 
-@import 'c-article';
-
 // Přetížení Bootatrapu
 // --------------
 
 // Set minimum reasonable width on very small devices
 
 body {
-  --orange: #ff8442;
-  --red: #ed0b36;
-  --bs-light: #eef3fc;
-  --bs-body-color: #0a1d39;
-
   min-width: 320px;
 }
 
@@ -42,31 +35,28 @@ img:not([src$='.svg']) {
 // --------------
 
 .o-header {
-  color: var(--bs-white);
-  background-color: var(--bs-body-color);
-}
+  color: var(--bs-dark-text-emphasis);
 
-.navbar-brand {
-  color: var(--orange);
+  &[data-bs-theme='dark'] {
+    background-color: #0a1d39;
+  }
 
-  &:hover {
-    color: var(--red);
+  .navbar {
+    --bs-navbar-brand-color: var(--bs-orange);
+    --bs-navbar-brand-hover-color: var(--bs-link-hover-color);
   }
 }
 
-.nav-link {
-  color: var(--bs-white);
-
-  &:hover {
-    color: var(--red);
-  }
+.navbar-nav {
+  --bs-nav-link-color: var(--bs-orange);
+  --bs-nav-link-hover-color: var(--bs-link-hover-color);
 }
 
 // Hlavní obsah
 // --------------
 
 .o-main {
-  background-color: var(--bs-light);
+  background-color: var(--bs-tertiary-bg);
 
   h1 {
     padding-bottom: 0.5rem;
@@ -74,7 +64,7 @@ img:not([src$='.svg']) {
     letter-spacing: 0.15rem;
 
     // prettier-ignore
-    background-image: linear-gradient(130deg, var(--red) 20%, var(--orange) 40%);
+    background-image: linear-gradient(130deg, var(--bs-red) 20%, var(--bs-orange) 40%);
     background-clip: text;
     -webkit-text-fill-color: transparent;
   }
