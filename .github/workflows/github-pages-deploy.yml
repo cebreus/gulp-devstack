@@ -1,9 +1,9 @@
 name: Build and Deploy
 on:
   push:
-    branches: ["master"]
+    branches: ['master']
   workflow_dispatch:
-    branches: ["master", "develop"]
+    branches: ['master', 'develop']
 
 permissions:
   contents: write
@@ -32,6 +32,6 @@ jobs:
           npm run build
 
       - name: Deploy to GitHub Pages 🚀
-        uses: JamesIves/github-pages-deploy-action@4
+        uses: JamesIves/github-pages-deploy-action@4.4.2
         with:
           folder: build
