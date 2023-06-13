@@ -1,33 +1,37 @@
 name: Build and Deploy
 on:
   push:
-    branches:
-      - master
+    branches: ["master"]
+  workflow_dispatch:
+    branches: ["master", "develop"]
+
+permissions:
+  contents: write
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: 🚚 Get latest code
-        uses: actions/checkout@v2
+      - name: Checkout 🔄
+        uses: actions/checkout@v3
 
-      - name: Cache dependencies
+      - name: Cache dependencies 🗄️
         id: cache
-        uses: actions/cache@v2
+        uses: actions/cache@3
         with:
           path: ./node_modules
           key: modules-${{ hashFiles('package-lock.json') }}
 
-      - name: Install dependencies
+      - name: Install dependencies ⬇️
         if: steps.cache.outputs.cache-hit != 'true'
         run: npm ci
 
-      - name: 🔨 Build
+      - name: Build project 🔨
         run: |
           npm run build
 
-      - name: 🚀 Deploy
-        uses: JamesIves/github-pages-deploy-action@4.1.6
+      - name: Deploy to GitHub Pages 🚀
+        uses: JamesIves/github-pages-deploy-action@4
         with:
-          branch: gh-pages
           folder: build
