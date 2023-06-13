@@ -1,14 +1,18 @@
 # Front-end Gulp DevStack Changelog
 
-## [4.4.2](https://github.com/cebreus/gulp-devstack/compare/4.4.0...4.4.2) (2023-06-13)
+## [4.4.3](https://github.com/cebreus/gulp-devstack/compare/4.0.0...4.4.3) (2023-06-13)
+
+> Fix workflow dependency.
+
+## [4.4.2](https://github.com/cebreus/gulp-devstack/compare/4.0.0...4.4.2) (2023-06-13)
 
 > Fix release notes.
 
-## [4.4.1](https://github.com/cebreus/gulp-devstack/compare/4.4.0...4.4.1) (2023-06-13)
+## [4.4.1](https://github.com/cebreus/gulp-devstack/compare/4.0.0...4.4.1) (2023-06-13)
 
 > Refactor GitHub workflows.
 
-## [4.4.0](https://github.com/cebreus/gulp-devstack/compare/4.3.0...4.4.0) (2023-06-12)
+## [4.4.0](https://github.com/cebreus/gulp-devstack/compare/4.0.0...4.4.0) (2023-06-12)
 
 > It contains Bootstrap 5.3.0, security updates and major package upgrades.
 
@@ -17,19 +21,19 @@
 *   feat: upgrade Bootstrap to 5.3.0
 *   feat: new GitHub action for deployment to GitHub Pages
 
-## Release [4.3.1](https://github.com/cebreus/gulp-devstack/compare/4.3.0...4.3.1) (2023-05-30)
+## Release [4.3.1](https://github.com/cebreus/gulp-devstack/compare/4.0.0...4.3.1) (2023-05-30)
 
 > Security updates, README fix.
 
-## Release [4.3.0](https://github.com/cebreus/gulp-devstack/compare/4.2.0...4.3.0) (2023-05-18)
+## Release [4.3.0](https://github.com/cebreus/gulp-devstack/compare/4.0.0...4.3.0) (2023-05-18)
 
 > Security updates and minor fixes.
 
-## Release [4.2.0](https://github.com/cebreus/gulp-devstack/compare/4.1.0...4.2.0) (2023-03-29)
+## Release [4.2.0](https://github.com/cebreus/gulp-devstack/compare/4.0.0...4.2.0) (2023-03-29)
 
 > Security updates, minor enhancements and upgrade of gulp-imagemin to version 8.
 
-## Release [4.1.1](https://github.com/cebreus/gulp-devstack/compare/4.1.0...4.1.1) (2023-03-29)
+## Release [4.1.1](https://github.com/cebreus/gulp-devstack/compare/4.0.0...4.1.1) (2023-03-29)
 
 > Security updates.
 

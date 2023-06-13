@@ -99,7 +99,7 @@ const faviconGenConfig = {
   orientation: 'portrait',
   scope: '/',
   start_url: '/index.html',
-  version: '4.4.2',
+  version: '4.4.3',
   logging: false,
   html: 'favicons.njk',
   pipeHTML: true,
