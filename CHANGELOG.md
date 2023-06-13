@@ -1,5 +1,9 @@
 # Front-end Gulp DevStack Changelog
 
+## [4.4.1](https://github.com/cebreus/gulp-devstack/compare/4.3.0...4.4.1) (2023-06-13)
+
+> Refactor GitHub workflows.
+
 ## [4.4.0](https://github.com/cebreus/gulp-devstack/compare/4.2.0...4.4.0) (2023-06-12)
 
 > It contains Bootstrap 5.3.0, security updates and major package upgrades.
