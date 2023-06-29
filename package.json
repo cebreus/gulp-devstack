@@ -110,7 +110,7 @@
     "eslint-config-prettier": "^8.8.0",
     "eslint-plugin-disable": "^2.0.3",
     "eslint-plugin-import": "^2.27.5",
-    "eslint-plugin-jsdoc": "^46.4.0",
+    "eslint-plugin-jsdoc": "^46.4.2",
     "eslint-plugin-prettier": "^4.2.1",
     "eslint-plugin-require-sort": "^1.3.0",
     "html-validate": "^8.0.5",
@@ -130,7 +130,7 @@
     "remark-preset-lint-recommended": "^6.1.3",
     "stylelint": "^15.9.0",
     "stylelint-high-performance-animation": "^1.8.0",
-    "stylelint-selector-bem-pattern": "^2.1.1"
+    "stylelint-selector-bem-pattern": "^3.0.0"
   },
   "engines": {
     "node": ">=16"
