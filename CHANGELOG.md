@@ -1,5 +1,9 @@
 # Front-end Gulp DevStack Changelog
 
+## [4.4.1](https://github.com/cebreus/gulp-devstack/compare/4.0.0...4.4.1) (2023-07-03)
+
+> Fix a glob in the `copyStaticFnc()` function, refactor the `buildTodo()` function and security updates.
+
 ## [4.4.0](https://github.com/cebreus/gulp-devstack/compare/4.0.0...4.4.0) (2023-06-12)
 
 > It contains Bootstrap 5.3.0, security updates and major package upgrades.
