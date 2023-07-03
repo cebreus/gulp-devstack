@@ -31,7 +31,7 @@ function cleanFolders() {
 
 function copyStatic(done) {
   return copyStaticFnc(
-    [`${config.staticBase}/*`, `${config.staticBase}/.*/*`],
+    [`${config.staticBase}/**/*`, `${config.staticBase}/.*/*`],
     './static',
     config.buildBase,
     {
