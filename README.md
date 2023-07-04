@@ -54,7 +54,7 @@ When you want to build whole web sites from the data sources as API or many mark
 *   Developer-friendly — [ESLint](https://eslint.org/), [Prettier](https://prettier.io/), [Remark](https://remark.js.org/), [Stylelint](https://stylelint.io/) via tasks or with [Husky](https://github.com/typicode/husky) and [Lint staged](https://github.com/okonet/lint-staged).
 *   Separate tasks for Development, Export and Build with automatic renaming and hashing all critical assets.
 *   Ready for implementation Git based CMS as [Tina CMS](https://tina.io/) or [Netlify CMS](https://www.netlifycms.org/) etc. — Front Matter (Markdown files metadata and content).
-*   HTML temlates uses [Nunjucks](https://mozilla.github.io/nunjucks/). Fully customisable [Bootstrap 5.3.x](https://getbootstrap.com/) extended with [BEM](https://en.bem.info/). JavaScript processed with [Babel](https://babeljs.io/) or injected from CDN or as static files.
+*   HTML temlates uses [Nunjucks](https://mozilla.github.io/nunjucks/). Fully customisable [Bootstrap 5.3](https://getbootstrap.com/) extended with [BEM](https://en.bem.info/). JavaScript processed with [Babel](https://babeljs.io/) or injected from CDN or as static files.
 
 ***
 
