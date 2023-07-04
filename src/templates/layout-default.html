@@ -1,16 +1,25 @@
+{% set seoTitle %}
+{% if (seo.title is defined and seo.title | length > 0) 
+  or(title is defined and title | length > 0) %}
+  {{ (seo.title or title) | striptags  }}
+{% elseif SITE.seo.title is defined and SITE.seo.title | length > 0 %}
+{% endif %}
+{{ (SITE.seo.title ) | striptags  }}
+{% endset %}
 <!DOCTYPE html>
 <html lang="{{ SITE.meta.lang }}">
   <head>
     <meta charset="{{ SITE.meta.charset }}">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ seoTitle | striptags | trim }}</title>
+
+    <!-- inject:css -->
+    <!-- endinject -->
 
     {% include "./partials/meta-seo.njk" %}
     {% include "./partials/meta-open-graph.njk" %}
     {% include "./partials/meta-twitter-cards.njk" %}
     {% include "./partials/favicons.njk" %}
-
-    <!-- inject:css -->
-    <!-- endinject -->
   </head>
   <body data-version="4.4.1" data-template="{{ pageData.template }}" data-bs-theme="light">
 
