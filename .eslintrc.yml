@@ -3,14 +3,16 @@ env:
   commonjs: false
   es2021: true
 extends:
-  - airbnb-base
-  - plugin:prettier/recommended
-  - plugin:jsdoc/recommended
+  - 'eslint:recommended'
+  - 'airbnb-base'
+  - 'plugin:prettier/recommended'
+  - 'plugin:jsdoc/recommended'
 plugins:
   - prettier
   - require-sort
   - jsdoc
   - disable
+  - import
 overrides:
   - files:
       - '*.js'
@@ -27,5 +29,21 @@ parserOptions:
   presets: ['@babel/preset-env']
 processor: 'disable/disable'
 rules:
-  'require-sort/require-sort': [warn, { 'ignoreCase': true }]
+  'require-sort/require-sort': [warn,
+    {
+      ignoreCase: false,
+      ignoreDeclarationSort: false,
+      ignorePropertySort: false,
+      propertySyntaxSortOrder: ["none", "multiple", "single"],
+    }
+  ]
   no-param-reassign: ['error', { 'props': false }]
+  sort-imports: [warn,
+    {
+      ignoreCase: false,
+      ignoreDeclarationSort: false,
+      ignoreMemberSort: false,
+      memberSyntaxSortOrder: ["none", "all", "multiple", "single"],
+      allowSeparatedGroups: false
+    }
+  ]

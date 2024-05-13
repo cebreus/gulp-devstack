@@ -24,6 +24,7 @@ const { loadPlugin } = require('../gulp-tasks/helpers');
 
 const revision = async (params) => {
   const rev = await loadPlugin('gulp-rev');
+
   const cb = params.cb || (() => {});
 
   if (typeof cb !== 'function') {
