@@ -45,7 +45,7 @@ const processJs = (input, output, params = {}) => {
             },
           ],
         ],
-      })
+      }),
     )
     .pipe(uglify())
     .pipe(gulpif(concatFiles, gulpConcat(outputConcatFileName)))

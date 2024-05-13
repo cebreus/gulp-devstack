@@ -27,33 +27,42 @@ const showLogs = false;
 // Gulp functions
 // --------------
 
-function cleanFolders() {
-  return cleanFnc([config.tempBase, config.buildBase]);
-}
-
-function cleanupBuild() {
-  return cleanFnc([`${config.buildBase}/assets/favicons/favicons.njk`]);
+function cleanFolders(done) {
+  return cleanFnc([config.tempBase, config.buildBase], {
+    verbose: showLogs,
+    cb: () => {
+      done();
+    },
+  });
 }
 
 function copyStatic(done) {
   return copyStaticFnc(
-    [`${config.staticBase}/**/*`, `${config.staticBase}/.*/*`],
-    './static',
+    [
+      `${config.staticBase}/*`,
+      `${config.staticBase}/**/*`,
+      `${config.staticBase}/.*/*`,
+    ],
+    config.staticBase,
     config.buildBase,
     {
+      verbose: showLogs,
       cb: () => {
         done();
       },
-    }
+    },
   );
 }
 
 function htmlValidate() {
-  return htmlValidateFnc(`${config.buildBase}/**/*.html`);
+  return htmlValidateFnc(`${config.buildBase}/**/*.html`, {
+    verbose: showLogs,
+  });
 }
 
 function deployFtp(done) {
   return deployFtpFnc(`${config.buildBase}/**`, `${config.buildBase}/`, '.', {
+    verbose: showLogs,
     cb: () => {
       done();
     },
@@ -69,10 +78,11 @@ function compileSassAll(done) {
     'index.min.css',
     config.postcssPluginsBase,
     {
+      verbose: showLogs,
       cb: () => {
         done();
       },
-    }
+    },
   );
 }
 
@@ -85,7 +95,7 @@ function purgecss(done) {
       cb: () => {
         done();
       },
-    }
+    },
   );
 }
 
@@ -123,7 +133,7 @@ function datasetPreparePages(done) {
       cb: () => {
         done();
       },
-    }
+    },
   );
 }
 
@@ -168,24 +178,19 @@ function images(done) {
 // Favicons
 
 function favicons(done) {
-  return faviconsFnc(
-    config.faviconSourceFile,
-    config.faviconBuild,
-    {
-      config: config.faviconGenConfig,
-      verbose: showLogs,
-      cb: () => {
-        done();
-      },
-    },
-    () => {
+  return faviconsFnc(config.faviconSourceFile, config.faviconBuild, {
+    config: config.faviconGenConfig,
+    verbose: showLogs,
+    cb: () => {
+      done();
+
       // Move `favicon.ico` to project root
       fs.rename(
         `${config.faviconBuild}/favicon.ico`,
         `${config.buildBase}/favicon.ico`,
         (err) => {
           if (err) throw err;
-        }
+        },
       );
 
       // Move `favicons.njk` and edit file content
@@ -215,37 +220,46 @@ function favicons(done) {
                   log.error(err3);
                 }
               }
-            }
+            },
           );
-        }
-      );
-    }
-  );
-}
-
-// Fonts
-
-function fontLoad(done) {
-  return fontLoadFnc(config.fontloadFile, config.tempBase, {
-    config: config.fontLoadConfig,
-    verbose: showLogs,
-    cb: () => {
-      copyStaticFnc(
-        `${config.tempBase}/assets/font/**/*`,
-        `${config.tempBase}/assets/font`,
-        `${config.buildBase}/assets/font`,
-        {
-          cb: () => {
-            done();
-          },
-        }
+        },
       );
     },
   });
 }
 
+// Fonts
+
+function fontLoad(done) {
+  return fontLoadFnc(
+    config.fontloadFile,
+    config.tempBase,
+    {
+      config: config.fontLoadConfig,
+      verbose: showLogs,
+      cb: () => {
+        done();
+      },
+    },
+    () => {
+      copyStaticFnc(
+        `${config.tempBase}/assets/font/**/*`,
+        `${config.tempBase}/assets/font`,
+        `${config.buildBase}/assets/font`,
+        {
+          verbose: showLogs,
+          cb: () => {
+            done();
+          },
+        },
+      );
+    },
+  );
+}
+
 function replaceHash(done) {
   return replaceHashFnc(`${config.buildBase}/**/*.html`, config.buildBase, {
+    verbose: showLogs,
     cb: () => {
       done();
     },
@@ -270,6 +284,15 @@ function revision(done) {
   return revisionFnc(params);
 }
 
+function postbuild(done) {
+  fs.unlink(`${config.buildBase}/assets/favicons/favicons.njk`, (err) => {
+    if (err) {
+      log.error(err);
+    }
+  });
+  // htmlValidate();
+  done();
+}
 // Gulp tasks
 // --------------
 
@@ -281,7 +304,7 @@ gulp.task('dataset', gulp.parallel(datasetPrepareSite, datasetPreparePages));
 
 gulp.task(
   'html',
-  gulp.series(datasetPrepareSite, datasetPreparePages, buildPages)
+  gulp.series(datasetPrepareSite, datasetPreparePages, buildPages),
 );
 
 gulp.task('images', images);
@@ -307,8 +330,8 @@ gulp.task(
     revision,
     replaceHash,
     htmlValidate,
-    cleanupBuild
-  )
+    postbuild,
+  ),
 );
 
 gulp.task('deployFtp', gulp.series('build', deployFtp));

@@ -11,6 +11,7 @@ const htmlBuildFnc = require('./gulp-tasks/gulp-html-build');
 const imagesOptimizeFnc = require('./gulp-tasks/gulp-optimize-images');
 const jsProcessFnc = require('./gulp-tasks-build/gulp-process-js');
 const todoFnc = require('./gulp-tasks/gulp-todo');
+
 require('dotenv').config();
 
 // Variables
@@ -34,7 +35,7 @@ function copyStatic(done) {
       cb: () => {
         done();
       },
-    }
+    },
   );
 }
 
@@ -50,7 +51,7 @@ function compileSassCore(done) {
       cb: () => {
         done();
       },
-    }
+    },
   );
 }
 
@@ -64,7 +65,7 @@ function compileSassCustom(done) {
       cb: () => {
         done();
       },
-    }
+    },
   );
 }
 
@@ -78,7 +79,7 @@ function compileSassUtils(done) {
       cb: () => {
         done();
       },
-    }
+    },
   );
 }
 
@@ -116,7 +117,7 @@ function datasetPreparePages(done) {
       cb: () => {
         done();
       },
-    }
+    },
   );
 }
 
@@ -179,24 +180,24 @@ function watchFiles() {
 
   gulp.watch(
     config.sassCustom,
-    gulp.series(compileSassCustom, hotReload.browserSyncRefresh)
+    gulp.series(compileSassCustom, hotReload.browserSyncRefresh),
   );
 
   gulp.watch(
     config.sassCore,
-    gulp.series(compileSassCore, hotReload.browserSyncRefresh)
+    gulp.series(compileSassCore, hotReload.browserSyncRefresh),
   );
 
   gulp.watch(
     config.sassUtils,
-    gulp.series(compileSassUtils, hotReload.browserSyncRefresh)
+    gulp.series(compileSassUtils, hotReload.browserSyncRefresh),
   );
 
   // Watch JS
 
   gulp.watch(
     config.jsFiles,
-    gulp.series(processJs, hotReload.browserSyncRefresh)
+    gulp.series(processJs, hotReload.browserSyncRefresh),
   );
 
   // Watch Templates
@@ -209,7 +210,7 @@ function watchFiles() {
   gulp
     .watch(
       './content/**/*.md',
-      gulp.series(datasetPrepareSite, datasetPreparePages, buildPages)
+      gulp.series(datasetPrepareSite, datasetPreparePages, buildPages),
     )
     .on('change', hotReload.browserSyncReload);
 
@@ -223,7 +224,7 @@ function watchFiles() {
 
 gulp.task(
   'css',
-  gulp.parallel(compileSassCore, compileSassCustom, compileSassUtils)
+  gulp.parallel(compileSassCore, compileSassCustom, compileSassUtils),
 );
 
 gulp.task('js', processJs);
@@ -232,7 +233,7 @@ gulp.task('dataset', gulp.parallel(datasetPrepareSite, datasetPreparePages));
 
 gulp.task(
   'html',
-  gulp.series(datasetPrepareSite, datasetPreparePages, buildPages)
+  gulp.series(datasetPrepareSite, datasetPreparePages, buildPages),
 );
 
 gulp.task('images', images);
@@ -256,8 +257,8 @@ gulp.task(
     processJs,
     buildPages,
     todoFnc,
-    gulp.parallel(watchFiles, hotReload.browserSync)
-  )
+    gulp.parallel(watchFiles, hotReload.browserSync),
+  ),
 );
 
 // Aliases

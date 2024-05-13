@@ -23,7 +23,7 @@ const compileSass = (
   output,
   outputConcatFileName,
   postcssPluginsBase,
-  params = {}
+  params = {},
 ) => {
   const processFile = outputConcatFileName ? gulpConcat : gulpEmptyPipe;
 

@@ -4,10 +4,9 @@ const fs = require('fs');
 const gulp = require('gulp');
 const gulpif = require('gulp-if');
 const inject = require('gulp-inject');
-const minify = require('gulp-htmlmin');
-
 const log = require('fancy-log');
 const markdown = require('nunjucks-markdown-filter');
+const minify = require('gulp-htmlmin');
 const nunjucksRender = require('gulp-nunjucks-render');
 const plumber = require('gulp-plumber');
 const prettify = require('gulp-html-beautify');
@@ -76,15 +75,15 @@ const buildHtml = (params) => {
                 `${process.cwd()}/${params.dataSource}/${
                   currentFile.dirname
                 }.json`,
-                'utf8'
-              )
+                'utf8',
+              ),
             );
             oldDataSource = currentFile.dirname;
             if (file.seo.slug) {
               currentFile.dirname = file.seo.slug;
             }
           }
-        })
+        }),
       )
       // Add access to site configuration
       .pipe(
@@ -96,7 +95,7 @@ const buildHtml = (params) => {
             },
           };
           return file;
-        })
+        }),
       )
       .pipe(
         gulpif(
@@ -110,8 +109,8 @@ const buildHtml = (params) => {
               };
             });
             return file;
-          })
-        )
+          }),
+        ),
       )
       .pipe(
         gulpif(
@@ -120,21 +119,22 @@ const buildHtml = (params) => {
             if (currentFile.dirname === '.') {
               return JSON.parse(
                 fs.readFileSync(
-                  `${process.cwd()}/${params.dataSource}/index.json`
-                )
+                  `${process.cwd()}/${params.dataSource}/index.json`,
+                ),
               );
             }
             const file = JSON.parse(
               fs.readFileSync(
-                `${process.cwd()}/${params.dataSource}/${oldDataSource}.json`
-              )
+                `${process.cwd()}/${params.dataSource}/${oldDataSource}.json`,
+              ),
             );
             return file;
-          })
-        )
+          }),
+        ),
       )
       .pipe(
         nunjucksRender({
+          data: { SOURCE: process.env.SOURCE },
           path: params.processPaths,
           manageEnv: (enviroment) => {
             enviroment.addFilter('date', dateFilter);
@@ -144,13 +144,13 @@ const buildHtml = (params) => {
               (arr) =>
                 (arr instanceof Array &&
                   arr.filter((e, i, arr1) => arr1.indexOf(e) === i)) ||
-                arr
+                arr,
             );
             enviroment.addGlobal('toDate', (date) => {
               return date ? new Date(date) : new Date();
             });
           },
-        })
+        }),
       )
       .pipe(
         inject(
@@ -163,8 +163,16 @@ const buildHtml = (params) => {
             addRootSlash: true,
             removeTags: true,
             quiet: true,
-          }
-        )
+          },
+        ),
+      )
+      // Allows content of 'export' dir to place in any depth of dirs on the server/domain
+      .pipe(replace(/(href=["'])(\/assets)/g, '$1.$2'))
+      .pipe(
+        replace(
+          '<!-- inject: bootstrap js -->',
+          params.injectCdnJs.toString().replace(/[, ]+/g, ' '),
+        ),
       )
       .pipe(
         inject(
@@ -176,19 +184,25 @@ const buildHtml = (params) => {
             ignorePath: params.injectIgnorePath,
             addRootSlash: true,
             removeTags: true,
-          }
-        )
+            transform(filepath) {
+              // Performance optimisation on local JS libraries on end of <body>
+              // `.` allows content of 'export' dir to place in any depth of dirs on the server/domain
+              return `<script defer src=".${filepath}"></script>`;
+            },
+          },
+        ),
       )
-      .pipe(replace(/(href=["'])(\/assets)/g, '$1.$2'))
+      // Improve acessibility of basic tables
+      .pipe(replace(/<th>/gm, '<th scope="col">'))
+      // Remove multi/line comments
       .pipe(replace(/( )*<!--((.*)|[^<]*|[^!]*|[^-]*|[^>]*)-->\n*/gm, ''))
-      .pipe(
-        replace(
-          '<!-- inject: bootstrap js -->',
-          params.injectCdnJs.toString().replace(/[, ]+/g, ' ')
-        )
-      )
       // Minify HTML - fix HTML structure like missng closing tags
-      .pipe(minify({ collapseWhitespace: true }))
+      .pipe(
+        minify({
+          collapseWhitespace: true,
+          collapseBooleanAttributes: true,
+        }),
+      )
       // Beautify HTML
       .pipe(
         prettify({
@@ -196,7 +210,7 @@ const buildHtml = (params) => {
           indent_char: ' ',
           indent_with_tabs: false,
           preserve_newlines: false,
-        })
+        }),
       )
       .pipe(
         gulpif(
@@ -205,8 +219,8 @@ const buildHtml = (params) => {
             dirname: '/',
             basename: params.rename,
             extname: '.html',
-          })
-        )
+          }),
+        ),
       )
       .pipe(gulp.dest(params.output))
       .on('end', () => {
