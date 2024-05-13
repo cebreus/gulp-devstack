@@ -15,6 +15,7 @@ const htmlBuildFnc = require('./gulp-tasks-export/gulp-html-build');
 const htmlValidateFnc = require('./gulp-tasks/gulp-html-validate');
 const imagesOptimizeFnc = require('./gulp-tasks/gulp-optimize-images');
 const jsProcessFnc = require('./gulp-tasks-export/gulp-process-js');
+
 require('dotenv').config();
 
 // Variables
@@ -38,7 +39,7 @@ function copyStatic(done) {
       cb: () => {
         done();
       },
-    }
+    },
   );
 }
 
@@ -65,7 +66,7 @@ function compileSassAll(done) {
       cb: () => {
         done();
       },
-    }
+    },
   );
 }
 
@@ -78,7 +79,7 @@ function purgecss(done) {
       cb: () => {
         done();
       },
-    }
+    },
   );
 }
 
@@ -116,7 +117,7 @@ function datasetPreparePages(done) {
       cb: () => {
         done();
       },
-    }
+    },
   );
 }
 
@@ -178,7 +179,7 @@ function favicons(done) {
         `${config.buildBase}/favicon.ico`,
         (err) => {
           if (err) throw err;
-        }
+        },
       );
 
       // Move `favicons.njk` and edit file content
@@ -208,11 +209,11 @@ function favicons(done) {
                   log.error(err3);
                 }
               }
-            }
+            },
           );
-        }
+        },
       );
-    }
+    },
   );
 }
 
@@ -231,7 +232,7 @@ function fontLoad(done) {
           cb: () => {
             done();
           },
-        }
+        },
       );
     },
   });
@@ -248,7 +249,7 @@ gulp.task('dataset', gulp.parallel(datasetPrepareSite, datasetPreparePages));
 
 gulp.task(
   'html',
-  gulp.series(datasetPrepareSite, datasetPreparePages, buildPages)
+  gulp.series(datasetPrepareSite, datasetPreparePages, buildPages),
 );
 
 gulp.task('images', images);
@@ -271,8 +272,8 @@ gulp.task(
     processJs,
     buildPages,
     purgecss,
-    htmlValidate
-  )
+    htmlValidate,
+  ),
 );
 
 gulp.task('deployFtp', gulp.series('export', deployFtp));

@@ -75,15 +75,15 @@ const buildHtml = (params) => {
                 `${process.cwd()}/${params.dataSource}/${
                   currentFile.dirname
                 }.json`,
-                'utf8'
-              )
+                'utf8',
+              ),
             );
             oldDataSource = currentFile.dirname;
             if (file.seo.slug) {
               currentFile.dirname = file.seo.slug;
             }
           }
-        })
+        }),
       )
       // Add access to site configuration
       .pipe(
@@ -95,7 +95,7 @@ const buildHtml = (params) => {
             },
           };
           return file;
-        })
+        }),
       )
       .pipe(
         gulpif(
@@ -109,8 +109,8 @@ const buildHtml = (params) => {
               };
             });
             return file;
-          })
-        )
+          }),
+        ),
       )
       .pipe(
         gulpif(
@@ -119,18 +119,18 @@ const buildHtml = (params) => {
             if (currentFile.dirname === '.') {
               return JSON.parse(
                 fs.readFileSync(
-                  `${process.cwd()}/${params.dataSource}/index.json`
-                )
+                  `${process.cwd()}/${params.dataSource}/index.json`,
+                ),
               );
             }
             const file = JSON.parse(
               fs.readFileSync(
-                `${process.cwd()}/${params.dataSource}/${oldDataSource}.json`
-              )
+                `${process.cwd()}/${params.dataSource}/${oldDataSource}.json`,
+              ),
             );
             return file;
-          })
-        )
+          }),
+        ),
       )
       .pipe(
         nunjucksRender({
@@ -144,13 +144,13 @@ const buildHtml = (params) => {
               (arr) =>
                 (arr instanceof Array &&
                   arr.filter((e, i, arr1) => arr1.indexOf(e) === i)) ||
-                arr
+                arr,
             );
             enviroment.addGlobal('toDate', (date) => {
               return date ? new Date(date) : new Date();
             });
           },
-        })
+        }),
       )
       .pipe(
         inject(
@@ -162,8 +162,15 @@ const buildHtml = (params) => {
             ignorePath: params.injectIgnorePath,
             addRootSlash: true,
             removeTags: true,
-          }
-        )
+            quiet: false,
+          },
+        ),
+      )
+      .pipe(
+        replace(
+          '<!-- inject: bootstrap js -->',
+          params.injectCdnJs.toString().replace(/[, ]+/g, ' '),
+        ),
       )
       .pipe(
         inject(
@@ -175,22 +182,24 @@ const buildHtml = (params) => {
             ignorePath: params.injectIgnorePath,
             addRootSlash: true,
             removeTags: true,
-          }
-        )
+            transform(filepath) {
+              // Performance optimisation on local JS libraries on end of <body>
+              return `<script defer src="${filepath}"></script>`;
+            },
+          },
+        ),
       )
-      .pipe(
-        replace(
-          '<!-- inject: bootstrap js -->',
-          params.injectCdnJs.toString().replace(/[, ]+/g, ' ')
-        )
-      )
+      // Improve acessibility of basic tables
+      .pipe(replace(/<th>/gm, '<th scope="col">'))
+      // Remove multi/line comments
+      .pipe(replace(/( )*<!--((.*)|[^<]*|[^!]*|[^-]*|[^>]*)-->\n*/gm, ''))
       .pipe(
         prettify({
           indentSize: 4,
           indent_char: ' ',
           indent_with_tabs: false,
           preserve_newlines: false,
-        })
+        }),
       )
       .pipe(
         gulpif(
@@ -199,8 +208,8 @@ const buildHtml = (params) => {
             dirname: '/',
             basename: params.rename,
             extname: '.html',
-          })
-        )
+          }),
+        ),
       )
       .pipe(gulp.dest(params.output))
       .on('end', () => {

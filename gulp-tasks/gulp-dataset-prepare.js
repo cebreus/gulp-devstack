@@ -43,14 +43,14 @@ const datasetPrepare = (input, output, params = {}) => {
           };
         }
         return '';
-      })
+      }),
     )
     .pipe(gulp.dest(output))
     .pipe(
       through2.obj((file, enc, cb) => {
         files.push(file.path);
         cb();
-      })
+      }),
     )
     .on('end', () => {
       if (params.verbose) {
