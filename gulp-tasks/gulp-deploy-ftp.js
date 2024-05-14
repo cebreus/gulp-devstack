@@ -4,15 +4,23 @@ const log = require('fancy-log');
 require('dotenv').config();
 
 /**
- * @description Deploy files and folders to FTP
- * @param {string} input path to folder to deploy
- * @param {string} basePath input base path
- * @param {string} output destination path
- * @param {object} params
- * @returns {*} Compiled file
+ * Deploys files to an FTP server.
+ * @param {string|string[]} input - The file(s) or glob pattern(s) to deploy.
+ * @param {string} basePath - The base path for the file(s) to deploy.
+ * @param {string} output - The destination path on the FTP server.
+ * @param {object} [params] - Additional parameters.
+ * @param {Function} [params.cb] - The callback function to execute after deployment.
+ * @param {boolean} [params.verbose] - Whether to log verbose output.
+ * @throws {Error} If the callback in params is not a function.
+ * @returns {void} A readable and writable stream.
  */
-
 const deployFtp = (input, basePath, output, params = {}) => {
+  const cb = params.cb || (() => {});
+
+  if (typeof cb !== 'function') {
+    throw new Error('Callback in params should be of type function.');
+  }
+
   const conn = ftp.create({
     host: process.env.FTP_HOST,
     user: process.env.FTP_USER,
@@ -26,7 +34,10 @@ const deployFtp = (input, basePath, output, params = {}) => {
     .pipe(conn.newer(input))
     .pipe(conn.dest(output))
     .on('end', () => {
-      params.cb();
+      if (params.verbose) {
+        log(`         Done upload to FTP from '${input}' to '${output}'`);
+      }
+      cb();
     });
 };
 

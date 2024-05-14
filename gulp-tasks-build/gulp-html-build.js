@@ -14,17 +14,22 @@ const replace = require('gulp-replace');
 require('dotenv').config();
 
 /**
- * @description Compile Nunjucks templates and replaces variable from JSON
- * @param {string} input Path with filter to source files
- * @param {string} output Path to save compiled files
- * @param {string} dataSource Input file/path with data structure
- * @param {string} rename Custom name of file
- * @param {string} injectCss Path to css files which you want inject
- * @param {Array} injectJs Path to JS files which you want inject
- * @param {Array} injectCdnJs Path to CDN JS files which you want inject
- * @returns {*} Compiled file
+ * Builds HTML files based on the provided parameters.
+ * @param {object} params - The build parameters.
+ * @param {string} params.siteConfig - The path to the site configuration file.
+ * @param {string|string[]} params.dataSource - The path(s) to the data source file(s).
+ * @param {string} params.templates - The path to the templates directory.
+ * @param {string} params.input - The input file(s) to process.
+ * @param {string} params.rename - The new name for the output file(s).
+ * @param {string} params.output - The output directory for the processed files.
+ * @param {Function} params.cb - The callback function to execute after the build is complete.
+ * @param {string[]} params.injectCss - The CSS files to inject into the HTML.
+ * @param {string} params.injectIgnorePath - The path to ignore when injecting CSS files.
+ * @param {string[]} params.injectCdnJs - The CDN URLs for JavaScript files to inject into the HTML.
+ * @param {string[]} params.injectJs - The local JavaScript files to inject into the HTML.
+ * @param {string[]} params.processPaths - The paths to process during rendering.
+ * @returns {void} - The stream of processed HTML files.
  */
-
 const buildHtml = (params) => {
   // eslint-disable-next-line global-require, import/no-dynamic-require
   const localeSettings = require(`.${params.siteConfig}`);
@@ -74,15 +79,15 @@ const buildHtml = (params) => {
                 `${process.cwd()}/${params.dataSource}/${
                   currentFile.dirname
                 }.json`,
-                'utf8'
-              )
+                'utf8',
+              ),
             );
             oldDataSource = currentFile.dirname;
             if (file.seo.slug) {
               currentFile.dirname = file.seo.slug;
             }
           }
-        })
+        }),
       )
       // Add access to site configuration
       .pipe(
@@ -94,7 +99,7 @@ const buildHtml = (params) => {
             },
           };
           return file;
-        })
+        }),
       )
       .pipe(
         gulpif(
@@ -108,8 +113,8 @@ const buildHtml = (params) => {
               };
             });
             return file;
-          })
-        )
+          }),
+        ),
       )
       .pipe(
         gulpif(
@@ -118,18 +123,18 @@ const buildHtml = (params) => {
             if (currentFile.dirname === '.') {
               return JSON.parse(
                 fs.readFileSync(
-                  `${process.cwd()}/${params.dataSource}/index.json`
-                )
+                  `${process.cwd()}/${params.dataSource}/index.json`,
+                ),
               );
             }
             const file = JSON.parse(
               fs.readFileSync(
-                `${process.cwd()}/${params.dataSource}/${oldDataSource}.json`
-              )
+                `${process.cwd()}/${params.dataSource}/${oldDataSource}.json`,
+              ),
             );
             return file;
-          })
-        )
+          }),
+        ),
       )
       .pipe(
         nunjucksRender({
@@ -143,13 +148,13 @@ const buildHtml = (params) => {
               (arr) =>
                 (arr instanceof Array &&
                   arr.filter((e, i, arr1) => arr1.indexOf(e) === i)) ||
-                arr
+                arr,
             );
             enviroment.addGlobal('toDate', (date) => {
               return date ? new Date(date) : new Date();
             });
           },
-        })
+        }),
       )
       .pipe(
         inject(
@@ -162,8 +167,16 @@ const buildHtml = (params) => {
             addRootSlash: true,
             removeTags: true,
             quiet: true,
-          }
-        )
+          },
+        ),
+      )
+      // Allows content of 'export' dir to place in any depth of dirs on the server / domain
+      .pipe(replace(/(href=["'])(\/assets)/g, '$1.$2'))
+      .pipe(
+        replace(
+          '<!-- inject: bootstrap js -->',
+          params.injectCdnJs.toString().replace(/[, ]+/g, ' '),
+        ),
       )
       .pipe(
         inject(
@@ -175,22 +188,23 @@ const buildHtml = (params) => {
             ignorePath: params.injectIgnorePath,
             addRootSlash: true,
             removeTags: true,
-          }
-        )
+            transform(filepath) {
+              // Performance optimisation on local JS libraries on end of <body>
+              return `<script defer src="${filepath}"></script>`;
+            },
+          },
+        ),
       )
-      // Remove multi/line comments
-      .pipe(
-        replace(
-          '<!-- inject: bootstrap js -->',
-          params.injectCdnJs.toString().replace(/[, ]+/g, ' ')
-        )
-      )
+      // Improve acessibility of basic tables
+      .pipe(replace(/<th>/gm, '<th scope="col">'))
       // Remove multi/line comments
       .pipe(replace(/( )*<!--((.*)|[^<]*|[^!]*|[^-]*|[^>]*)-->\n*/gm, ''))
+      // Minify HTML - fix HTML structure like missng closing tags
       .pipe(
         minify({
           collapseWhitespace: true,
-        })
+          collapseBooleanAttributes: true,
+        }),
       )
       .pipe(
         gulpif(
@@ -199,8 +213,8 @@ const buildHtml = (params) => {
             dirname: '/',
             basename: params.rename,
             extname: '.html',
-          })
-        )
+          }),
+        ),
       )
       .pipe(gulp.dest(params.output))
       .on('end', () => {

@@ -6,12 +6,11 @@ extends:
   - '@visionappscz/stylelint-config'
   - '@visionappscz/stylelint-config/order'
   - '@visionappscz/stylelint-config/scss'
-  - stylelint-config-recommended-scss
 
 rules:
   indentation: 2
   linebreaks: 'unix'
-  unit-allowed-list: ['px', 'rem', '%', 's', 'deg']
+  unit-allowed-list: ['px', 'rem', 'em', '%', 's', 'deg', 'vh', 'vw']
 
   plugin/no-low-performance-animation-properties: true
 

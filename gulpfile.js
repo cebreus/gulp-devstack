@@ -1,4 +1,3 @@
-/* eslint-plugin-disable jsdoc */
 const gulp = require('gulp');
 const cleanFnc = require('./gulp-tasks/gulp-clean');
 const config = require('./gulpconfig');
@@ -11,6 +10,7 @@ const htmlBuildFnc = require('./gulp-tasks/gulp-html-build');
 const imagesOptimizeFnc = require('./gulp-tasks/gulp-optimize-images');
 const jsProcessFnc = require('./gulp-tasks-build/gulp-process-js');
 const todoFnc = require('./gulp-tasks/gulp-todo');
+
 require('dotenv').config();
 
 // Variables
@@ -21,25 +21,44 @@ const showLogs = 'brief';
 // Gulp functions
 // --------------
 
+/**
+ * Cleans the folders specified in the `config.buildBase` variable.
+ * @returns {Promise} A promise that resolves when the folders are cleaned.
+ */
 function cleanFolders() {
   return cleanFnc(config.buildBase);
 }
 
+/**
+ * Copies static files from the source directory to the build directory.
+ * @param {Function} done - Callback function to be called when the copying is complete.
+ * @returns {Promise} - A promise that resolves when the copying is complete.
+ */
 function copyStatic(done) {
   return copyStaticFnc(
-    [`${config.staticBase}/**/*`, `${config.staticBase}/.*/*`],
+    [
+      `${config.staticBase}/*`,
+      `${config.staticBase}/**/*`,
+      `${config.staticBase}/.*/*`,
+    ],
     config.staticBase,
     config.buildBase,
     {
+      verbose: showLogs,
       cb: () => {
         done();
       },
-    }
+    },
   );
 }
 
 // SASS
 
+/**
+ * Compiles Sass core files.
+ * @param {Function} done - Callback function to be called when the compilation is done.
+ * @returns {object} - The result of the cssCompileFnc function.
+ */
 function compileSassCore(done) {
   return cssCompileFnc(
     config.sassCore,
@@ -50,10 +69,15 @@ function compileSassCore(done) {
       cb: () => {
         done();
       },
-    }
+    },
   );
 }
 
+/**
+ * Compiles Sass custom files.
+ * @param {Function} done - Callback function to be called when the compilation is done.
+ * @returns {object} - The result of the cssCompileFnc function.
+ */
 function compileSassCustom(done) {
   return cssCompileFnc(
     config.sassCustom,
@@ -64,10 +88,15 @@ function compileSassCustom(done) {
       cb: () => {
         done();
       },
-    }
+    },
   );
 }
 
+/**
+ * Compiles Sass utilities.
+ * @param {Function} done - Callback function to be called when the compilation is done.
+ * @returns {object} - The result of the cssCompileFnc function.
+ */
 function compileSassUtils(done) {
   return cssCompileFnc(
     config.sassUtils,
@@ -78,12 +107,17 @@ function compileSassUtils(done) {
       cb: () => {
         done();
       },
-    }
+    },
   );
 }
 
 // JS
 
+/**
+ * Processes JavaScript files.
+ * @param {Function} done - Callback function to be called when processing is complete.
+ * @returns {void}
+ */
 function processJs(done) {
   const params = {
     concatFiles: false,
@@ -98,6 +132,11 @@ function processJs(done) {
 
 // Dataset
 
+/**
+ * Prepares the dataset for the site.
+ * @param {Function} done - The callback function to be called when the dataset preparation is complete.
+ * @returns {Promise} A promise that resolves when the dataset preparation is complete.
+ */
 function datasetPrepareSite(done) {
   return datasetPrepareFnc(`${config.contentBase}/site.md`, config.tempBase, {
     verbose: showLogs,
@@ -107,6 +146,11 @@ function datasetPrepareSite(done) {
   });
 }
 
+/**
+ * Prepares dataset pages.
+ * @param {Function} done - The callback function to be called when the dataset pages are prepared.
+ * @returns {void}
+ */
 function datasetPreparePages(done) {
   return datasetPrepareFnc(
     config.datasetPagesSource,
@@ -116,12 +160,17 @@ function datasetPreparePages(done) {
       cb: () => {
         done();
       },
-    }
+    },
   );
 }
 
 // Templates
 
+/**
+ * Builds the pages using the specified parameters.
+ * @param {Function} done - The callback function to be called when the build is complete.
+ * @returns {object} - The result of the htmlBuildFnc function.
+ */
 function buildPages(done) {
   const params = {
     input: `${config.tplPagesBase}/**/*.html`,
@@ -144,6 +193,11 @@ function buildPages(done) {
 
 // GFX
 
+/**
+ * Optimizes images in different formats (jpg, png, svg).
+ * @param {Function} done - Callback function to be called when the task is complete.
+ * @returns {Function} - The callback function passed as a parameter.
+ */
 function images(done) {
   const params = {
     verbose: showLogs,
@@ -161,6 +215,11 @@ function images(done) {
 
 // Fonts
 
+/**
+ * Loads fonts using the specified configuration.
+ * @param {Function} done - The callback function to be called when the font loading is complete.
+ * @returns {void}
+ */
 function fontLoad(done) {
   fontLoadFnc(config.fontloadFile, config.tempBase, {
     config: config.fontLoadConfig,
@@ -174,33 +233,31 @@ function fontLoad(done) {
 // Watch
 // --------------
 
+/**
+ * Watches files for changes and triggers corresponding tasks.
+ */
 function watchFiles() {
   // Watch SASS
-
   gulp.watch(
     config.sassCustom,
-    gulp.series(compileSassCustom, hotReload.browserSyncRefresh)
+    gulp.series(compileSassCustom, hotReload.browserSyncRefresh),
   );
-
   gulp.watch(
     config.sassCore,
-    gulp.series(compileSassCore, hotReload.browserSyncRefresh)
+    gulp.series(compileSassCore, hotReload.browserSyncRefresh),
   );
-
   gulp.watch(
     config.sassUtils,
-    gulp.series(compileSassUtils, hotReload.browserSyncRefresh)
+    gulp.series(compileSassUtils, hotReload.browserSyncRefresh),
   );
 
   // Watch JS
-
   gulp.watch(
     config.jsFiles,
-    gulp.series(processJs, hotReload.browserSyncRefresh)
+    gulp.series(processJs, hotReload.browserSyncRefresh),
   );
 
   // Watch Templates
-
   gulp
     .watch(['./src/templates/**/*.*', './src/pages/**/*.*'], buildPages)
     .on('change', hotReload.browserSyncReload);
@@ -209,12 +266,11 @@ function watchFiles() {
   gulp
     .watch(
       './content/**/*.md',
-      gulp.series(datasetPrepareSite, datasetPreparePages, buildPages)
+      gulp.series(datasetPrepareSite, datasetPreparePages, buildPages),
     )
     .on('change', hotReload.browserSyncReload);
 
   // Watch GFX
-
   gulp.watch(config.gfxBase, gulp.series(images, hotReload.browserSyncRefresh));
 }
 
@@ -223,7 +279,7 @@ function watchFiles() {
 
 gulp.task(
   'css',
-  gulp.parallel(compileSassCore, compileSassCustom, compileSassUtils)
+  gulp.parallel(compileSassCore, compileSassCustom, compileSassUtils),
 );
 
 gulp.task('js', processJs);
@@ -232,7 +288,7 @@ gulp.task('dataset', gulp.parallel(datasetPrepareSite, datasetPreparePages));
 
 gulp.task(
   'html',
-  gulp.series(datasetPrepareSite, datasetPreparePages, buildPages)
+  gulp.series(datasetPrepareSite, datasetPreparePages, buildPages),
 );
 
 gulp.task('images', images);
@@ -256,8 +312,8 @@ gulp.task(
     processJs,
     buildPages,
     todoFnc,
-    gulp.parallel(watchFiles, hotReload.browserSync)
-  )
+    gulp.parallel(watchFiles, hotReload.browserSync),
+  ),
 );
 
 // Aliases
