@@ -4,17 +4,16 @@ const plumber = require('gulp-plumber');
 const purgecss = require('gulp-purgecss');
 
 /**
- * @function purgeCss
- * @description Removes unused CSS from stylesheets, processing the input CSS files based on the referenced HTML content.
- * @param {string|string[]} inputCss Path(s) to the input CSS file(s).
- * @param {string|string[]} inputHtml Path(s) to the HTML file(s) used for purging unused CSS.
- * @param {string} outputCss Path to the output directory for the purged CSS.
- * @param {Object} params Optional parameters for CSS purging.
- * @param {boolean} params.verbose Flag indicating if verbose logging should be enabled.
- * @param {function} params.cb Callback function to be executed at the end of the stream.
- * @returns {Object} - Gulp stream.
+ * Purges unused CSS from the input CSS file based on the selectors used in the input HTML file.
+ * @param {string} inputCss - The path to the input CSS file.
+ * @param {string} inputHtml - The path to the input HTML file.
+ * @param {string} outputCss - The path to the output CSS file.
+ * @param {object} [params] - Optional parameters.
+ * @param {Function} [params.cb] - The callback function to be executed after the purge is complete.
+ * @param {boolean} [params.verbose] - Whether to log verbose output.
+ * @throws {Error} If the callback in params is not a function.
+ * @returns {void} The gulp stream for further processing.
  */
-
 const purgeCss = (inputCss, inputHtml, outputCss, params = {}) => {
   const cb = params.cb || (() => {});
 

@@ -3,16 +3,15 @@ const log = require('fancy-log');
 const validate = require('gulp-html-validate');
 
 /**
- * @function htmlValidate
- * @description Validates HTML files with `html-validate` and logs the results.
- * @param {string} input Path to the HTML files to be validated.
- * @param {object} [params={}] An optional parameters object.
- * @param {boolean} [params.verbose=false] If true, logs additional information.
- * @param {function} [params.cb=null] An optional callback function to be called when validation is done.
- * @returns {stream.Transform} A gulp stream which can be piped to other functions or tasks.
+ * Validates HTML files using gulp-html-validate.
+ * @param {string|string[]} input - The file path(s) or glob pattern(s) of the HTML file(s) to validate.
+ * @param {object} params - Additional parameters for customization.
+ * @param {Function} params.cb - Callback function to execute after the validation is complete.
+ * @param {boolean} params.verbose - Whether to log verbose output.
+ * @throws {Error} If the callback in params is not a function.
+ * @returns {void}
  */
-
-const htmlValidate = (input, params = {}) => {
+const htmlValidate = (input, params) => {
   const cb = params.cb || (() => {});
 
   if (typeof cb !== 'function') {
@@ -21,11 +20,8 @@ const htmlValidate = (input, params = {}) => {
 
   return gulp
     .src(input)
-
     .pipe(validate())
-
     .pipe(validate.format())
-
     .pipe(validate.failAfterError())
     .on('end', () => {
       if (params.verbose) {

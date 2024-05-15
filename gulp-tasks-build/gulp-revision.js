@@ -6,25 +6,21 @@ const revRewrite = require('gulp-rev-rewrite');
 const { loadPlugin } = require('../gulp-tasks/helpers');
 
 /**
- * @async
- * @function revision
- * @description Creates a revision (a unique hash) for each asset, updates the references in HTML files, deletes old revisioned files, and optionally compresses the HTML files.
- * @param {object} params - The parameters object.
- * @param {string[]} params.inputRevision The glob or path of the files to create a revision for.
- * @param {string} params.outputRevision The path of the directory where the revisioned files should be written.
- * @param {string} params.ouputManifest The path of the directory where the manifest file should be written.
- * @param {string[]} params.inputRewrite The glob or path of the HTML files to update the references in.
- * @param {string} params.manifestFile The path of the manifest file used to update the references in HTML files.
- * @param {string} params.outputRewrite The path of the directory where the rewritten HTML files should be written.
- * @param {boolean} [params.verbose=false] If true, logs additional information.
- * @param {function} [params.cb=null] An optional callback function to be called when the revisioning and rewriting is done.
- * @returns {stream.Transform} A Gulp stream which can be piped to other functions or tasks.
- * @throws {Error} Throws an error if the 'gulp-rev' plugin cannot be loaded.
+ * Performs asset revisioning by adding unique hashes to the filenames and updating HTML references.
+ * @param {object} params - The parameters for the revision task.
+ * @param {Function} params.cb - The callback function to be executed after the revision task is complete.
+ * @param {string} params.inputRevision - The input path for the files to be revised.
+ * @param {string} params.outputRevision - The output path for the revised files.
+ * @param {string} params.ouputManifest - The output path for the manifest file.
+ * @param {string} params.inputRewrite - The input path for the files to be rewritten.
+ * @param {string} params.manifestFile - The path to the manifest file.
+ * @param {string} params.outputRewrite - The output path for the rewritten files.
+ * @param {boolean} params.verbose - Determines whether to log verbose output.
+ * @returns {void} - A stream representing the revision task.
+ * @throws {Error} - If the callback in params is not a function.
  */
-
 const revision = async (params) => {
   const rev = await loadPlugin('gulp-rev');
-
   const cb = params.cb || (() => {});
 
   if (typeof cb !== 'function') {

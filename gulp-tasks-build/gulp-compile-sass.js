@@ -10,16 +10,17 @@ const sass = require('gulp-sass')(require('sass'));
 const sassGlob = require('gulp-sass-glob');
 
 /**
- * @function compileSass
- * @description Compiles SASS files, applies PostCSS plugins, optionally concatenates them, and writes to output directory.
- * @param {string} input Source SASS files path.
- * @param {string} output Output directory path.
- * @param {string|null} outputConcatFileName Output file name for concatenation, null otherwise.
- * @param {Array} postcssPluginsBase Array of PostCSS plugins.
- * @param {Object} params Optional parameters: { verbose: boolean, cb: function }
- * @returns {Object} Gulp stream.
+ * Compiles Sass files and performs additional processing.
+ * @param {string} input - The input file or glob pattern.
+ * @param {string} output - The output directory.
+ * @param {string} outputConcatFileName - The name of the concatenated output file (optional).
+ * @param {Array} postcssPluginsBase - An array of PostCSS plugins to apply.
+ * @param {object} params - Additional parameters (optional).
+ * @param {Function} params.cb - Callback function to execute after processing (optional).
+ * @param {boolean} params.verbose - Whether to log verbose output (optional).
+ * @returns {object} - The Gulp stream.
+ * @throws {Error} - If the callback in params is not a function.
  */
-
 const compileSass = (
   input,
   output,

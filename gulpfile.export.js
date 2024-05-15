@@ -1,4 +1,3 @@
-/* eslint-plugin-disable jsdoc */
 const fs = require('fs');
 const gulp = require('gulp');
 const log = require('fancy-log');
@@ -26,16 +25,30 @@ const showLogs = false;
 // Gulp functions
 // --------------
 
+/**
+ * Cleans the folders specified in the `config.buildBase` variable.
+ * @returns {Promise} A promise that resolves when the folders are cleaned.
+ */
 function cleanFolders() {
   return cleanFnc([config.tempBase, config.buildBase]);
 }
 
+/**
+ * Copies static files from the source directory to the build directory.
+ * @param {Function} done - Callback function to be called when the copying is complete.
+ * @returns {Promise} - A promise that resolves when the copying is complete.
+ */
 function copyStatic(done) {
   return copyStaticFnc(
-    [`${config.staticBase}/**/*`, `${config.staticBase}/.*/*`],
-    './static',
+    [
+      `${config.staticBase}/*`,
+      `${config.staticBase}/**/*`,
+      `${config.staticBase}/.*/*`,
+    ],
+    config.staticBase,
     config.buildBase,
     {
+      verbose: showLogs,
       cb: () => {
         done();
       },
@@ -43,12 +56,28 @@ function copyStatic(done) {
   );
 }
 
-function htmlValidate() {
-  return htmlValidateFnc(`${config.buildBase}/**/*.html`);
+/**
+ * Validates HTML files.
+ * @param {Function} done - Callback function to be called when the validation is complete.
+ * @returns {Promise} A promise that resolves when the HTML files are validated.
+ */
+function htmlValidate(done) {
+  return htmlValidateFnc(`${config.buildBase}/**/*.html`, {
+    verbose: showLogs,
+    cb: () => {
+      done();
+    },
+  });
 }
 
+/**
+ * Deploys files to FTP server.
+ * @param {Function} done - Callback function to be called when deployment is complete.
+ * @returns {Promise} - A promise that resolves when the deployment is complete.
+ */
 function deployFtp(done) {
   return deployFtpFnc(`${config.buildBase}/**`, `${config.buildBase}/`, '.', {
+    verbose: showLogs,
     cb: () => {
       done();
     },
@@ -56,6 +85,11 @@ function deployFtp(done) {
 }
 // SASS
 
+/**
+ * Compiles Sass core files.
+ * @param {Function} done - Callback function to be called when the compilation is done.
+ * @returns {object} - The result of the cssCompileFnc function.
+ */
 function compileSassAll(done) {
   return cssCompileFnc(
     config.sassAll,
@@ -70,6 +104,11 @@ function compileSassAll(done) {
   );
 }
 
+/**
+ * Purges unused CSS from the specified files and directories.
+ * @param {Function} done - The callback function to be called when the purge is complete.
+ * @returns {object} - The result of the purge operation.
+ */
 function purgecss(done) {
   return cssPurgeFnc(
     [`${config.buildBase}/**/*index*.css`],
@@ -85,6 +124,11 @@ function purgecss(done) {
 
 // JS
 
+/**
+ * Processes JavaScript files.
+ * @param {Function} done - Callback function to be called when processing is complete.
+ * @returns {void}
+ */
 function processJs(done) {
   const params = {
     concatFiles: true,
@@ -99,6 +143,11 @@ function processJs(done) {
 
 // Dataset
 
+/**
+ * Prepares the dataset for the site.
+ * @param {Function} done - The callback function to be called when the dataset preparation is complete.
+ * @returns {Promise} A promise that resolves when the dataset preparation is complete.
+ */
 function datasetPrepareSite(done) {
   return datasetPrepareFnc(`${config.contentBase}/site.md`, config.tempBase, {
     verbose: showLogs,
@@ -108,6 +157,11 @@ function datasetPrepareSite(done) {
   });
 }
 
+/**
+ * Prepares dataset pages.
+ * @param {Function} done - The callback function to be called when the dataset pages are prepared.
+ * @returns {void}
+ */
 function datasetPreparePages(done) {
   return datasetPrepareFnc(
     config.datasetPagesSource,
@@ -123,6 +177,11 @@ function datasetPreparePages(done) {
 
 // Templates
 
+/**
+ * Builds the pages using the specified parameters.
+ * @param {Function} done - The callback function to be called when the build is complete.
+ * @returns {object} - The result of the htmlBuildFnc function.
+ */
 function buildPages(done) {
   const params = {
     input: `${config.tplPagesBase}/**/*.html`,
@@ -145,6 +204,11 @@ function buildPages(done) {
 
 // GFX
 
+/**
+ * Optimizes images in different formats (jpg, png, svg).
+ * @param {Function} done - Callback function to be called when the task is complete.
+ * @returns {Function} - The callback function passed as a parameter.
+ */
 function images(done) {
   const params = {
     verbose: showLogs,
@@ -156,23 +220,23 @@ function images(done) {
   imagesOptimizeFnc.optimizeJpg(config.imagesJpg, config.gfxBuild, params);
   imagesOptimizeFnc.optimizePng(config.imagesPng, config.gfxBuild, params);
   imagesOptimizeFnc.optimizeSvg(config.imagesSvg, config.gfxBuild, params);
-  done();
+  return done();
 }
 
 // Favicons
 
+/**
+ * Generate favicons and perform necessary file operations.
+ * @param {Function} done - Callback function to be called when the task is done.
+ * @returns {void}
+ */
 function favicons(done) {
-  return faviconsFnc(
-    config.faviconSourceFile,
-    config.faviconBuild,
-    {
-      config: config.faviconGenConfig,
-      verbose: showLogs,
-      cb: () => {
-        done();
-      },
-    },
-    () => {
+  return faviconsFnc(config.faviconSourceFile, config.faviconBuild, {
+    config: config.faviconGenConfig,
+    verbose: showLogs,
+    cb: () => {
+      done();
+
       // Move `favicon.ico` to project root
       fs.rename(
         `${config.faviconBuild}/favicon.ico`,
@@ -214,11 +278,16 @@ function favicons(done) {
         },
       );
     },
-  );
+  });
 }
 
 // Fonts
 
+/**
+ * Loads fonts using the specified configuration.
+ * @param {Function} done - The callback function to be called when the font loading is complete.
+ * @returns {void}
+ */
 function fontLoad(done) {
   return fontLoadFnc(config.fontloadFile, config.tempBase, {
     config: config.fontLoadConfig,
@@ -236,6 +305,20 @@ function fontLoad(done) {
       );
     },
   });
+}
+
+/**
+ * Performs post-build tasks.
+ * @param {Function} done - Callback function to be called when post-build tasks are completed.
+ */
+function postbuild(done) {
+  fs.unlink(`${config.buildBase}/assets/favicons/favicons.njk`, (err) => {
+    if (err) {
+      log.error(err);
+    }
+  });
+  // htmlValidate();
+  done();
 }
 
 // Gulp tasks
@@ -273,6 +356,7 @@ gulp.task(
     buildPages,
     purgecss,
     htmlValidate,
+    postbuild,
   ),
 );
 

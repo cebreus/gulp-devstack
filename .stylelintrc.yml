@@ -10,7 +10,7 @@ extends:
 rules:
   indentation: 2
   linebreaks: 'unix'
- unit-allowed-list: ['px', 'rem', 'em', '%', 's', 'deg', 'vh', 'vw']
+  unit-allowed-list: ['px', 'rem', 'em', '%', 's', 'deg', 'vh', 'vw']
 
   plugin/no-low-performance-animation-properties: true
 

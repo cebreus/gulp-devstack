@@ -3,13 +3,11 @@ const log = require('fancy-log');
 const path = require('path');
 
 /**
- * @function sortByDate
- * @description  Sort the array by date and time
- * @param {Object} a First object containing a date
- * @param {Object} b Second object containing a date
- * @returns {Array} Sorted array by date and time
+ * Sorts an array of objects by date.
+ * @param {object} a - The first object to compare.
+ * @param {object} b - The second object to compare.
+ * @returns {number} - Returns 1 if `a` is greater than `b`, -1 if `a` is less than `b`, or 0 if they are equal.
  */
-
 const sortByDate = (a, b) => {
   const dateA = new Date(a.date).getTime();
   const dateB = new Date(b.date).getTime();
@@ -17,33 +15,25 @@ const sortByDate = (a, b) => {
 };
 
 /**
- * @function groupBy
- * @description  Group array by given key
- * @param {Array} array The array to group
- * @param {string} key The key to group by
- * @returns {Array} Grouped array
+ * Groups an array of objects by a specified key.
+ * @param {Array} array - The array of objects to be grouped.
+ * @param {string} key - The key to group the objects by.
+ * @returns {object} - An object containing the grouped objects.
  */
-
 const groupBy = (array, key) => {
-  // Return the end result
   return array.reduce((result, currentValue) => {
-    // If an array already present for key, push it to the array. Else create an array and push the object
     (result[currentValue[key]] = result[currentValue[key]] || []).push(
       currentValue,
     );
-    // Return the current iteration `result` value, this will be taken as next iteration `result` value and accumulate
     return result;
-  }, {}); // empty object is the initial value for result object
+  }, {});
 };
 
 /**
- * @function readFilesSync
- * @description Read files synchronously from a folder, with natural sorting
- * @param {string} dir Absolute path to directory
- * @returns {object[]} List of object, each object represent a file
- * structured like so: `{ filepath, name, ext, stat }`
+ * Reads all files in a directory synchronously and returns an array of file objects.
+ * @param {string} dir - The directory path to read files from.
+ * @returns {Array} - An array of file objects containing the file path, name, and stat information.
  */
-
 const readFilesSync = (dir) => {
   const files = [];
 
@@ -69,12 +59,9 @@ const readFilesSync = (dir) => {
 };
 
 /**
- * @function mkdirr
- * @description  Recursively create directory
- * @param {string} dir Directory or path
- * @returns {void}
+ * Creates a directory if it doesn't already exist.
+ * @param {string} dir - The directory path to create.
  */
-
 const mkdirr = (dir) => {
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, {
@@ -84,14 +71,12 @@ const mkdirr = (dir) => {
 };
 
 /**
- * @function loadPlugin
- * @description Load a plugin dynamically.
- * @param {string} plugin Name of the plugin to load.
- * @returns {*} The loaded plugin module.
- * @throws {Error} If the plugin fails to load.
+ * Loads a plugin dynamically using the specified plugin path.
+ * @param {string} plugin - The path to the plugin module.
+ * @returns {Promise<*>} - A promise that resolves to the loaded plugin module.
+ * @throws {Error} - If the plugin fails to load.
  */
-
-async function loadPlugin(plugin) {
+const loadPlugin = async (plugin) => {
   try {
     const module = await import(plugin);
     return module.default || module;
@@ -99,15 +84,14 @@ async function loadPlugin(plugin) {
     log.error(`Failed to load plugin: ${plugin}`);
     throw error;
   }
-}
+};
 
 /**
- * @function readJson
- * @description Reads a file and parses its content as JSON.
- * @param {string} filePath
- * @returns {Object} Parsed JSON content of the file.
+ * Reads and parses a JSON file.
+ * @param {string} filePath - The path to the JSON file.
+ * @returns {object} - The parsed JSON object.
+ * @throws {Error} - If there is an error reading or parsing the JSON file.
  */
-
 const readJson = (filePath) => {
   try {
     return JSON.parse(fs.readFileSync(filePath, { encoding: 'utf8' }));
@@ -118,12 +102,10 @@ const readJson = (filePath) => {
 };
 
 /**
- * @function fileExists
- * @description Checks if a file exists.
- * @param {string} filePath
- * @returns {boolean} Whether the file exists or not.
+ * Checks if a file exists at the specified file path.
+ * @param {string} filePath - The path to the file.
+ * @returns {boolean} - Returns true if the file exists, false otherwise.
  */
-
 const fileExists = (filePath) => {
   try {
     fs.accessSync(filePath);
@@ -135,13 +117,11 @@ const fileExists = (filePath) => {
 };
 
 /**
- * @function loadEnvVariables
- * @description Loads environment variables and returns an object with the variable names and their values.
- * @param {string[]} requiredVariables - An array of required environment variable names.
- * @returns {Object} - An object containing the loaded environment variables.
- * @throws {Error} - If any required environment variable is not set.
+ * Loads the specified environment variables and returns an object containing their values.
+ * @param {string[]} requiredVariables - An array of environment variable names that are required.
+ * @returns {object} - An object containing the values of the required environment variables.
+ * @throws {Error} - If any of the required environment variables are not set.
  */
-
 const loadEnvVariables = (requiredVariables) => {
   const envVariables = {};
 

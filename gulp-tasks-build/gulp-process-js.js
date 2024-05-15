@@ -8,19 +8,18 @@ const plumber = require('gulp-plumber');
 const uglify = require('gulp-uglify');
 
 /**
- * @function processJs
- * @description Processes JavaScript files using babel, uglify, and optionally concatenation.
- * @param {string} input Path to the input JavaScript files.
- * @param {string} output Path to the output directory.
- * @param {Object} params Optional parameters for JavaScript processing.
- * @param {boolean} params.rewriteExisting Flag indicating if existing files should be rewritten.
- * @param {boolean} params.concatFiles Flag indicating if files should be concatenated.
- * @param {string} params.outputConcatPrefixFileName Prefix for the concatenated output file name.
- * @param {boolean} params.verbose Flag indicating if verbose logging should be enabled.
- * @param {function} params.cb Callback function to be executed at the end of the stream.
- * @returns {Object} Gulp stream.
+ * Process JavaScript files.
+ * @param {string|string[]} input - The input file(s) or glob pattern(s).
+ * @param {string} output - The output directory.
+ * @param {object} [params] - Optional parameters.
+ * @param {Function} [params.cb] - Callback function to be executed after processing.
+ * @param {boolean} [params.rewriteExisting] - Whether to rewrite existing files.
+ * @param {boolean} [params.concatFiles] - Whether to concatenate files.
+ * @param {string} [params.outputConcatPrefixFileName] - The prefix for the concatenated output file name.
+ * @param {boolean} [params.verbose] - Whether to log verbose output.
+ * @returns {void} - The gulp stream.
+ * @throws {Error} - If the callback parameter is not a function.
  */
-
 const processJs = (input, output, params = {}) => {
   const cb = params.cb || (() => {});
 
