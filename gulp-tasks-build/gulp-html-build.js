@@ -196,9 +196,9 @@ const buildHtml = (params) => {
         ),
       )
       // Improve acessibility of basic tables
-      .pipe(replace(/<th>/gm, '<th scope="col">'))
+      .pipe(replace(/<th>/g, '<th scope="col">'))
       // Remove multi/line comments
-      .pipe(replace(/( )*<!--((.*)|[^<]*|[^!]*|[^-]*|[^>]*)-->\n*/gm, ''))
+      .pipe(replace(/( )*<!--((.*)|[^<]*|[^!]*|[^-]*|[^>]*)-->\n*/g, ''))
       // Minify HTML - fix HTML structure like missng closing tags
       .pipe(
         minify({

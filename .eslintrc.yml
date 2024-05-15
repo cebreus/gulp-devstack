@@ -4,14 +4,16 @@ env:
   es2021: true
 
 extends:
-  - 'eslint:recommended'
   - 'airbnb-base'
-  - 'plugin:prettier/recommended'
+  - 'eslint:recommended'
   - 'plugin:jsdoc/recommended'
+  - 'plugin:prettier/recommended'
+  - 'plugin:regexp/recommended'
 plugins:
-  - prettier
-  - jsdoc
   - import
+  - jsdoc
+  - prettier
+  - regexp
 
 overrides:
   - files:
@@ -31,7 +33,6 @@ rules:
   no-param-reassign:
     - error
     - props: false
-
   sort-imports:
     - warn
     - ignoreCase: false
