@@ -15,17 +15,22 @@ const replace = require('gulp-replace');
 require('dotenv').config();
 
 /**
- * @description Compile Nunjucks templates and replaces variable from JSON
- * @param {string} input Path with filter to source files
- * @param {string} output Path to save compiled files
- * @param {string} dataSource Input file/path with data structure
- * @param {string} rename Custom name of file
- * @param {string} injectCss Path to css files which you want inject
- * @param {Array} injectJs Path to JS files which you want inject
- * @param {Array} injectCdnJs Path to CDN JS files which you want inject
- * @returns {*} Compiled file
+ * Builds HTML files based on the provided parameters.
+ * @param {object} params - The build parameters.
+ * @param {string} params.siteConfig - The path to the site configuration file.
+ * @param {string|string[]} params.dataSource - The path(s) to the data source file(s).
+ * @param {string} params.templates - The path to the templates directory.
+ * @param {string} params.input - The input file(s) to process.
+ * @param {string} params.rename - The new name for the output file(s).
+ * @param {string} params.output - The output directory for the processed files.
+ * @param {Function} params.cb - The callback function to execute after the build is complete.
+ * @param {string[]} params.injectCss - The CSS files to inject into the HTML.
+ * @param {string} params.injectIgnorePath - The path to ignore when injecting CSS files.
+ * @param {string[]} params.injectCdnJs - The CDN URLs for JavaScript files to inject into the HTML.
+ * @param {string[]} params.injectJs - The local JavaScript files to inject into the HTML.
+ * @param {string[]} params.processPaths - The paths to process during rendering.
+ * @returns {void} - The stream of processed HTML files.
  */
-
 const buildHtml = (params) => {
   // eslint-disable-next-line global-require, import/no-dynamic-require
   const localeSettings = require(`.${params.siteConfig}`);

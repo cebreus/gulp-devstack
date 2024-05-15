@@ -4,17 +4,16 @@ const log = require('fancy-log');
 require('dotenv').config();
 
 /**
- * @function deployFtp
- * @description Uploads files to a FTP server using Gulp and Vinyl FTP.
- * @param {string} input The glob or path of the local files to be uploaded.
- * @param {string} basePath Base directory path to be used for the input files.
- * @param {string} output The path on the FTP server where the files should be uploaded.
- * @param {object} [params={}] An optional parameters object.
- * @param {boolean} [params.verbose=false] If true, logs additional information.
- * @param {function} [params.cb=null] An optional callback function to be called when the upload is done.
- * @returns {stream.Transform} A Gulp stream which can be piped to other functions or tasks.
+ * Deploys files to an FTP server.
+ * @param {string|string[]} input - The file(s) or glob pattern(s) to deploy.
+ * @param {string} basePath - The base path for the file(s) to deploy.
+ * @param {string} output - The destination path on the FTP server.
+ * @param {object} [params] - Additional parameters.
+ * @param {Function} [params.cb] - The callback function to execute after deployment.
+ * @param {boolean} [params.verbose] - Whether to log verbose output.
+ * @throws {Error} If the callback in params is not a function.
+ * @returns {void} A readable and writable stream.
  */
-
 const deployFtp = (input, basePath, output, params = {}) => {
   const cb = params.cb || (() => {});
 

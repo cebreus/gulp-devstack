@@ -4,14 +4,15 @@ const minify = require('gulp-htmlmin');
 const sri = require('gulp-sri-hash');
 
 /**
- * @function sriHash
- * @description Add sri integrity hashes into link tags in html
- * @param {string} input path to HTML files
- * @param {string} output path to save HTML files
- * @param {object} params
- * @returns {*} HTML files with integrity hashes
+ * Generates SRI (Subresource Integrity) hashes for the files in the specified input directory and writes them to the output directory.
+ * @param {string} input - The input directory containing the files to generate SRI hashes for.
+ * @param {string} output - The output directory where the files with SRI hashes will be written.
+ * @param {object} [params] - Optional parameters.
+ * @param {Function} [params.cb] - A callback function to be executed after the SRI hashes are generated and written.
+ * @param {boolean} [params.verbose] - Specifies whether to log verbose output.
+ * @throws {Error} Throws an error if the callback in params is not a function.
+ * @returns {void} Returns a stream representing the Gulp task.
  */
-
 const sriHash = (input, output, params = {}) => {
   const cb = params.cb || (() => {});
 

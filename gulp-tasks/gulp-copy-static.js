@@ -3,15 +3,16 @@ const log = require('fancy-log');
 const plumber = require('gulp-plumber');
 
 /**
- * @function copy
- * @description Copies static files from one location to another.
- * @param {string} input Input path or file pattern to copy
- * @param {string} basePath Base path for Gulp to search files
- * @param {string} output Destination path
- * @param {object} Additional parameters with callback function
- * @returns {void}
+ * Copies files from the specified input path to the output path.
+ * @param {string|string[]} input - The path or an array of paths to the files to be copied.
+ * @param {string} basePath - The base path for the input files.
+ * @param {string} output - The path to copy the files to.
+ * @param {object} [params] - Additional parameters.
+ * @param {Function} [params.cb] - The callback function to be executed after the files are copied.
+ * @param {boolean} [params.verbose] - Whether to log verbose output.
+ * @throws {Error} If the callback in params is not a function.
+ * @returns {void} A Node.js ReadWriteStream representing the copy operation.
  */
-
 const copy = (input, basePath, output, params = {}) => {
   const cb = params.cb || (() => {});
 

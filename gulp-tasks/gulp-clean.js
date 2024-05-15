@@ -4,11 +4,14 @@ const log = require('fancy-log');
 const plumber = require('gulp-plumber');
 
 /**
- * @description Clean function
- * @param {string} input path to folder or file that you want to remove
- * @returns {*} Compiled file
+ * Cleans the specified input files or directories.
+ * @param {string|string[]} input - The file(s) or directory(s) to clean.
+ * @param {object} [params] - Optional parameters.
+ * @param {Function} [params.cb] - The callback function to be called after cleaning is complete.
+ * @param {boolean} [params.verbose] - Whether to log verbose output.
+ * @returns {void}
+ * @throws {Error} If the callback in params is not a function.
  */
-
 const clean = (input, params = {}) => {
   const cb = params.cb || (() => {});
 

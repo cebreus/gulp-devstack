@@ -7,15 +7,16 @@ const through2 = require('through2');
 const todo = require('gulp-todo');
 
 /**
- * @function buildTodo
- * @description A function to generate a TODO.md file
- * @param {object} params - The function parameters.
- * @returns {Stream} Compiled file
+ * Builds a TODO.md file by scanning JavaScript, CSS, SCSS, and Markdown files for TODO comments.
+ * @param {object} params - Optional parameters for the buildTodo function.
+ * @param {Function} params.cb - Callback function to be executed after the TODO file is created.
+ * @param {boolean} params.verbose - Flag indicating whether to log verbose output.
+ * @returns {void} - Gulp stream that generates the TODO.md file.
+ * @throws {Error} - If the callback parameter is not a function.
  */
 
 const buildTodo = (params = {}) => {
   let todoExist = false;
-
   const filePath = './TODO.md';
   const cb = params.cb || (() => {});
 
@@ -57,7 +58,7 @@ const buildTodo = (params = {}) => {
           log('         ToDos created.');
         }
       } catch (error) {
-        console.error(`exec error: ${error}`);
+        log.error(`exec error: ${error}`);
       }
       cb();
     });

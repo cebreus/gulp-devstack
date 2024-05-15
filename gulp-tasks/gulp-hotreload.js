@@ -2,10 +2,8 @@ const browsersync = require('browser-sync').create();
 const config = require('../gulpconfig');
 
 /**
- * @function browserSync
- * @description Initialize BrowserSync with given configuration
+ *Initialize BrowserSync with given configuration
  */
-
 function browserSync() {
   browsersync.init({
     server: {
@@ -18,21 +16,26 @@ function browserSync() {
 }
 
 /**
- * @function browserSyncRefresh
- * @description Refresh BrowserSync
- * @param {function} done - Callback function to notify completion
+ * Reloads the browser using BrowserSync.
+ * @param {Function} done - The callback function to be called when the browser is reloaded.
  */
 
+/**
+ *
+ * @param done
+ */
 function browserSyncRefresh(done) {
   browsersync.reload();
   done();
 }
 
 /**
- * @function browserSyncReload
- * @description Reload BrowserSync
+ * Reload BrowserSync
  */
 
+/**
+ *
+ */
 function browserSyncReload() {
   browsersync.reload();
 }

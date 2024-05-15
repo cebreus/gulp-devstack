@@ -1,6 +1,6 @@
 {
   "name": "gulp-devstack",
-  "version": "4.4.1",
+  "version": "4.5.0",
   "description": "Basic Gulp DevStack for basic front-end development with customized Bootstrap.",
   "scripts": {
     "start": "npm run dev",
@@ -9,9 +9,9 @@
     "dev": "node ./node_modules/gulp/bin/gulp.js -f gulpfile.js default",
     "deploy-ftp": "node ./node_modules/gulp/bin/gulp.js -f gulpfile.build.js deployFtp",
     "export": "node ./node_modules/gulp/bin/gulp.js -f gulpfile.export.js default",
-    "export:validate:html": "npx gulp -f gulpfile.export.js validate",
+    "export:validate:html": "gulp -f gulpfile.export.js validate",
     "commit": "npx git-cz",
-    "format": "npm run js:fix && npx prettier --write **/*.{css,scss,md,js,json} && npm run css:fix && npm run text:fix",
+    "format": "pnpm js:fix && npx prettier --write **/*.{css,scss,md,js,json} --list-different && pnpm css:fix && pnpm text:fix",
     "css:lint": "npx stylelint **/*.scss",
     "css:fix": "npx stylelint --fix **/*.scss",
     "js:lint": "npx eslint '**/*.js'",
@@ -22,8 +22,9 @@
     "todo": "node ./node_modules/gulp/bin/gulp.js -f gulpfile.js todo",
     "todo:show": "npx leasot -x -r markdown -A '.txt,coffeeParser' './**/*.{js,html,njk,scss,txt,md,yml}' -i './node_modules/**/*'",
     "pre-commit": "npx lint-staged",
-    "prepare": "npm run snyk-protect && rm -rf .husky && npx husky install && npx husky set .husky/pre-commit 'npm run pre-commit' && npx husky set .husky/commit-msg 'npx --no-install commitlint --edit'",
-    "snyk-protect": "snyk-protect"
+    "husky-init": "rm -rf .husky && husky init && echo \"pnpm pre-commit\" > .husky/pre-commit && echo \"npx commitlint --edit\" > .husky/commit-msg",
+    "prepare": "if [ \"$CI\" != \"true\" ]; then pnpm snyk-protect && husky; fi",
+    "snyk-protect": "npx snyk-protect"
   },
   "repository": {
     "type": "git",
@@ -42,11 +43,29 @@
     "gulp",
     "bootstrap"
   ],
+  "engines": {
+    "node": ">=18"
+  },
+  "lint-staged": {
+    "*.{css,scss,md,js,json}": [
+      "npx prettier --write --list-different"
+    ],
+    "*.js": [
+      "npx eslint --fix"
+    ],
+    "*.md": [
+      "pnpm text:fix"
+    ],
+    "*.scss": [
+      "npx stylelint --fix --allow-empty-input"
+    ]
+  },
+  "snyk": true,
   "dependencies": {
     "autoprefixer": "^10.4.19",
     "bootstrap": "5.3.2",
     "browser-sync": "^3.0.2",
-    "cssnano": "^6.1.2",
+    "cssnano": "^7.0.1",
     "dotenv": "^16.4.5",
     "fancy-log": "^2.0.0",
     "gulp": "^4.0.2",
@@ -61,7 +80,7 @@
     "gulp-html-validate": "github:cebreus/gulp-html-validate",
     "gulp-htmlmin": "^5.0.1",
     "gulp-if": "^3.0.0",
-    "gulp-imagemin": "^8.0.0",
+    "gulp-imagemin": "^9.1.0",
     "gulp-inject": "^5.0.5",
     "gulp-jsbeautifier": "^3.0.1",
     "gulp-json-editor": "^2.6.0",
@@ -69,8 +88,8 @@
     "gulp-newer": "^1.4.0",
     "gulp-nunjucks-render": "^2.2.3",
     "gulp-plumber": "^1.2.1",
-    "gulp-postcss": "^9.0.1",
-    "gulp-purgecss": "^5.0.0",
+    "gulp-postcss": "^10.0.0",
+    "gulp-purgecss": "^6.0.0",
     "gulp-rename": "^2.0.0",
     "gulp-replace": "^1.1.4",
     "gulp-rev": "^10.0.0",
@@ -104,19 +123,15 @@
     "@release-it/conventional-changelog": "^8.0.1",
     "@snyk/protect": "^1.1291.0",
     "@visionappscz/stylelint-config": "^3.0.0",
-
-    "eslint": "^8.2.0",
+    "eslint": "^8.57.0",
     "eslint-config-airbnb-base": "^15.0.0",
     "eslint-config-prettier": "^9.1.0",
-    "eslint-plugin-disable": "^2.0.3",
     "eslint-plugin-import": "^2.29.1",
     "eslint-plugin-jsdoc": "^48.2.4",
     "eslint-plugin-prettier": "^5.1.3",
-    "eslint-plugin-require-sort": "^1.3.0",
     "html-validate": "^8.18.2",
     "husky": "^9.0.11",
     "lint-staged": "^15.2.2",
-
     "release-it": "^17.2.1",
     "remark": "^15.0.1",
     "remark-cli": "^12.0.1",
@@ -132,23 +147,5 @@
     "stylelint": "^14.16.1",
     "stylelint-high-performance-animation": "^1.10.0",
     "stylelint-selector-bem-pattern": "^3.0.1"
-  },
-  "engines": {
-    "node": ">=16"
-  },
-  "lint-staged": {
-    "*.{css,scss,md,js,json}": [
-      "prettier --write"
-    ],
-    "*.js": [
-      "eslint --fix"
-    ],
-    "*.md": [
-      "npm run text:fix --"
-    ],
-    "*.scss": [
-      "stylelint --fix --allow-empty-input"
-    ]
-  },
-  "snyk": true
+  }
 }

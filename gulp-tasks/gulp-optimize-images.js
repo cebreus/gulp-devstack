@@ -4,17 +4,19 @@ const log = require('fancy-log');
 const newer = require('gulp-newer');
 const plumber = require('gulp-plumber');
 const upng = require('gulp-upng');
+const { loadPlugin } = require('./helpers');
 
-async function loadPlugin(plugin) {
-  try {
-    const module = await import(plugin);
-    return module.default || module;
-  } catch (error) {
-    log.error(`Failed to load plugin: ${plugin}`);
-    throw error;
-  }
-}
-
+/**
+ * Process images using gulp-imagemin plugin.
+ * @param {string} input - The input path or glob pattern for the images.
+ * @param {string} output - The output path for the optimized images.
+ * @param {Array} plugins - An array of imagemin plugins to use for optimization.
+ * @param {object} [params] - Additional parameters for customization.
+ * @param {boolean} [params.rewriteExisting] - Whether to rewrite existing images.
+ * @param {boolean} [params.verbose] - Whether to log verbose output.
+ * @param {Function} params.cb - Callback function to execute after processing images.
+ * @returns {void}
+ */
 async function processImages(input, output, plugins, params = {}) {
   const imagemin = await loadPlugin('gulp-imagemin');
 
