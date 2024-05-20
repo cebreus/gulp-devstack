@@ -105,8 +105,8 @@ dependencies:
     specifier: ^0.4.4
     version: 0.4.4
   gulp-rev-rewrite:
-    specifier: ^5.0.0
-    version: 5.0.0
+    specifier: ^6.0.0
+    version: 6.0.0
   gulp-sass:
     specifier: ^5.1.0
     version: 5.1.0
@@ -4305,6 +4305,7 @@ packages:
 
   /cross-spawn@5.1.0:
     resolution: {integrity: sha512-pTgQJ5KC0d2hcY8eyL1IzlBPYjTkyH72XRZPnLyKus2mBfNjQs3klqbJU2VILqZryAZUt9JOb3h/mWMy23/f5A==}
+    requiresBuild: true
     dependencies:
       lru-cache: 4.1.5
       shebang-command: 1.2.0
@@ -5361,7 +5362,6 @@ packages:
   /escape-string-regexp@5.0.0:
     resolution: {integrity: sha512-/veY75JbMK4j1yjvuUxuVsiS/hr/4iHs9FTT6cgTexxdE0Ly/glccBAkloH/DofkjRbZU3bnoj38mOmhkZ0lHw==}
     engines: {node: '>=12'}
-    dev: true
 
   /escodegen@2.1.0:
     resolution: {integrity: sha512-2NlIDTwUWJN0mRPQOdtQBzbUHvdGY2P1VXSyU83Q3xKxM7WHX2Ql8dKq782Q9TgQUNOLEzEYu9bzLNj1q88I5w==}
@@ -7248,13 +7248,12 @@ packages:
       through2: 2.0.5
     dev: false
 
-  /gulp-rev-rewrite@5.0.0:
-    resolution: {integrity: sha512-uB9hOCAFspiBP4V2FDu/xRwuTVPle/6qC9OuDuYds8Vno2cqSf9P4Xmm3lUHJVa9NrsE9Rdo9cY3UEuwsrX5ww==}
-    engines: {node: '>=12'}
+  /gulp-rev-rewrite@6.0.0:
+    resolution: {integrity: sha512-SKefSq5FVw7VAzPr8ZBvVMH7s1M7GXHyNhPlP/3k1IkD7lObLbVK8/WCY632+zfHJkc6kMsPlz4TP9lEA++4wg==}
+    engines: {node: '>=18'}
     dependencies:
-      lodash.escaperegexp: 4.1.2
-      plugin-error: 1.0.1
-      through2: 4.0.2
+      escape-string-regexp: 5.0.0
+      plugin-error: 2.0.1
     dev: false
 
   /gulp-rev@10.0.0(gulp@4.0.2):
@@ -9054,6 +9053,7 @@ packages:
 
   /lodash.escaperegexp@4.1.2:
     resolution: {integrity: sha512-TM9YBvyC84ZxE3rgfefxUWiQKLilstD6k7PTGt6wfbtXF8ixIJLOL3VYyV/z+ZiPLsVxAsKAFVwWlWeb2Y8Yyw==}
+    dev: true
 
   /lodash.isarguments@3.1.0:
     resolution: {integrity: sha512-chi4NHZlZqZD18a0imDHnZPrDeBbTtVN7GXMwuGdRH9qotxAjYs3aVLKc7zNOG9eddR5Ksd8rvFEBc9SsggPpg==}
@@ -9239,6 +9239,7 @@ packages:
 
   /lru-cache@4.1.5:
     resolution: {integrity: sha512-sWZlbEP2OsHNkXrMl5GYk/jKk70MBng6UU4YI/qGDYbgf6YbP4EvmqISbXCoJiRKs+1bSpFHVgQxvJ17F2li5g==}
+    requiresBuild: true
     dependencies:
       pseudomap: 1.0.2
       yallist: 2.1.2
@@ -10283,6 +10284,7 @@ packages:
   /npm-run-path@2.0.2:
     resolution: {integrity: sha512-lJxZYlT4DW/bRUtFh1MQIWqmLwQfAxnqWG4HhEdjMlkrJYnJn0Jrr2u3mgxqaWsdiBc76TYkTG/mhrnYTuzfHw==}
     engines: {node: '>=4'}
+    requiresBuild: true
     dependencies:
       path-key: 2.0.1
     dev: false
@@ -10319,7 +10321,6 @@ packages:
     transitivePeerDependencies:
       - chokidar
     dev: false
-    bundledDependencies: false
 
   /nunjucks-markdown-filter@0.1.0:
     resolution: {integrity: sha512-pC9s/4c5VRMD6y+2GNQP7aT9gozt7TIW3UzZ0RfHl/KXLlEyr4vHlW/0m7pC/me7zJReZ1VRgXwgXfERYPQQjA==}
@@ -11614,6 +11615,7 @@ packages:
 
   /pseudomap@1.0.2:
     resolution: {integrity: sha512-b/YwNhb8lk1Zz2+bXXpS/LK9OisiZZ1SNsSLxN1x2OXVEhW2Ckr/7mWE5vrC1ZTiJlD9g19jWszTmJsB+oEpFQ==}
+    requiresBuild: true
     dev: false
 
   /public-ip@4.0.4:
@@ -13259,6 +13261,7 @@ packages:
   /shebang-command@1.2.0:
     resolution: {integrity: sha512-EV3L1+UQWGor21OmnvojK36mhg+TyIKDh3iFBKBohr5xeXIhNBcx8oWdgkTEEQ+BEFFYdLRuqMfd5L84N1V5Vg==}
     engines: {node: '>=0.10.0'}
+    requiresBuild: true
     dependencies:
       shebang-regex: 1.0.0
     dev: false
@@ -13847,6 +13850,7 @@ packages:
   /strip-eof@1.0.0:
     resolution: {integrity: sha512-7FCwGGmx8mD5xQd3RPUvnSpUXHM3BWuzjtpD4TXsfcZ9EL4azvVVUscFYwD9nx8Kh+uCBC00XBtAykoMHwTh8Q==}
     engines: {node: '>=0.10.0'}
+    requiresBuild: true
     dev: false
 
   /strip-final-newline@2.0.0:
@@ -14227,6 +14231,7 @@ packages:
   /temp-dir@1.0.0:
     resolution: {integrity: sha512-xZFXEGbG7SNC3itwBzI3RYjq/cEhBkx2hJuKGIUOcEULmkQExXiHat2z/qkISYsuR+IKumhEfKKbV5qXmhICFQ==}
     engines: {node: '>=4'}
+    requiresBuild: true
     dev: false
 
   /tempfile@2.0.0:
@@ -15008,6 +15013,7 @@ packages:
     resolution: {integrity: sha512-HjSDRw6gZE5JMggctHBcjVak08+KEVhSIiDzFnT9S9aegmp85S/bReBVTb4QTFaRNptJ9kuYaNhnbNEOkbKb/A==}
     deprecated: Please upgrade  to version 7 or higher.  Older versions may use Math.random() in certain circumstances, which is known to be problematic.  See https://v8.dev/blog/math-random for details.
     hasBin: true
+    requiresBuild: true
     dev: false
 
   /v8-compile-cache@2.4.0:
@@ -15429,6 +15435,7 @@ packages:
 
   /yallist@2.1.2:
     resolution: {integrity: sha512-ncTzHV7NvsQZkYe1DW7cbDLm0YpzHmZF5r/iyP3ZnQtMiJ+pjzisCiMNI+Sj+xQF5pXhSHxSB3uDbsBTzY/c2A==}
+    requiresBuild: true
     dev: false
 
   /yallist@3.1.1:
