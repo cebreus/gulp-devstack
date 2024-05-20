@@ -9,8 +9,8 @@ dependencies:
     specifier: ^10.4.19
     version: 10.4.19(postcss@8.4.38)
   bootstrap:
-    specifier: 5.3.2
-    version: 5.3.2(@popperjs/core@2.11.8)
+    specifier: 5.3.3
+    version: 5.3.3(@popperjs/core@2.11.8)
   browser-sync:
     specifier: ^3.0.2
     version: 3.0.2
@@ -3265,8 +3265,8 @@ packages:
     resolution: {integrity: sha512-JZOSA7Mo9sNGB8+UjSgzdLtokWAky1zbztM3WRLCbZ70/3cTANmQmOdR7y2g+J0e2WXywy1yS468tY+IruqEww==}
     dev: false
 
-  /bootstrap@5.3.2(@popperjs/core@2.11.8):
-    resolution: {integrity: sha512-D32nmNWiQHo94BKHLmOrdjlL05q1c8oxbtBphQFb9Z5to6eGRDCm0QgeaZ4zFBHzfg2++rqa2JkqCcxDy0sH0g==}
+  /bootstrap@5.3.3(@popperjs/core@2.11.8):
+    resolution: {integrity: sha512-8HLCdWgyoMguSO9o+aH+iuZ+aht+mzW0u3HIMzVu7Srrpv7EBBxTnrFlSCskwdY1+EOFQSm7uMJhNQHkdPcmjg==}
     peerDependencies:
       '@popperjs/core': ^2.11.8
     dependencies:
@@ -4305,6 +4305,7 @@ packages:
 
   /cross-spawn@5.1.0:
     resolution: {integrity: sha512-pTgQJ5KC0d2hcY8eyL1IzlBPYjTkyH72XRZPnLyKus2mBfNjQs3klqbJU2VILqZryAZUt9JOb3h/mWMy23/f5A==}
+    requiresBuild: true
     dependencies:
       lru-cache: 4.1.5
       shebang-command: 1.2.0
@@ -9239,6 +9240,7 @@ packages:
 
   /lru-cache@4.1.5:
     resolution: {integrity: sha512-sWZlbEP2OsHNkXrMl5GYk/jKk70MBng6UU4YI/qGDYbgf6YbP4EvmqISbXCoJiRKs+1bSpFHVgQxvJ17F2li5g==}
+    requiresBuild: true
     dependencies:
       pseudomap: 1.0.2
       yallist: 2.1.2
@@ -10283,6 +10285,7 @@ packages:
   /npm-run-path@2.0.2:
     resolution: {integrity: sha512-lJxZYlT4DW/bRUtFh1MQIWqmLwQfAxnqWG4HhEdjMlkrJYnJn0Jrr2u3mgxqaWsdiBc76TYkTG/mhrnYTuzfHw==}
     engines: {node: '>=4'}
+    requiresBuild: true
     dependencies:
       path-key: 2.0.1
     dev: false
@@ -10319,7 +10322,6 @@ packages:
     transitivePeerDependencies:
       - chokidar
     dev: false
-    bundledDependencies: false
 
   /nunjucks-markdown-filter@0.1.0:
     resolution: {integrity: sha512-pC9s/4c5VRMD6y+2GNQP7aT9gozt7TIW3UzZ0RfHl/KXLlEyr4vHlW/0m7pC/me7zJReZ1VRgXwgXfERYPQQjA==}
@@ -11614,6 +11616,7 @@ packages:
 
   /pseudomap@1.0.2:
     resolution: {integrity: sha512-b/YwNhb8lk1Zz2+bXXpS/LK9OisiZZ1SNsSLxN1x2OXVEhW2Ckr/7mWE5vrC1ZTiJlD9g19jWszTmJsB+oEpFQ==}
+    requiresBuild: true
     dev: false
 
   /public-ip@4.0.4:
@@ -13259,6 +13262,7 @@ packages:
   /shebang-command@1.2.0:
     resolution: {integrity: sha512-EV3L1+UQWGor21OmnvojK36mhg+TyIKDh3iFBKBohr5xeXIhNBcx8oWdgkTEEQ+BEFFYdLRuqMfd5L84N1V5Vg==}
     engines: {node: '>=0.10.0'}
+    requiresBuild: true
     dependencies:
       shebang-regex: 1.0.0
     dev: false
@@ -13847,6 +13851,7 @@ packages:
   /strip-eof@1.0.0:
     resolution: {integrity: sha512-7FCwGGmx8mD5xQd3RPUvnSpUXHM3BWuzjtpD4TXsfcZ9EL4azvVVUscFYwD9nx8Kh+uCBC00XBtAykoMHwTh8Q==}
     engines: {node: '>=0.10.0'}
+    requiresBuild: true
     dev: false
 
   /strip-final-newline@2.0.0:
@@ -14227,6 +14232,7 @@ packages:
   /temp-dir@1.0.0:
     resolution: {integrity: sha512-xZFXEGbG7SNC3itwBzI3RYjq/cEhBkx2hJuKGIUOcEULmkQExXiHat2z/qkISYsuR+IKumhEfKKbV5qXmhICFQ==}
     engines: {node: '>=4'}
+    requiresBuild: true
     dev: false
 
   /tempfile@2.0.0:
@@ -15008,6 +15014,7 @@ packages:
     resolution: {integrity: sha512-HjSDRw6gZE5JMggctHBcjVak08+KEVhSIiDzFnT9S9aegmp85S/bReBVTb4QTFaRNptJ9kuYaNhnbNEOkbKb/A==}
     deprecated: Please upgrade  to version 7 or higher.  Older versions may use Math.random() in certain circumstances, which is known to be problematic.  See https://v8.dev/blog/math-random for details.
     hasBin: true
+    requiresBuild: true
     dev: false
 
   /v8-compile-cache@2.4.0:
@@ -15429,6 +15436,7 @@ packages:
 
   /yallist@2.1.2:
     resolution: {integrity: sha512-ncTzHV7NvsQZkYe1DW7cbDLm0YpzHmZF5r/iyP3ZnQtMiJ+pjzisCiMNI+Sj+xQF5pXhSHxSB3uDbsBTzY/c2A==}
+    requiresBuild: true
     dev: false
 
   /yallist@3.1.1:
