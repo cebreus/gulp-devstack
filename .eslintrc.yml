@@ -4,20 +4,20 @@ env:
   es2021: true
 
 extends:
-  - 'airbnb-base'
   - 'eslint:recommended'
   - 'plugin:jsdoc/recommended'
-  - 'plugin:prettier/recommended'
   - 'plugin:regexp/recommended'
+
 plugins:
   - import
   - jsdoc
-  - prettier
   - regexp
 
 overrides:
   - files:
       - '*.js'
+      - '*.mjs'
+      - '*.cjs'
 
 parser: '@babel/eslint-parser'
 parserOptions:
@@ -33,14 +33,3 @@ rules:
   no-param-reassign:
     - error
     - props: false
-  sort-imports:
-    - warn
-    - ignoreCase: false
-      ignoreDeclarationSort: false
-      ignoreMemberSort: false
-      memberSyntaxSortOrder:
-        - none
-        - all
-        - multiple
-        - single
-      allowSeparatedGroups: false

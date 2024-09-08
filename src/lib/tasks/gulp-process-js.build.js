@@ -1,25 +1,13 @@
-const babel = require('gulp-babel');
-const gulp = require('gulp');
-const gulpConcat = require('gulp-concat');
-const gulpif = require('gulp-if');
-const log = require('fancy-log');
-const newer = require('gulp-newer');
-const plumber = require('gulp-plumber');
-const uglify = require('gulp-uglify');
+import gulp from 'gulp';
 
-/**
- * Process JavaScript files.
- * @param {string|string[]} input - The input file(s) or glob pattern(s).
- * @param {string} output - The output directory.
- * @param {object} [params] - Optional parameters.
- * @param {Function} [params.cb] - Callback function to be executed after processing.
- * @param {boolean} [params.rewriteExisting] - Whether to rewrite existing files.
- * @param {boolean} [params.concatFiles] - Whether to concatenate files.
- * @param {string} [params.outputConcatPrefixFileName] - The prefix for the concatenated output file name.
- * @param {boolean} [params.verbose] - Whether to log verbose output.
- * @returns {void} - The gulp stream.
- * @throws {Error} - If the callback parameter is not a function.
- */
+import log from 'fancy-log';
+import babel from 'gulp-babel';
+import gulpConcat from 'gulp-concat';
+import gulpif from 'gulp-if';
+import newer from 'gulp-newer';
+import plumber from 'gulp-plumber';
+import uglify from 'gulp-uglify';
+
 const processJs = (input, output, params = {}) => {
   const cb = params.cb || (() => {});
 
@@ -70,4 +58,4 @@ const processJs = (input, output, params = {}) => {
     });
 };
 
-module.exports = processJs;
+export default processJs;

@@ -1,7 +1,8 @@
-const gulp = require('gulp');
-const log = require('fancy-log');
-const plumber = require('gulp-plumber');
-const purgecss = require('gulp-purgecss');
+import { dest, src } from 'gulp';
+
+import log from 'fancy-log';
+import plumber from 'gulp-plumber';
+import purgecss from 'gulp-purgecss';
 
 /**
  * Purges unused CSS from the input CSS file based on the selectors used in the input HTML file.
@@ -21,8 +22,7 @@ const purgeCss = (inputCss, inputHtml, outputCss, params = {}) => {
     throw new Error('Callback in params should be of type function.');
   }
 
-  return gulp
-    .src(inputCss)
+  return src(inputCss)
     .pipe(plumber())
     .pipe(
       purgecss({
@@ -41,7 +41,7 @@ const purgeCss = (inputCss, inputHtml, outputCss, params = {}) => {
         // rejected: true,
       }),
     )
-    .pipe(gulp.dest(outputCss))
+    .pipe(dest(outputCss))
     .on('end', () => {
       if (params.verbose) {
         log(`         PurgeCSS done.`);
@@ -50,4 +50,4 @@ const purgeCss = (inputCss, inputHtml, outputCss, params = {}) => {
     });
 };
 
-module.exports = purgeCss;
+export default purgeCss;

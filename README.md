@@ -146,14 +146,6 @@ When you want to build whole web sites from the data sources as API or many mark
 
   Common Gulp tasks for Development workflow. Do not edit unless you know what you are doing.
 
-* ### `/gulp-tasks-build`
-
-  Common Gulp tasks for Build workflow. Do not edit unless you know what you are doing.
-
-* ### `/gulp-tasks-export`
-
-  Common Gulp tasks for Export workflow (compiled and formated bundles). Do not edit unless you know what you are doing.
-
 * ### `/src`
 
   Development directory. This is place of developers creativity. Change anything as you wish.

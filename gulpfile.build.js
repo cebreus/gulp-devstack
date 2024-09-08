@@ -1,22 +1,28 @@
-const fs = require('fs');
-const gulp = require('gulp');
-const log = require('fancy-log');
-const cleanFnc = require('./gulp-tasks/gulp-clean');
-const config = require('./gulpconfig.build');
-const copyStaticFnc = require('./gulp-tasks/gulp-copy-static');
-const cssCompileFnc = require('./gulp-tasks-build/gulp-compile-sass');
-const cssPurgeFnc = require('./gulp-tasks-build/gulp-purgecss');
-const datasetPrepareFnc = require('./gulp-tasks/gulp-dataset-prepare');
-const deployFtpFnc = require('./gulp-tasks/gulp-deploy-ftp');
-const faviconsFnc = require('./gulp-tasks/gulp-favicons');
-const fontLoadFnc = require('./gulp-tasks/gulp-font-load');
-const htmlBuildFnc = require('./gulp-tasks-build/gulp-html-build');
-const htmlValidateFnc = require('./gulp-tasks/gulp-html-validate');
-const imagesOptimizeFnc = require('./gulp-tasks/gulp-optimize-images');
-const jsProcessFnc = require('./gulp-tasks-build/gulp-process-js');
-const replaceHashFnc = require('./gulp-tasks-build/gulp-sri-hash');
-const revisionFnc = require('./gulp-tasks-build/gulp-revision');
-require('dotenv').config();
+import { parallel, series, task } from 'gulp';
+
+import * as config from './src/lib/constants/gulpconfig.build.js';
+
+import cssCompileFnc from './src/lib/tasks/gulp-compile-sass.build.js';
+import htmlBuildFnc from './src/lib/tasks/gulp-html-build.build.js';
+import jsProcessFnc from './src/lib/tasks/gulp-process-js.build.js';
+import cssPurgeFnc from './src/lib/tasks/gulp-purgecss.build.js';
+import revisionFnc from './src/lib/tasks/gulp-revision.build.js';
+import replaceHashFnc from './src/lib/tasks/gulp-sri-hash.build.js';
+import cleanFnc from './src/lib/tasks/gulp-clean.js';
+import copyStaticFnc from './src/lib/tasks/gulp-copy-static.js';
+import datasetPrepareFnc from './src/lib/tasks/gulp-dataset-prepare.js';
+import deployFtpFnc from './src/lib/tasks/gulp-deploy-ftp.js';
+import faviconsFnc from './src/lib/tasks/gulp-favicons.js';
+import fontLoadFnc from './src/lib/tasks/gulp-font-load.js';
+import htmlValidateFnc from './src/lib/tasks/gulp-html-validate.js';
+import {
+  optimizeJpg,
+  optimizePng,
+  optimizeSvg,
+} from './src/lib/tasks/gulp-optimize-images.js';
+import { error } from 'fancy-log';
+import { readFileSync, rename, unlink, unlinkSync, writeFileSync } from 'fs';
+
 
 // Variables
 // --------------
@@ -41,11 +47,7 @@ function cleanFolders() {
  */
 function copyStatic(done) {
   return copyStaticFnc(
-    [
-      `${config.staticBase}/*`,
-      `${config.staticBase}/**/*`,
-      `${config.staticBase}/.*/*`,
-    ],
+    [`${config.staticBase}/*`, `${config.staticBase}/**/*`, `${config.staticBase}/.*/*`],
     config.staticBase,
     config.buildBase,
     {
@@ -166,16 +168,12 @@ function datasetPrepareSite(done) {
  * @returns {void}
  */
 function datasetPreparePages(done) {
-  return datasetPrepareFnc(
-    config.datasetPagesSource,
-    config.datasetPagesBuild,
-    {
-      verbose: showLogs,
-      cb: () => {
-        done();
-      },
+  return datasetPrepareFnc(config.datasetPagesSource, config.datasetPagesBuild, {
+    verbose: showLogs,
+    cb: () => {
+      done();
     },
-  );
+  });
 }
 
 // Templates
@@ -220,9 +218,9 @@ function images(done) {
     },
   };
 
-  imagesOptimizeFnc.optimizeJpg(config.imagesJpg, config.gfxBuild, params);
-  imagesOptimizeFnc.optimizePng(config.imagesPng, config.gfxBuild, params);
-  imagesOptimizeFnc.optimizeSvg(config.imagesSvg, config.gfxBuild, params);
+  optimizeJpg(config.imagesJpg, config.gfxBuild, params);
+  optimizePng(config.imagesPng, config.gfxBuild, params);
+  optimizeSvg(config.imagesSvg, config.gfxBuild, params);
   return done();
 }
 
@@ -241,7 +239,7 @@ function favicons(done) {
       done();
 
       // Move `favicon.ico` to project root
-      fs.rename(
+      rename(
         `${config.faviconBuild}/favicon.ico`,
         `${config.buildBase}/favicon.ico`,
         (err) => {
@@ -250,36 +248,32 @@ function favicons(done) {
       );
 
       // Move `favicons.njk` and edit file content
-      fs.readFileSync(
-        `${config.faviconBuild}/favicons.njk`,
-        'utf8',
-        (err, data) => {
-          if (err) throw err;
+      readFileSync(`${config.faviconBuild}/favicons.njk`, 'utf8', (err, data) => {
+        if (err) throw err;
 
-          // Remove link to moved `favicon.ico`
-          const newValue = data.replace(/<link rel="shortcut icon[^>]*>/g, '');
+        // Remove link to moved `favicon.ico`
+        const newValue = data.replace(/<link rel="shortcut icon[^>]*>/g, '');
 
-          fs.writeFileSync(
-            `${config.tplTemplatesBase}/partials/favicons.njk`,
-            newValue,
-            'utf8',
-            (err2) => {
-              if (err2) {
-                throw err;
-              } else {
-                // log('Done!');
+        writeFileSync(
+          `${config.tplTemplatesBase}/partials/favicons.njk`,
+          newValue,
+          'utf8',
+          (err2) => {
+            if (err2) {
+              throw err;
+            } else {
+              // log('Done!');
 
-                try {
-                  fs.unlinkSync(`${config.faviconBuild}/favicons.njk`);
-                  // log('Removed!');
-                } catch (err3) {
-                  log.error(err3);
-                }
+              try {
+                unlinkSync(`${config.faviconBuild}/favicons.njk`);
+                // log('Removed!');
+              } catch (err3) {
+                error(err3);
               }
-            },
-          );
-        },
-      );
+            }
+          },
+        );
+      });
     },
   });
 }
@@ -331,10 +325,7 @@ function replaceHash(done) {
  */
 function revision(done) {
   const params = {
-    inputRevision: [
-      `${config.buildBase}/**/*.css`,
-      `${config.buildBase}/**/*.js`,
-    ],
+    inputRevision: [`${config.buildBase}/**/*.css`, `${config.buildBase}/**/*.js`],
     inputRewrite: `${config.buildBase}/**/*.html`,
     outputRevision: config.buildBase,
     outputRewrite: config.buildBase,
@@ -352,9 +343,9 @@ function revision(done) {
  * @param {Function} done - Callback function to be called when post-build tasks are completed.
  */
 function postbuild(done) {
-  fs.unlink(`${config.buildBase}/assets/favicons/favicons.njk`, (err) => {
+  unlink(`${config.buildBase}/assets/favicons/favicons.njk`, (err) => {
     if (err) {
-      log.error(err);
+      error(err);
     }
   });
   // htmlValidate();
@@ -363,26 +354,23 @@ function postbuild(done) {
 // Gulp tasks
 // --------------
 
-gulp.task('css', compileSassAll);
+task('css', compileSassAll);
 
-gulp.task('js', processJs);
+task('js', processJs);
 
-gulp.task('dataset', gulp.parallel(datasetPrepareSite, datasetPreparePages));
+task('dataset', parallel(datasetPrepareSite, datasetPreparePages));
 
-gulp.task(
-  'html',
-  gulp.series(datasetPrepareSite, datasetPreparePages, buildPages),
-);
+task('html', series(datasetPrepareSite, datasetPreparePages, buildPages));
 
-gulp.task('images', images);
+task('images', images);
 
-gulp.task('fonts', fontLoad);
+task('fonts', fontLoad);
 
-gulp.task('validate', htmlValidate);
+task('validate', htmlValidate);
 
-gulp.task(
+task(
   'build',
-  gulp.series(
+  series(
     cleanFolders,
     images,
     copyStatic,
@@ -401,8 +389,8 @@ gulp.task(
   ),
 );
 
-gulp.task('deployFtp', gulp.series('build', deployFtp));
+task('deployFtp', series('build', deployFtp));
 
 // Aliases
 
-gulp.task('default', gulp.series('build'));
+task('default', series('build'));

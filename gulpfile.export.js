@@ -1,21 +1,22 @@
-const fs = require('fs');
-const gulp = require('gulp');
-const log = require('fancy-log');
-const cleanFnc = require('./gulp-tasks/gulp-clean');
-const config = require('./gulpconfig.export');
-const copyStaticFnc = require('./gulp-tasks/gulp-copy-static');
-const cssCompileFnc = require('./gulp-tasks-export/gulp-compile-sass');
-const cssPurgeFnc = require('./gulp-tasks-build/gulp-purgecss');
-const datasetPrepareFnc = require('./gulp-tasks/gulp-dataset-prepare');
-const deployFtpFnc = require('./gulp-tasks/gulp-deploy-ftp');
-const faviconsFnc = require('./gulp-tasks/gulp-favicons');
-const fontLoadFnc = require('./gulp-tasks/gulp-font-load');
-const htmlBuildFnc = require('./gulp-tasks-export/gulp-html-build');
-const htmlValidateFnc = require('./gulp-tasks/gulp-html-validate');
-const imagesOptimizeFnc = require('./gulp-tasks/gulp-optimize-images');
-const jsProcessFnc = require('./gulp-tasks-export/gulp-process-js');
+import gulp from 'gulp';
 
-require('dotenv').config();
+import log from 'fancy-log';
+import fs from 'fs';
+
+import cssPurgeFnc from './src/lib/tasks/gulp-purgecss.build.js';
+import cssCompileFnc from './src/lib/tasks/gulp-compile-sass.export.js';
+import htmlBuildFnc from './src/lib/tasks/gulp-html-build.export.js';
+import jsProcessFnc from './src/lib/tasks/gulp-process-js.export.js';
+import cleanFnc from './src/lib/tasks/gulp-clean.js';
+import copyStaticFnc from './src/lib/tasks/gulp-copy-static.js';
+import datasetPrepareFnc from './src/lib/tasks/gulp-dataset-prepare.js';
+import deployFtpFnc from './src/lib/tasks/gulp-deploy-ftp.js';
+import faviconsFnc from './src/lib/tasks/gulp-favicons.js';
+import fontLoadFnc from './src/lib/tasks/gulp-font-load.js';
+import htmlValidateFnc from './src/lib/tasks/gulp-html-validate.js';
+import * as imagesOptimizeFnc from './src/lib/tasks/gulp-optimize-images.js';
+import * as config from './src/lib/constants/gulpconfig.export.js';
+
 
 // Variables
 // --------------
@@ -29,7 +30,7 @@ const showLogs = false;
  * Cleans the folders specified in the `config.buildBase` variable.
  * @returns {Promise} A promise that resolves when the folders are cleaned.
  */
-function cleanFolders() {
+export function cleanFolders() {
   return cleanFnc([config.tempBase, config.buildBase]);
 }
 
@@ -38,7 +39,7 @@ function cleanFolders() {
  * @param {Function} done - Callback function to be called when the copying is complete.
  * @returns {Promise} - A promise that resolves when the copying is complete.
  */
-function copyStatic(done) {
+export function copyStatic(done) {
   return copyStaticFnc(
     [
       `${config.staticBase}/*`,
@@ -49,9 +50,7 @@ function copyStatic(done) {
     config.buildBase,
     {
       verbose: showLogs,
-      cb: () => {
-        done();
-      },
+      cb: done,
     },
   );
 }
@@ -61,12 +60,10 @@ function copyStatic(done) {
  * @param {Function} done - Callback function to be called when the validation is complete.
  * @returns {Promise} A promise that resolves when the HTML files are validated.
  */
-function htmlValidate(done) {
+export function htmlValidate(done) {
   return htmlValidateFnc(`${config.buildBase}/**/*.html`, {
     verbose: showLogs,
-    cb: () => {
-      done();
-    },
+    cb: done,
   });
 }
 
@@ -75,14 +72,13 @@ function htmlValidate(done) {
  * @param {Function} done - Callback function to be called when deployment is complete.
  * @returns {Promise} - A promise that resolves when the deployment is complete.
  */
-function deployFtp(done) {
+export function deployFtp(done) {
   return deployFtpFnc(`${config.buildBase}/**`, `${config.buildBase}/`, '.', {
     verbose: showLogs,
-    cb: () => {
-      done();
-    },
+    cb: done,
   });
 }
+
 // SASS
 
 /**
@@ -90,16 +86,14 @@ function deployFtp(done) {
  * @param {Function} done - Callback function to be called when the compilation is done.
  * @returns {object} - The result of the cssCompileFnc function.
  */
-function compileSassAll(done) {
+export function compileSassAll(done) {
   return cssCompileFnc(
     config.sassAll,
     config.sassBuild,
     'index.css',
     config.postcssPluginsBase,
     {
-      cb: () => {
-        done();
-      },
+      cb: done,
     },
   );
 }
@@ -109,15 +103,13 @@ function compileSassAll(done) {
  * @param {Function} done - The callback function to be called when the purge is complete.
  * @returns {object} - The result of the purge operation.
  */
-function purgecss(done) {
+export function purgecss(done) {
   return cssPurgeFnc(
     [`${config.buildBase}/**/*index*.css`],
     [`${config.buildBase}/**/*.html`],
     config.buildBase,
     {
-      cb: () => {
-        done();
-      },
+      cb: done,
     },
   );
 }
@@ -129,13 +121,11 @@ function purgecss(done) {
  * @param {Function} done - Callback function to be called when processing is complete.
  * @returns {void}
  */
-function processJs(done) {
+export function processJs(done) {
   const params = {
     concatFiles: true,
     outputConcatPrefixFileName: 'app',
-    cb: () => {
-      done();
-    },
+    cb: done,
   };
 
   return jsProcessFnc(config.jsFiles, config.jsBuild, params);
@@ -148,12 +138,10 @@ function processJs(done) {
  * @param {Function} done - The callback function to be called when the dataset preparation is complete.
  * @returns {Promise} A promise that resolves when the dataset preparation is complete.
  */
-function datasetPrepareSite(done) {
+export function datasetPrepareSite(done) {
   return datasetPrepareFnc(`${config.contentBase}/site.md`, config.tempBase, {
     verbose: showLogs,
-    cb: () => {
-      done();
-    },
+    cb: done,
   });
 }
 
@@ -162,15 +150,13 @@ function datasetPrepareSite(done) {
  * @param {Function} done - The callback function to be called when the dataset pages are prepared.
  * @returns {void}
  */
-function datasetPreparePages(done) {
+export function datasetPreparePages(done) {
   return datasetPrepareFnc(
     config.datasetPagesSource,
     config.datasetPagesBuild,
     {
       verbose: showLogs,
-      cb: () => {
-        done();
-      },
+      cb: done,
     },
   );
 }
@@ -182,7 +168,7 @@ function datasetPreparePages(done) {
  * @param {Function} done - The callback function to be called when the build is complete.
  * @returns {object} - The result of the htmlBuildFnc function.
  */
-function buildPages(done) {
+export function buildPages(done) {
   const params = {
     input: `${config.tplPagesBase}/**/*.html`,
     output: config.tplBuild,
@@ -194,9 +180,7 @@ function buildPages(done) {
     injectJs: config.injectJs,
     injectCss: config.injectCss,
     injectIgnorePath: config.buildBase.replace('./', ''),
-    cb: () => {
-      done();
-    },
+    cb: done,
   };
 
   return htmlBuildFnc(params);
@@ -209,12 +193,10 @@ function buildPages(done) {
  * @param {Function} done - Callback function to be called when the task is complete.
  * @returns {Function} - The callback function passed as a parameter.
  */
-function images(done) {
+export function images(done) {
   const params = {
     verbose: showLogs,
-    cb: () => {
-      done();
-    },
+    cb: done,
   };
 
   imagesOptimizeFnc.optimizeJpg(config.imagesJpg, config.gfxBuild, params);
@@ -230,7 +212,7 @@ function images(done) {
  * @param {Function} done - Callback function to be called when the task is done.
  * @returns {void}
  */
-function favicons(done) {
+export function favicons(done) {
   return faviconsFnc(config.faviconSourceFile, config.faviconBuild, {
     config: config.faviconGenConfig,
     verbose: showLogs,
@@ -288,7 +270,7 @@ function favicons(done) {
  * @param {Function} done - The callback function to be called when the font loading is complete.
  * @returns {void}
  */
-function fontLoad(done) {
+export function fontLoad(done) {
   return fontLoadFnc(config.fontloadFile, config.tempBase, {
     config: config.fontLoadConfig,
     verbose: showLogs,
@@ -298,9 +280,7 @@ function fontLoad(done) {
         `${config.tempBase}/assets/font`,
         `${config.buildBase}/assets/font`,
         {
-          cb: () => {
-            done();
-          },
+          cb: done,
         },
       );
     },
@@ -311,7 +291,7 @@ function fontLoad(done) {
  * Performs post-build tasks.
  * @param {Function} done - Callback function to be called when post-build tasks are completed.
  */
-function postbuild(done) {
+export function postbuild(done) {
   fs.unlink(`${config.buildBase}/assets/favicons/favicons.njk`, (err) => {
     if (err) {
       log.error(err);
@@ -324,44 +304,35 @@ function postbuild(done) {
 // Gulp tasks
 // --------------
 
-gulp.task('css', compileSassAll);
+export const css = compileSassAll;
+export const js = processJs;
+export const dataset = gulp.parallel(datasetPrepareSite, datasetPreparePages);
+export const html = gulp.series(
+  datasetPrepareSite,
+  datasetPreparePages,
+  buildPages,
+);
+export const gfx = images;
+export const fonts = fontLoad;
+export const validate = htmlValidate;
 
-gulp.task('js', processJs);
-
-gulp.task('dataset', gulp.parallel(datasetPrepareSite, datasetPreparePages));
-
-gulp.task(
-  'html',
-  gulp.series(datasetPrepareSite, datasetPreparePages, buildPages),
+export const exportTask = gulp.series(
+  cleanFolders,
+  images,
+  copyStatic,
+  datasetPrepareSite,
+  datasetPreparePages,
+  favicons,
+  fontLoad,
+  compileSassAll,
+  processJs,
+  buildPages,
+  purgecss,
+  htmlValidate,
+  postbuild,
 );
 
-gulp.task('images', images);
-
-gulp.task('fonts', fontLoad);
-
-gulp.task('validate', htmlValidate);
-
-gulp.task(
-  'export',
-  gulp.series(
-    cleanFolders,
-    images,
-    copyStatic,
-    datasetPrepareSite,
-    datasetPreparePages,
-    favicons,
-    fontLoad,
-    compileSassAll,
-    processJs,
-    buildPages,
-    purgecss,
-    htmlValidate,
-    postbuild,
-  ),
-);
-
-gulp.task('deployFtp', gulp.series('export', deployFtp));
+export const deployFtpTask = gulp.series(exportTask, deployFtp);
 
 // Aliases
-
-gulp.task('default', gulp.series('export'));
+export default exportTask;

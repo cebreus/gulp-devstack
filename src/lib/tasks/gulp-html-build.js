@@ -1,17 +1,20 @@
-const data = require('gulp-data');
-const dateFilter = require('nunjucks-date-filter-locale');
-const fs = require('fs');
-const gulp = require('gulp');
-const gulpif = require('gulp-if');
-const inject = require('gulp-inject');
-const log = require('fancy-log');
-const markdown = require('nunjucks-markdown-filter');
-const minify = require('gulp-htmlmin');
-const nunjucksRender = require('gulp-nunjucks-render');
-const plumber = require('gulp-plumber');
-const rename = require('gulp-rename');
-const replace = require('gulp-replace');
-require('dotenv').config();
+import gulp from 'gulp';
+
+import { readJson } from '../../helpers.js';
+import log from 'fancy-log';
+import fs from 'fs';
+import data from 'gulp-data';
+import prettify from 'gulp-html-beautify';
+import gulpif from 'gulp-if';
+import inject from 'gulp-inject';
+import nunjucksRender from 'gulp-nunjucks-render';
+import plumber from 'gulp-plumber';
+import rename from 'gulp-rename';
+import replace from 'gulp-replace';
+import dateFilter from 'nunjucks-date-filter-locale';
+import markdown from 'nunjucks-markdown-filter';
+import process from 'process';
+import { Stream } from 'stream';
 
 /**
  * Builds HTML files based on the provided parameters.
@@ -19,20 +22,21 @@ require('dotenv').config();
  * @param {string} params.siteConfig - The path to the site configuration file.
  * @param {string|string[]} params.dataSource - The path(s) to the data source file(s).
  * @param {string} params.templates - The path to the templates directory.
- * @param {string} params.input - The input file(s) to process.
- * @param {string} params.rename - The new name for the output file(s).
- * @param {string} params.output - The output directory for the processed files.
- * @param {Function} params.cb - The callback function to execute after the build is complete.
- * @param {string[]} params.injectCss - The CSS files to inject into the HTML.
+ * @param {string} params.input - The input files to process.
+ * @param {string} params.injectCss - The CSS files to inject.
  * @param {string} params.injectIgnorePath - The path to ignore when injecting CSS files.
- * @param {string[]} params.injectCdnJs - The CDN URLs for JavaScript files to inject into the HTML.
- * @param {string[]} params.injectJs - The local JavaScript files to inject into the HTML.
- * @param {string[]} params.processPaths - The paths to process during rendering.
- * @returns {void} - The stream of processed HTML files.
+ * @param {string[]} params.injectCdnJs - The CDN URLs of JavaScript files to inject.
+ * @param {string} params.injectJs - The JavaScript files to inject.
+ * @param {string[]} params.processPaths - The paths to process.
+ * @param {string} params.output - The output directory.
+ * @param {string} params.rename - The new name for the output file(s).
+ * @param {Function} params.cb - The callback function to execute when the build is complete.
+ * @returns {Stream} - The Gulp stream.
  */
 const buildHtml = (params) => {
   // eslint-disable-next-line global-require, import/no-dynamic-require
-  const localeSettings = require(`.${params.siteConfig}`);
+  // const localeSettings = require(`.${params.siteConfig}`);
+  const localeSettings = readJson(params.siteConfig);
   const renameCondition = !!params.rename;
   dateFilter.setLocale(localeSettings.meta.lang);
   let currentFile = '';
@@ -76,8 +80,7 @@ const buildHtml = (params) => {
           if (currentFile.dirname !== '.') {
             const file = JSON.parse(
               fs.readFileSync(
-                `${process.cwd()}/${params.dataSource}/${
-                  currentFile.dirname
+                `${process.cwd()}/${params.dataSource}/${currentFile.dirname
                 }.json`,
                 'utf8',
               ),
@@ -166,12 +169,10 @@ const buildHtml = (params) => {
             ignorePath: params.injectIgnorePath,
             addRootSlash: true,
             removeTags: true,
-            quiet: true,
+            quiet: false,
           },
         ),
       )
-      // Allows content of 'export' dir to place in any depth of dirs on the server / domain
-      .pipe(replace(/(href=["'])(\/assets)/g, '$1.$2'))
       .pipe(
         replace(
           '<!-- inject: bootstrap js -->',
@@ -199,11 +200,12 @@ const buildHtml = (params) => {
       .pipe(replace(/<th>/g, '<th scope="col">'))
       // Remove multi/line comments
       .pipe(replace(/( )*<!--((.*)|[^<]*|[^!]*|[^-]*|[^>]*)-->\n*/g, ''))
-      // Minify HTML - fix HTML structure like missng closing tags
       .pipe(
-        minify({
-          collapseWhitespace: true,
-          collapseBooleanAttributes: true,
+        prettify({
+          indentSize: 4,
+          indent_char: ' ',
+          indent_with_tabs: false,
+          preserve_newlines: false,
         }),
       )
       .pipe(
@@ -223,4 +225,4 @@ const buildHtml = (params) => {
   );
 };
 
-module.exports = buildHtml;
+export default buildHtml;

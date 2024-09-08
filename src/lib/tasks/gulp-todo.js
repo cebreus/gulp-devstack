@@ -1,19 +1,11 @@
-const { exec } = require('child_process');
-const fs = require('fs');
-const gulp = require('gulp');
-const log = require('fancy-log');
-const replace = require('gulp-replace');
-const through2 = require('through2');
-const todo = require('gulp-todo');
+import gulp from 'gulp';
 
-/**
- * Builds a TODO.md file by scanning JavaScript, CSS, SCSS, and Markdown files for TODO comments.
- * @param {object} params - Optional parameters for the buildTodo function.
- * @param {Function} params.cb - Callback function to be executed after the TODO file is created.
- * @param {boolean} params.verbose - Flag indicating whether to log verbose output.
- * @returns {void} - Gulp stream that generates the TODO.md file.
- * @throws {Error} - If the callback parameter is not a function.
- */
+import { exec } from 'child_process';
+import log from 'fancy-log';
+import fs from 'fs';
+import replace from 'gulp-replace';
+import todo from 'gulp-todo';
+import through2 from 'through2';
 
 const buildTodo = (params = {}) => {
   let todoExist = false;
@@ -64,4 +56,4 @@ const buildTodo = (params = {}) => {
     });
 };
 
-module.exports = buildTodo;
+export default buildTodo;

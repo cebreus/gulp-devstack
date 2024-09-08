@@ -1,11 +1,13 @@
-const babel = require('gulp-babel');
-const gulp = require('gulp');
-const gulpConcat = require('gulp-concat');
-const gulpif = require('gulp-if');
-const log = require('fancy-log');
-const newer = require('gulp-newer');
-const plumber = require('gulp-plumber');
-const uglify = require('gulp-uglify');
+import { dest, src } from 'gulp';
+
+import log from 'fancy-log';
+import babel from 'gulp-babel';
+import gulpConcat from 'gulp-concat';
+import gulpif from 'gulp-if';
+import newer from 'gulp-newer';
+import plumber from 'gulp-plumber';
+import uglify from 'gulp-uglify';
+
 /**
  * Process JavaScript files.
  * @param {string|string[]} input - The input file(s) or glob pattern(s).
@@ -40,8 +42,7 @@ const processJs = (input, output, params = {}) => {
 
   const outputConcatFileName = `${params.outputConcatPrefixFileName}.min.js`;
 
-  return gulp
-    .src(input)
+  return src(input)
     .pipe(plumber())
     .pipe(gulpif(!rewriteExisting, newer(output)))
     .pipe(
@@ -60,7 +61,7 @@ const processJs = (input, output, params = {}) => {
     )
     .pipe(uglify())
     .pipe(gulpif(concatFiles, gulpConcat(outputConcatFileName)))
-    .pipe(gulp.dest(output))
+    .pipe(dest(output))
     .on('end', () => {
       if (params.verbose) {
         log(`         JS files processed.`);
@@ -69,4 +70,4 @@ const processJs = (input, output, params = {}) => {
     });
 };
 
-module.exports = processJs;
+export default processJs;
