@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="{{ site.meta.lang | default('en') }}">
+<head>
+  <meta charset="{{ site.meta.charset | default('utf-8') }}">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  {# SEO - Základní meta tagy - použijeme primární hodnoty z meta objektu #}
+  <title>{% if meta.title %}{{ meta.title }}{% endif %}{% if site.title and meta.title %} | {% endif %}{% if site.title %}{{ site.title }}{% endif %}</title>
+
+  {% if meta.description %}
+  <meta name="description" content="{{ meta.description }}">
+  {% endif %}
+
+  {# Klíčová slova přebereme z SEO objektu #}
+  {% if seo and seo.keywords %}
+  <meta name="keywords" content="{{ seo.keywords }}">
+  {% endif %}
+
+  {# Author může být v SEO nebo v meta #}
+  {% if seo and seo.author %}
+  <meta name="author" content="{{ seo.author }}">
+  {% elif meta.author %}
+  <meta name="author" content="{{ meta.author }}">
+  {% endif %}
+
+  {# Robots může být v SEO nebo v meta objektu #}
+  {% if meta.robots %}
+  <meta name="robots" content="{{ meta.robots }}">
+  {% elif seo and seo.robots %}
+  <meta name="robots" content="{{ seo.robots }}">
+  {% endif %}
+
+  {# Canonical URL - primárně z meta objektu, záložně z SEO #}
+  {% if meta.canonical %}
+  <link rel="canonical" href="{{ meta.canonical }}">
+  {% endif %}
+
+  {# Open Graph tagy - použijeme primárně meta.og, ale zkontrolujeme i open_graph přímo #}
+  {% if meta.og.use or (open_graph and open_graph.use) %}
+  <meta property="og:type" content="{{ meta.og.type | default(open_graph.type, 'website') }}">
+  <meta property="og:url" content="{{ meta.canonical | default(open_graph.url, '') }}">
+  <meta property="og:title" content="{{ meta.og.title | default(open_graph.title, meta.title) }}">
+  <meta property="og:description" content="{{ meta.og.description | default(open_graph.description, meta.description) }}">
+  <meta property="og:site_name" content="{{ meta.og.site_name | default(open_graph.site_name, site.title) }}">
+
+  {% set ogAppId = meta.og.app_id | default(open_graph.app_id, '') %}
+  {% if ogAppId %}
+  <meta property="fb:app_id" content="{{ ogAppId }}">
+  {% endif %}
+
+  {% set ogImages = meta.og.image | default(open_graph.image, []) %}
+  {% for image in ogImages %}
+  <meta property="og:image" content="{{ image }}">
+  {% endfor %}
+  {% endif %}
+
+  {# Twitter Card tagy - podobně jako u OG #}
+  {% if meta.twitter.use or (twitter_cards and twitter_cards.use) %}
+  <meta name="twitter:card" content="{{ meta.twitter.type | default(twitter_cards.type, 'summary_large_image') }}">
+  <meta name="twitter:url" content="{{ meta.canonical | default(twitter_cards.url, '') }}">
+  <meta name="twitter:title" content="{{ meta.twitter.title | default(twitter_cards.title, meta.title) }}">
+  <meta name="twitter:description" content="{{ meta.twitter.description | default(twitter_cards.description, meta.description) }}">
+
+  {% set twitterSite = meta.twitter.site | default(twitter_cards.site, '') %}
+  {% if twitterSite %}
+  <meta name="twitter:site" content="{{ twitterSite }}">
+  {% endif %}
+
+  {% set twitterCreator = meta.twitter.creator | default(twitter_cards.creator, '') %}
+  {% if twitterCreator %}
+  <meta name="twitter:creator" content="{{ twitterCreator }}">
+  {% endif %}
+
+  {% set twitterImages = meta.twitter.image | default(twitter_cards.image, []) %}
+  {% for image in twitterImages %}
+  <meta name="twitter:image" content="{{ image }}">
+  {% endfor %}
+  {% endif %}
+
+  {% if page.updated_at %}
+  <meta property="article:modified_time" content="{{ page.updated_at }}">
+  {% endif %}
+
+  <!-- inject:css -->
+  <!-- endinject -->
+
+  {% block head %}{% endblock %}
+</head>
+<body data-template="{{ pageData.template }}" data-bs-theme="light">
+  {% include "components/header/header.njk" %}
+
+  {% if page.hero %}
+    {% set heroTitle = page.hero.title %}
+    {% set heroExcerpt = page.hero.excerpt %}
+    {% set heroContent = page.hero.content %}
+    {% set heroModifier = page.hero.modifier %}
+    {% include "components/hero/hero.njk" %}
+  {% endif %}
+
+  <main class="site-main">
+    <div class="container">
+      <div class="row">
+        <div class="col-12">
+          {% block content %}
+            {{ page.content | safe }}
+          {% endblock %}
+        </div>
+      </div>
+    </div>
+  </main>
+
+  {% include "components/footer/footer.njk" %}
+
+  <!-- inject: bootstrap js -->
+  <!-- inject:js -->
+  <!-- endinject -->
+
+  <!-- inject:cdn:js -->
+  <!-- endinject -->
+
+  {% block scripts %}{% endblock %}
+</body>
+</html>

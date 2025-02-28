@@ -1,0 +1,24 @@
+{# Component: Card #}
+<div class="c-card">
+  {% if cardIcon %}
+  <div class="c-card__icon">
+    <i class="bi bi-{{ cardIcon }}"></i>
+  </div>
+  {% endif %}
+
+  {% if cardTitle %}
+  <h3 class="c-card__title">{{ cardTitle }}</h3>
+  {% endif %}
+
+  {% if cardText %}
+  <div class="c-card__text">{{ cardText | safe }}</div>
+  {% endif %}
+
+  {% if cardButtons %}
+  <div class="c-card__actions">
+    {% for button in cardButtons %}
+    <a href="{{ button.url }}" class="btn {{ button.class }}">{{ button.text }}</a>
+    {% endfor %}
+  </div>
+  {% endif %}
+</div>

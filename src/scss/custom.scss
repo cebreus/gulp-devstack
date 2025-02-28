@@ -1,11 +1,18 @@
 @use 'sass:map';
+@use 'sass:color';
 @import '../../node_modules/bootstrap/scss/functions';
-@import '../../node_modules/bootstrap/scss/mixins';
 @import './variables';
-@import './temp/assets/css/fonts';
+// @import './variables-dark';
+// @import '../../node_modules/bootstrap/scss/maps';
+// @import '../../node_modules/bootstrap/scss/mixins';
+// @import '../../node_modules/bootstrap/scss/utilities';
 
-// Importy komponent
-// --------------
+// @import './bootstrap.scss';
+// Component imports are handled automatically by the Gulp task
+// @use './temp/assets/css/fonts';
+
+// Component imports are handled automatically by the Gulp task
+// We don't need explicit imports here anymore
 
 // Přetížení Bootatrapu
 // --------------

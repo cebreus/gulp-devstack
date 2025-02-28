@@ -1,0 +1,19 @@
+{% if features and features.length > 0 %}
+<div class="features-container">
+  <div class="row">
+    {% for feature in features %}
+    <div class="col-md-3 mb-4">
+      <div class="feature-card">
+        {% if feature.icon %}
+        <div class="feature-icon">
+          <i class="bi bi-{{ feature.icon }}"></i>
+        </div>
+        {% endif %}
+        <h3 class="feature-title">{{ feature.name }}</h3>
+        <div class="feature-description">{{ feature.description }}</div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}

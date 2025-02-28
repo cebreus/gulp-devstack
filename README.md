@@ -17,22 +17,23 @@
 
 <!-- toc -->
 
-* [Typical use cases](#typical-use-cases)
-* [Features](#features)
-  * [Something more under the hood](#something-more-under-the-hood)
-* [Getting Started](#getting-started)
-  * [Installation](#installation)
-* [Project structure](#project-structure)
-* [Workflow](#workflow)
-  * [Development](#development)
-  * [Production Build](#production-build)
-  * [Export Build](#export-build)
-* [Updates from devstack to your existing project](#updates-from-devstack-to-your-existing-project)
-* [Inject devstack to your new project](#inject-devstack-to-your-new-project)
-* [Roadmap and Known issues](#roadmap-and-known-issues)
-* [Contributing](#contributing)
-* [License](#license)
-* [Contact](#contact)
+- [Front-end Gulp DevStack](#front-end-gulp-devstack)
+  - [Typical use cases](#typical-use-cases)
+  - [Features](#features)
+    - [Something more under the hood](#something-more-under-the-hood)
+  - [Getting Started](#getting-started)
+    - [Installation](#installation)
+  - [Project structure](#project-structure)
+  - [Workflow](#workflow)
+    - [Development](#development)
+    - [Production Build](#production-build)
+    - [Export Build](#export-build)
+  - [Updates from devstack to your existing project](#updates-from-devstack-to-your-existing-project)
+  - [Inject devstack to your new project](#inject-devstack-to-your-new-project)
+  - [Roadmap and Known issues](#roadmap-and-known-issues)
+  - [Contributing](#contributing)
+  - [License](#license)
+  - [Contact](#contact)
 
 <!-- tocstop -->
 
@@ -58,7 +59,7 @@ When you want to build whole web sites from the data sources as API or many mark
 
 ***
 
-|                        | Preprocessing / Linting                                                                      | 🛠️ Development<br>Postprocessing                                                                                                                                | 👁️ Export<br>Postprocessing                                                                                                                                     | 💯 Build<br>Postprocessing                                                                                                                                                               |
+|                        | Preprocessing / Linting                                                                      | 🛠️ Development<br>Postprocessing                                                                                                                                  | 👁️ Export<br>Postprocessing                                                                                                                                       | 💯 Build<br>Postprocessing                                                                                                                                                                |
 | ---------------------- | :------------------------------------------------------------------------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **CSS**                | [SASS](https://github.com/dlmanning/gulp-sass) / [Stylelint](https://stylelint.io/)          | [PostCSS](https://github.com/postcss/postcss) ([Autoprefixer](https://github.com/postcss/autoprefixer), [prettify](https://github.com/beautify-web/js-beautify)) | [PostCSS](https://github.com/postcss/postcss) ([Autoprefixer](https://github.com/postcss/autoprefixer), [prettify](https://github.com/beautify-web/js-beautify)) | [PostCSS](https://github.com/postcss/postcss) ([Autoprefixer](https://github.com/postcss/autoprefixer), [cssnano](https://github.com/ben-eb/cssnano), [PurgeCSS](https://purgecss.com/)) |
 | **JavaScript**         | [Babel](https://babeljs.io/) / [ESLint](https://eslint.org/)                                 | only concatenate                                                                                                                                                 | concatenate & [uglify](https://github.com/terinjokes/gulp-uglify)                                                                                                | concatenate & [uglify](https://github.com/terinjokes/gulp-uglify)                                                                                                                        |
@@ -140,7 +141,6 @@ When you want to build whole web sites from the data sources as API or many mark
 * ### `/content`
 
   * `/pages` — each `*.md` is data source for templates; each file corresponds to the template `./src/pages/*.html`
-  * `site.md` — contains default data for all pages
 
 * ### `/gulp-tasks`
 

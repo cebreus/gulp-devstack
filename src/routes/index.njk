@@ -1,0 +1,40 @@
+{% extends "layouts/default.njk" %}
+
+{% block content %}
+{{ page.content | safe }}
+
+  <section class="py-5">
+    <div class="row">
+      <div class="col-md-4">
+        {% set cardTitle = "Developing" %}
+        {% set cardText = "Landing pages or prototypes (npm run dev)." %}
+        {% set cardIcon = "code" %}
+        {% include "components/card/card.njk" %}
+      </div>
+
+      <div class="col-md-4">
+        {% set cardTitle = "Exporting" %}
+        {% set cardText = "Carefully compiled and formatted files for collaboration." %}
+        {% set cardIcon = "box" %}
+        {% include "components/card/card.njk" %}
+      </div>
+
+      <div class="col-md-4">
+        {% set cardTitle = "Building" %}
+        {% set cardText = "The final (production) bundle, ready for deployment." %}
+        {% set cardIcon = "rocket" %}
+        {% include "components/card/card.njk" %}
+      </div>
+    </div>
+  </section>
+
+  <section class="py-5">
+    <h2>Features</h2>
+    {% if page.features %}
+      {% set features = page.features %}
+      {% include "components/features/features.njk" %}
+    {% endif %}
+  </section>
+
+
+{% endblock %}
