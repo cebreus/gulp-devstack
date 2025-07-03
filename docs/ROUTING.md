@@ -5,9 +5,9 @@ on the site.
 
 ## How Routing Works
 
-* `src/routes/index.md` → `/` (homepage)
-* `src/routes/about/index.md` → `/about/`
-* You can use `.md` (Markdown) for content or `.njk` (Nunjucks) for custom
+- `src/routes/index.md` → `/` (homepage)
+- `src/routes/about/index.md` → `/about/`
+- You can use `.md` (Markdown) for content or `.njk` (Nunjucks) for custom
   templates
 
 If both `index.md` and `index.njk` exist in the same folder, the `.njk` file is
@@ -28,13 +28,13 @@ src/routes/
 
 ## Layouts
 
-* Files named `layout-*.njk` (e.g. `layout-default.njk`) are base templates, not
+- Files named `layout-*.njk` (e.g. `layout-default.njk`) are base templates, not
   pages.
-* Pages use `{% extends "layout-default.njk" %}` to inherit layout structure.
-* Layouts define blocks (see
+- Pages use `{% extends "layout-default.njk" %}` to inherit layout structure.
+- Layouts define blocks (see
   [Nunjucks Blocks Documentation](./NUNJUCKS-BLOCKS.md)) that pages can
   override.
-* Layouts are not routable URLs themselves.
+- Layouts are not routable URLs themselves.
 
 **Example:**
 
@@ -49,9 +49,9 @@ src/routes/
 
 ## Data in Templates
 
-* `site` — global config from [`src/config/site.js`](../src/config/site.js)
-* `page` — all frontmatter fields from the current Markdown file
-* Direct variables — top-level frontmatter fields (e.g. `title`, `hero`)
+- `site` — global config from [`src/config/site.js`](../src/config/site.js)
+- `page` — all frontmatter fields from the current Markdown file
+- Direct variables — top-level frontmatter fields (e.g. `title`, `hero`)
 
 See [Template Data Reference](./TEMPLATE-DATA.md) for details and examples.
 
@@ -67,9 +67,9 @@ best practices.
 Custom filters are defined in
 [`gulp/utils/nunjucks-filters.js`](../gulp/utils/nunjucks-filters.js):
 
-* `md` — render Markdown to HTML
-* `dump` — pretty-print objects
-* `safe` — mark as safe HTML
+- `md` — render Markdown to HTML
+- `dump` — pretty-print objects
+- `safe` — mark as safe HTML
 
 See [Template Data Reference](./TEMPLATE-DATA.md) for usage.
 

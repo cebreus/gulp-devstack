@@ -1,48 +1,88 @@
 {% extends "layout-default.njk" %}
 
 {% block content %}
-  <main class="o-main">
-    <section class="container pb-3 pt-5 bg-white u-clip-inset-full u-box-shadow-inset-full-white">
-      <div class="row row-cols-3">
-        <div class="col">
-          {%
-            set cardData = {
-              title: "Developing",
-              text: "Landing pages or prototypes (npm run dev)."
-            }
-          %}
-          {% include "components/card/card.njk" %}
-        </div>
+  {% from "components/card/card.njk" import card %}
 
-        <div class="col">
-          {%
-            set cardData = {
-              title: "Exporting",
-              text: "Carefully compiled and formatted files for collaboration."
-            }
-          %}
-          {% include "components/card/card.njk" %}
-        </div>
-
-        <div class="col">
-          {%
-            set cardData = {
-              title: "Building",
-              text: "The final (production) bundle, ready for deployment."
-            }
-          %}
-          {% include "components/card/card.njk" %}
+  <div class="container py-5">
+    {# Connection element to Hero - REMOVED #}
+    <div class="mb-5 text-center position-relative">
+      <h2 class="display-5 fw-semibold mb-3 mt-4">Engineered for Predictability</h2>
+      <div class="row justify-content-center">
+        <div class="col-lg-8 col-xl-7">
+          <p class="text-muted lead mb-0">
+            Unlike complex JS frameworks, Gulp DevStack prioritizes explicit control and production-ready output without
+            the black-box magic.
+          </p>
         </div>
       </div>
-    </section>
+    </div>
 
-    {% if page.features %}
-      <section class="features container py-3">
-        {% set features = page.features %}
-        {% include "components/features/features.njk" %}
-      </section>
+    <div class="u-bento-grid">
+      {% for item in bento_items %}
+        {% set dynamic_img = null %}
+        {% if item.img_ref == "stack_integration_visual" and item.img_data %}
+          {% set dynamic_img %}
+            <div class="c-integration-grid">
+              {% for intItem in item.img_data %}
+                <div class="c-integration-item" title="{{ intItem.title }}"> {% include intItem.svg %} </div>
+              {% endfor %}
+            </div>
+          {% endset %}
+        {% elif item.img_ref == "pipeline_visual" and item.img_data %}
+          {% set dynamic_img %}
+            <div class="c-pipeline">
+              {% for step in item.img_data %}
+                <div class="c-pipeline__step">
+                  <span class="c-pipeline__number">{{ step.number }}</span>
+                  <div class="c-pipeline__info">
+                    <span class="c-pipeline__label">{{ step.label }}</span>
+                    <span class="c-pipeline__text">{{ step.text }}</span>
+                  </div>
+                  <span class="c-pipeline__cmd">{{ step.cmd }}</span>
+                </div>
+              {% endfor %}
+            </div>
+          {% endset %}
+        {% elif item.img_ref == "feature_list_visual" and item.img_data %}
+          {% set dynamic_img %}
+            <div class="c-feature-list">
+              <div class="c-feature-list__grid">
+                {% for fItem in item.img_data %}
+                  <div class="c-feature-item">
+                    <span class="c-feature-item__icon"></span>
+                    <div class="c-feature-item__content">
+                      <span class="c-feature-item__title">{{ fItem.title | safe }}</span>
+                      <span class="c-feature-item__text">{{ fItem.text }}</span>
+                    </div>
+                  </div>
+                {% endfor %}
+              </div>
+            </div>
+          {% endset %}
+        {% endif %}
+        <div
+          class="u-bento-span-{{ item.size | default('medium') }}{{ ' u-order-md-' + item.mdOrder if item.mdOrder }}"
+        >
+          {{
+            card(
+              title = item.name,
+              body = item.text,
+              icon = item.icon,
+              badge = item.badge,
+              img = dynamic_img,
+              href = item.href,
+              variant = item.variant or "bento",
+              featured = item.featured,
+              compact = item.compact,
+              class = "h-100"
+            )
+          }}
+        </div>
+      {% endfor %}
+    </div>
+
+    {% if content %}
+      {# Content already handled inside Bento #}
     {% endif %}
-
-    <section class="container py-4">{{ page.content | safe }}</section>
-  </main>
+  </div>
 {% endblock %}

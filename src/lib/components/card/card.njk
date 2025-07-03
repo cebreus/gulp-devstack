@@ -1,22 +1,60 @@
-{# Component: Card #}
-<div class="c-card p-4 rounded-3">
-  {% if cardData.cardIcon %}
-    <div class="c-card__icon mb-3">{{ cardData.cardIcon | safe }}</div>
+{% macro card(title="", body="", icon="", badge="", footer="", img="", href="", variant="", featured=false, compact=false, class="", iconClass="", bodyClass="") %}
+  {% if href %}
+    <a href="{{ href }}" class="c-card__link">
+      {{ _card_content(title, body, icon, badge, footer, img, variant, featured, compact, class, iconClass, bodyClass, caller) }}
+    </a>
+  {% else %}
+    {{ _card_content(title, body, icon, badge, footer, img, variant, featured, compact, class, iconClass, bodyClass, caller) }}
   {% endif %}
+{% endmacro %}
 
-  {% if cardData.title %}
-    <h3 class="c-card__title mb-3 fs-5">{{ cardData.title }}</h3>
-  {% endif %}
+{% macro _card_content(title, body, icon, badge, footer, img, variant, featured, compact, class, iconClass, bodyClass, caller) %}
+  <div
+    class="c-card 
+    {% if variant %}c-card--{{ variant }}{% endif %} 
+    {% if featured %}c-card--featured{% endif %} 
+    {% if compact %}c-card--compact-title{% endif %} 
+    {{ class }}"
+  >
+    <div class="c-card__inner">
+      {% if icon %}
+        <div class="c-card__icon {{ iconClass }}">
+          {% if '.svg' in icon %}
+            {% include icon %}
+          {% else %}
+            {{ icon | safe }}
+          {% endif %}
+        </div>
+      {% endif %}
 
-  {% if cardData.text %}
-    <div class="c-card__text mb-3">{{ cardData.text | safe }}</div>
-  {% endif %}
+      <div class="c-card__body {{ bodyClass }}">
+        {% if title %}
+          <h3 class="c-card__title">{{ title | safe }}</h3>
+        {% endif %}
 
-  {% if cardData.cardButtons %}
-    <div class="c-card__actions mt-3">
-      {% for button in cardData.cardButtons %}
-        <a href="{{ button.url }}" class="btn {{ button.class }}">{{ button.text }}</a>
-      {% endfor %}
+        {% if body %}
+          <p class="c-card__description">{{ body | safe }}</p>
+        {% endif %}
+
+        {% if caller %}
+          <div class="c-card__custom-content"> {{ caller() }} </div>
+        {% endif %}
+
+        {% if img %}
+          <div class="c-card__visual"> {{ img | safe }} </div>
+        {% endif %}
+      </div>
+
+      {% if footer %}
+        <div class="c-card__footer"> {{ footer | safe }} </div>
+      {% endif %}
     </div>
-  {% endif %}
-</div>
+
+    {% if badge %}
+      <span class="c-card__badge badge rounded-pill">{{ badge }}</span>
+    {% endif %}
+
+    {# Visual flair #}
+    <div class="c-card__glow"></div>
+  </div>
+{% endmacro %}

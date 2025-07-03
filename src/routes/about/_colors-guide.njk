@@ -1,0 +1,30 @@
+<section id="colors" class="c-ds__section">
+  <h3 class="c-ds__section-title">Colors</h3>
+  <p class="c-ds__text">Core project palette utilizing standard Bootstrap 5 naming conventions.</p>
+
+  <div class="c-ds__row">
+    {%
+      set themeColors = [
+        { name: 'Primary', class: 'bg-primary' },
+        { name: 'Secondary', class: 'bg-secondary' },
+        { name: 'Success', class: 'bg-success' },
+        { name: 'Danger', class: 'bg-danger' },
+        { name: 'Warning', class: 'bg-warning' },
+        { name: 'Info', class: 'bg-info' },
+        { name: 'Light', class: 'bg-light' },
+        { name: 'Dark', class: 'bg-dark' }
+      ]
+    %}
+    {% for color in themeColors %}
+      <div class="c-ds__col">
+        <div class="c-ds__color-card c-ds__spacer-4">
+          <div class="c-ds__color-swatch {{ color.class }}"></div>
+          <div class="c-ds__color-card-body">
+            <div class="c-ds__color-name">{{ color.name }}</div>
+            <code class="c-ds__color-hex text-muted small">--bs-{{ color.name | lower }}</code>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+</section>

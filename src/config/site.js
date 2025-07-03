@@ -1,5 +1,3 @@
-// Site configuration - contains content and metadata settings for the website.
-import { getBaseUrl } from '../../gulp/config.js'
 import { readFileSync } from 'fs'
 
 const pkg = JSON.parse(readFileSync('./package.json', 'utf8'))
@@ -8,10 +6,10 @@ export const siteDefaults = {
   title: 'Gulp DevStack',
   description: 'Modern frontend development workflow with Gulp',
   version: pkg.version,
-  author: 'Developer',
+  author: 'Cebreus',
   copyright:
-    'Code licensed <a href="https://github.com/twbs/bootstrap/blob/main/LICENSE" target="_blank" rel="license noopener">MIT</a>',
-  baseUrl: getBaseUrl(),
+    'Code licensed under <a href="https://github.com/twbs/bootstrap/blob/main/LICENSE" class="text-muted" target="_blank" rel="license noopener">MIT</a>',
+  baseUrl: process.env.SITE_BASE_URL,
   meta: {
     lang: 'en',
     charset: 'utf-8',
@@ -21,7 +19,7 @@ export const siteDefaults = {
     title: '𝕊𝕚𝕥𝕖 SEO Title',
     description: '𝕊𝕚𝕥𝕖 SEO Description',
     robots: 'index,follow',
-    iclude_to_sitemap: false,
+    include_to_sitemap: false,
   },
   open_graph: {
     use: true,

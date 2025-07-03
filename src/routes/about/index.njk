@@ -1,21 +1,361 @@
 {% extends "layout-default.njk" %}
-
 {% block content %}
-  <section class="py-5">
-    <div class="row">
-      <div class="col-md-8">{{ page.content | safe }}</div>
-      <div class="col-md-4">
-        {%
-          set cardData = {
-            title: "Informace o projektu",
-            cardIcon: "info-circle",
-            text: '<div class="mb-3"><strong>Verze:</strong> ' + site.version + '</div><div class="mb-3"><strong>Autor:</strong> ' + site.author + '</div><div class="mt-4"><a href="https://github.com/cebreus/gulp-devstack" class="btn btn-primary">GitHub</a></div>'
-          }
-        %}
+  {% from "components/card/card.njk" import card %}
+  <div class="container py-5 c-about">
+    <div class="mb-5">
+      <h1 class="display-5 fw-semibold">Detailed Workflow Guide</h1>
+      <p class="lead text-muted">A deep dive into the architecture and operational logic of Gulp DevStack.</p>
+    </div>
 
-        {# Component inclusion with object data #}
-        {% include "components/card/card.njk" %}
+    <!-- Core Sections Cards -->
+    <h2>Core Philosophy</h2>
+    <div class="row row-cols-1 row-cols-md-3 g-4">
+      <div class="col">
+        <p>
+          Explicit build control through human-readable, deterministic assets with Subresource Integrity (SRI). No
+          framework abstraction—the source architecture ensures production output remains predictable and maintainable.
+        </p>
+      </div>
+      <div class="col">
+        <ul class="list-unstyled mb-0">
+          <li class="mb-2"> <strong>Predictability First</strong>: Dev, Export, and Build follow explicit behavior.</li>
+          <li class="mb-2">
+            <strong>Control by Default</strong>: Source structure remains transparent and maintainable.</li
+          >
+          <li>
+            <strong>Low Friction</strong>: Automation removes repetitive work without adding framework complexity.</li
+          >
+        </ul>
+      </div>
+      <div class="col">
+        <ul class="list-unstyled mb-0">
+          <li class="mb-2">
+            <strong>Component-Based</strong>: Reusable modules with clear ownership and maintainable boundaries.</li
+          >
+          <li class="mb-2">
+            <strong>Content &amp; Presentation</strong>: Markdown and Nunjucks remain cleanly separated.</li
+          >
+          <li>
+            <strong>Modern Standards</strong>: ESM, Gulp 5, SASS and Bootstrap 5 in a practical, non-bloated stack.</li
+          >
+        </ul>
       </div>
     </div>
-  </section>
+
+    <!-- Project Routing & Structure (Phase 2) -->
+    <div class="row c-about__section" id="structure">
+      <div class="col-12">
+        <h2 class="h4">Project Routing &amp; Structure</h2>
+        <p class="text-secondary small">
+          This project follows a <strong>filesystem-based routing</strong> convention. Every directory within
+          <code>src/routes/</code> directly corresponds to a public URL path.
+        </p>
+
+        <div class="bg-light p-3 rounded-3 border mb-4">
+          <div class="fw-bold small mb-2">Detailed Source Tree:</div>
+          <pre class="xsmall mb-0 text-muted"><code>src
+├── config         # Centralized configuration &amp; metadata
+├── js             # Global scripts and entry points
+├── lib/components # Reusable UI modules (NJK/SCSS)
+│   └── card       # Component example: Card UI
+│       ├── card.njk
+│       └── card.scss
+├── routes         # URL mapping &amp; page templates
+│   ├── about      # About page assets &amp; documentation
+│   │   ├── index.md         # Data source for this guide
+│   │   ├── _pipeline-table.njk
+│   │   └── index.scss
+│   └── index.njk  # Homepage entry point
+├── scss           # Global styles &amp; Bootstrap core
+└── assets         # Images, icons, and font storage</code></pre>
+        </div>
+
+        <div class="row g-4 mb-4">
+          <div class="col-md-6 col-lg-3">
+            <div class="fw-bold small mb-1">Routes &amp; Pages</div>
+            <div class="text-muted xsmall"
+              >Defined in <code>src/routes/</code> using <code>.njk</code> or <code>.md</code>. Entry points are
+              <code>index.njk</code>.</div
+            >
+          </div>
+          <div class="col-md-6 col-lg-3">
+            <div class="fw-bold small mb-1">Modular Components</div>
+            <div class="text-muted xsmall"
+              >UI elements in <code>src/lib/components/</code> are self-contained with their own styles.</div
+            >
+          </div>
+          <div class="col-md-6 col-lg-3">
+            <div class="fw-bold small mb-1">Automagic Assets</div>
+            <div class="text-muted xsmall"
+              >CSS/JS files matching the route name are automatically detected and injected.</div
+            >
+          </div>
+          <div class="col-md-6 col-lg-3">
+            <div class="fw-bold small mb-1">Global Config</div>
+            <div class="text-muted xsmall"
+              >Centralized settings in <code>src/config/site.js</code> and <code>gulp/config.js</code>.</div
+            >
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pipeline Comparison Table -->
+    <div class="row c-about__section" id="security">
+      <h2 class="">Triple Pipeline Strategy</h2>
+      <div class="col-12">
+        <p>
+          The pipeline is optimized for output quality, operational efficiency, and release confidence through explicit
+          modes.</p
+        >
+        <div class="table-responsive c-about__surface c-about__surface--table">
+          {% include "about/_pipeline-table.njk" %}
+        </div>
+      </div>
+    </div>
+    <div class="row c-about__section" id="export-mode">
+      <div class="col-12">
+        <h2 class="h4 c-about__section-title">Professional Handoff</h2>
+      </div>
+      <div class="col-12 col-md-3 mb-4">
+        <div class="c-about__step">
+          <h3 class="h6 fw-semibold">0. Global Configuration</h3>
+          <p class="text-muted small mb-0"
+            >Everything starts in <code>src/config/site.js</code>. This is where you define your project's metadata, SEO
+            defaults, and global variables. <br /><br />
+            For sensitive data like API keys or local server settings, use the
+            <code>.env.local</code>
+            file at the root of your project.</p
+          >
+        </div>
+      </div>
+      <div class="col-12 col-md-3 mb-4">
+        <div class="c-about__step">
+          <h3 class="h6 fw-semibold">1. Adding Content &amp; Pages</h3>
+          <p class="text-muted small mb-0"
+            >To create a new page, simply add a
+            <code>.njk</code>
+            or
+            <code>.md</code>
+            file to
+            <code>src/routes/</code>. The folder structure you create there defines your site's URLs. <br /><br />
+            Gulp DevStack supports nested routes and clean URLs automatically without any manual routing
+            configuration.</p
+          >
+        </div>
+      </div>
+      <div class="col-12 col-md-3 mb-4">
+        <div class="c-about__step">
+          <h3 class="h6 fw-semibold">2. Smart Styling Engine</h3>
+          <p class="text-muted small mb-0"
+            >Styling is handled in three layers: <br /><br />
+            <strong>&middot; Global:</strong>
+            Core styles like
+            <code>bootstrap.scss</code>
+            and
+            <code>custom.scss</code>.<br />
+            <strong>&middot; Components:</strong>
+            SCSS inside component folders is collected into
+            <code>components.css</code>.<br />
+            <strong>&middot; Route-Specific:</strong>
+            Files like
+            <code>about.scss</code>
+            are compiled only for their respective pages.</p
+          >
+        </div>
+      </div>
+      <div class="col-12 col-md-3 mb-4">
+        <div class="c-about__step">
+          <h3 class="h6 fw-semibold">3. Modern JS &amp; esbuild</h3>
+          <p class="text-muted small mb-0"
+            >JavaScript is bundled using <strong>esbuild</strong>. You can import Bootstrap modules individually in
+            <code>src/js/bootstrap-custom.js</code>
+            to keep your bundle size tiny. <br /><br />
+            Assets are automatically injected into your HTML templates via Gulp, so you never have to write
+            <code>&lt;script&gt;</code>
+            tags manually.</p
+          >
+        </div>
+      </div>
+    </div>
+    <!-- Component CLI Section -->
+    <div class="row c-about__section c-about__section--muted" id="cli">
+      <div class="col-12 col-md-5">
+        <h2 class="h5 c-about__section-title">Component CLI</h2>
+        <p class="text-muted small"
+          >Instead of manually creating folders and files, use our internal CLI power-tool to maintain project
+          consistency and speed up your workflow.</p
+        >
+        <div class="bg-dark text-white p-3 rounded-3 mb-3 mb-md-0">
+          <code class="text-info">pnpm component</code>
+        </div>
+      </div>
+      <div class="col-12 col-md-7">
+        <div class="row g-3">
+          <div class="col-6">
+            <div class="fw-semibold small">✨ Create</div>
+            <div class="text-muted small">Generates NJK, SCSS and MD boilerplate.</div>
+          </div>
+          <div class="col-6">
+            <div class="fw-semibold small">🔄 Rename</div>
+            <div class="text-muted small">Safely moves and updates all internal references.</div>
+          </div>
+          <div class="col-6">
+            <div class="fw-semibold small">🗑️ Remove</div>
+            <div class="text-muted small">Cleanly deletes the component and its assets.</div>
+          </div>
+          <div class="col-6">
+            <div class="fw-semibold small">📋 List</div>
+            <div class="text-muted small">Quick overview of all modules in your project.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row c-about__section" id="fidelity">
+      <div class="col-12 col-md-8">
+        <h2 class="h4 c-about__section-title">Output Fidelity</h2>
+        <p class="text-muted small"
+          >Gulp DevStack is built for anyone who needs predictable delivery with strong output control. It supports
+          individual velocity and team-level collaboration with a workflow that stays simple, practical, and reliable.
+          From rapid iteration to production hardening, every mode is explicit and purpose-driven.</p
+        >
+      </div>
+      <div class="col-12 col-md-4">
+        {% set infoIcon %}{% include "info.svg" %}{% endset %}
+        {% set cardActions %}
+          <a href="https://github.com/cebreus/gulp-devstack" class="btn btn-primary btn-sm">View on GitHub</a>
+        {% endset %}
+        {%
+          call card(
+            title = "Project Metadata",
+            cardIcon = infoIcon,
+            iconWrapperClass = "text-primary",
+            cardActions = cardActions
+          )
+        %}
+          <div class="d-flex justify-content-between mb-2">
+            <strong>Version:</strong>
+            <span class="badge bg-light text-dark border">{{ site.version }}</span>
+          </div>
+          <div class="d-flex justify-content-between">
+            <strong>Author:</strong>
+            <span class="text-muted">{{ site.author }}</span>
+          </div>
+        {% endcall %}
+      </div>
+    </div>
+    <!-- Quality Section -->
+    <div class="row c-about__section" id="quality">
+      <div class="col-12">
+        <h2 class="h4 c-about__section-title">Interactive Logger &amp; Health Check</h2>
+        <p class="text-muted"
+          >Gulp DevStack is continuously validated against industry standards for build stability, security
+          vulnerabilities, and code maintainability.</p
+        >
+        <div class="d-flex flex-wrap gap-3 mt-3">
+          <div class="p-3 border rounded-3 bg-light">
+            <div class="fw-semibold small mb-1 text-muted">Build Status</div>
+            <img
+              src="https://github.com/cebreus/gulp-devstack/actions/workflows/github-pages-deploy-pnpm.yml/badge.svg"
+              alt="Build"
+            />
+          </div>
+          <div class="p-3 border rounded-3 bg-light">
+            <div class="fw-semibold small mb-1 text-muted">Code Quality</div>
+            <img src="https://app.codacy.com/project/badge/Grade/16e0c62b123d4dbfb27c216f5107f464" alt="Codacy" />
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Additional Core Features -->
+    <div class="row c-about__section">
+      <div class="col-12">
+        <h2 class="h4 c-about__section-title mb-4">Core Philosophy &amp; Utilities</h2>
+      </div>
+      <div class="col-12 col-md-4 mb-4" id="abstraction">
+        <h3 class="h5 fw-semibold mb-2">Control Over Abstraction</h3>
+        <p class="text-muted small"
+          >Built for developers who demand precision over abstraction. No black-box magic, just pure automation that
+          scales perfectly with your development intent.</p
+        >
+      </div>
+      <div class="col-12 col-md-4 mb-4" id="autopilot">
+        <h3 class="h5 fw-semibold mb-2">Asset Autopilot</h3>
+        <p class="text-muted small mb-3"
+          >Automated image optimization pipeline supporting next-gen formats like WebP alongside traditional JPG/PNG
+          endpoints, keeping repositories lean.</p
+        >
+        <div class="p-3 border rounded-3 bg-white text-center">
+          <picture>
+            <source srcset="/assets/images/smajlik.avif" type="image/avif" />
+            <source srcset="/assets/images/smajlik.webp" type="image/webp" />
+            <img
+              src="/assets/images/smajlik.jpg"
+              alt="Optimized smile"
+              class="img-fluid rounded-2 shadow-sm c-about__autopilot-img"
+            />
+          </picture>
+          <div class="mt-2 xsmall text-muted fw-semibold">Next-gen Formats Demo</div>
+        </div>
+      </div>
+      <div class="col-12 col-md-4 mb-4" id="env">
+        <h3 class="h5 fw-semibold mb-2">Configurable ENV</h3>
+        <p class="text-muted small"
+          >First-class support for
+          <code>.env</code>
+          file configuration across the stack, enabling dynamic parameter injection based on execution environments.</p
+        >
+      </div>
+      <div class="col-12 mb-4" id="stack">
+        <h3 class="h5 fw-semibold mb-2">Stack Integrations</h3>
+        <p class="text-muted small"
+          >Seamless orchestration of best-in-class tools. Gulp 5 provides the task runner foundation, esbuild handles
+          lightning-fast JS bundling, and Nunjucks manages modular Templating. All running on Node 22+ with full ESM
+          support.</p
+        >
+        <div class="row g-3 mt-2">
+          <div class="col-6 col-md-3">
+            <div class="p-3 border rounded-3 bg-light text-center small">
+              <strong>Gulp 5</strong><br />Task Automation</div
+            >
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="p-3 border rounded-3 bg-light text-center small">
+              <strong>esbuild</strong><br />JS Bundling</div
+            >
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="p-3 border rounded-3 bg-light text-center small">
+              <strong>Nunjucks</strong><br />Templating</div
+            >
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="p-3 border rounded-3 bg-light text-center small">
+              <strong>Bootstrap 5.3</strong><br />UI Foundation</div
+            >
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Design System BEM Block -->
+    <div class="c-about__section pt-5 border-top c-ds">
+      <h2 class="c-ds__title display-6 fw-semibold">Design System</h2>
+      <p class="text-muted">
+        Thanks to the deeply integrated
+        <a
+          href="https://getbootstrap.com/docs/5.3/getting-started/introduction/"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Bootstrap 5</a
+        >
+        core, developers can choose between building custom BEM components via the CLI or utilizing standard Bootstrap
+        patterns and
+        <a href="https://getbootstrap.com/docs/5.3/examples/" target="_blank" rel="noopener noreferrer">Examples</a>.
+        These can be seamlessly integrated into our project structure to accelerate UI development.
+      </p>
+      {% include "about/_colors-guide.njk" %}
+      {% include "about/_cards-guide.njk" %}
+    </div>
+  </div>
 {% endblock %}

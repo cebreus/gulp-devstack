@@ -1,34 +1,171 @@
-// Component: hero
+@use 'sass:map';
+
 .c-hero {
-  padding: 4rem 0;
-  background-color: var(--bs-light);
+  position: relative;
+  padding: map.get($spacers, 5) 0;
+  overflow: hidden;
+  background-color: var(--deep-blue-bg);
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background:
+      radial-gradient(
+        circle at 20% 30%,
+        rgba($primary, 0.08) 0%,
+        transparent 50%
+      ),
+      radial-gradient(
+        circle at 80% 70%,
+        rgba($orange, 0.08) 0%,
+        transparent 50%
+      );
+    pointer-events: none;
+  }
+
+  &__inner {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  &__badge {
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba($white, 0.8);
+    border: solid rgba($white, 0.3) 1px;
+    background: rgba($white, 0.05);
+  }
 
   &__title {
-    font-weight: 300;
-    line-height: 0.9;
-    letter-spacing: 0.15rem;
-    background-image: linear-gradient(
-      130deg,
-      var(--bs-red) 20%,
-      var(--bs-orange) 40%
-    );
+    margin-bottom: map.get($spacers, 3);
+    line-height: 1.1;
+    text-align: center;
+    text-wrap: balance;
+    background-image: linear-gradient(135deg, $danger 0%, $orange 100%);
     background-clip: text;
     -webkit-text-fill-color: transparent;
+
+    // Subtle shadow for lift
+    filter: drop-shadow(0 4px 12px rgba($danger, 0.15));
+
+    @include font-size(map.get($display-font-sizes, 3));
   }
 
   &__description {
-    width: 50ch;
-    max-width: 100%;
-    font-weight: 300;
+    max-width: 60ch;
+    margin-bottom: map.get($spacers, 4);
+    font-weight: $font-weight-normal;
+    text-align: center;
+    text-wrap: balance;
+    color: rgba($white, 0.8);
+
+    @include font-size($h5-font-size);
   }
 
-  &--primary {
-    color: var(--bs-white);
-    background-color: var(--bs-primary);
+  &__content {
+    display: flex;
+    flex-wrap: wrap;
+    gap: map.get($spacers, 3);
+    justify-content: center;
+    margin-top: map.get($spacers, 1);
   }
 
-  &--dark {
-    color: var(--bs-white);
-    background-color: var(--bs-dark);
+  &__glow {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    z-index: 1;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(
+      circle at center,
+      rgba($orange, 0.15) 0%,
+      transparent 70%
+    );
+    opacity: 0.4;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+  }
+
+  &__btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    color: $white;
+    border: 1px solid rgba($white, 0.4);
+    background-color: transparent;
+    visibility: visible;
+    opacity: 1;
+
+    &:hover {
+      color: $white;
+      border-color: rgba($white, 0.8);
+      background-color: rgba($white, 0.1);
+    }
+  }
+}
+
+/* --- Variants --- */
+.c-hero--no-gradient {
+  &::before,
+  .c-hero__glow {
+    display: none;
+  }
+}
+
+.c-hero--light {
+  border-top: 1px solid rgba($black, 0.05);
+  background-color: $white;
+
+  &::before {
+    display: none;
+  }
+
+  .c-hero__badge {
+    color: $secondary;
+    border-color: rgba($black, 0.1);
+    background: rgba($black, 0.03);
+  }
+
+  .c-hero__description {
+    color: $secondary;
+
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+      color: inherit;
+    }
+  }
+
+  .c-hero__btn {
+    color: $dark;
+    border-color: rgba($black, 0.2);
+
+    &:hover {
+      color: $white;
+      border-color: $dark;
+      background-color: $dark;
+    }
+  }
+
+  .c-hero__glow {
+    background: radial-gradient(
+      circle at center,
+      rgba($primary, 0.05) 0%,
+      transparent 70%
+    );
   }
 }

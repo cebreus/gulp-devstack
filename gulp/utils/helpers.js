@@ -1,32 +1,35 @@
+import fs from 'node:fs'
+import path from 'node:path'
+import process from 'node:process'
+
 import logger from './logger.js'
-import fs from 'fs'
-import path from 'path'
-import process from 'process'
 
 /**
- * Returns the relative path of a file or directory from the current working directory.
- * @param {string} filePath - The absolute path to the file or directory.
- * @returns {string} The relative path.
+ * Returns the relative path of a file or directory from the current execution context.
+ * @param {string} absolutePath - The full path to resolve
+ * @returns {string} The relative path
  */
-export function getRelativePath(filePath) {
-  return path.relative(process.cwd(), filePath)
+export function getRelativePath(absolutePath) {
+  return path.relative(process.cwd(), absolutePath)
 }
 
 /**
- * Create a directory recursively if it doesn't exist, with logging.
- * @param {string} dir - Directory path.
- * @param {object} loggerInstance - The logger instance to use.
+ * Ensures that a directory exists by creating it recursively if necessary.
+ * @param {string} directoryPath - Target directory path
+ * @param {object} [loggerInstance] - Optional logger for reporting creation
  * @returns {Promise<void>}
  */
-export async function ensureDirectoryExists(dir, loggerInstance) {
+export async function ensureDirectoryExists(directoryPath, loggerInstance) {
   try {
-    await fs.promises.access(dir)
+    await fs.promises.access(directoryPath)
   } catch (error) {
     if (error.code === 'ENOENT') {
-      await fs.promises.mkdir(dir, {
-        recursive: true,
-      })
-      loggerInstance.debug(`Created directory: ${getRelativePath(dir)}`)
+      await fs.promises.mkdir(directoryPath, { recursive: true })
+      if (loggerInstance) {
+        loggerInstance.debug(
+          `Created directory: ${getRelativePath(directoryPath)}`
+        )
+      }
     } else {
       throw error
     }
@@ -34,166 +37,38 @@ export async function ensureDirectoryExists(dir, loggerInstance) {
 }
 
 /**
- * Sort an array of objects by date.
- * @param {object} a - First object with a 'date' property.
- * @param {object} b - Second object with a 'date' property.
- * @returns {number} Comparison result for sorting.
- */
-export function sortByDate(a, b) {
-  const dateA = new Date(a.date).getTime()
-  const dateB = new Date(b.date).getTime()
-  return dateA > dateB ? 1 : -1
-}
-
-/**
- * Group an array of objects by a specified key.
- * @param {Array<object>} array - Array of objects to group.
- * @param {string} key - Key to group by.
- * @returns {object} Grouped object.
- */
-export function groupBy(array, key) {
-  return array.reduce((result, currentValue) => {
-    ;(result[currentValue[key]] = result[currentValue[key]] || []).push(
-      currentValue
-    )
-    return result
-  }, {})
-}
-
-/**
- * Read files asynchronously from a directory.
- * @param {string} dir - Directory path.
- * @returns {Promise<Array<object>>} Promise resolving to an array of file info objects.
- */
-export async function readFiles(dir) {
-  const files = []
-
-  const filenames = await fs.promises.readdir(dir)
-
-  for (const filename of filenames) {
-    const filepath = path.resolve(dir, filename)
-    const stat = await fs.promises.stat(filepath)
-    const isFile = stat.isFile()
-
-    if (isFile) {
-      files.push({
-        filepath,
-        name: path.parse(filename).name,
-        stat,
-      })
-    }
-  }
-
-  files.sort((a, b) => {
-    return a.name.localeCompare(b.name, undefined, {
-      numeric: true,
-      sensitivity: 'base',
-    })
-  })
-
-  return files
-}
-
-/**
- * Create a directory recursively if it doesn't exist.
- * @param {string} dir - Directory path.
- */
-export function mkdirr(dir) {
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, {
-      recursive: true,
-    })
-  }
-}
-
-/**
- * Read and parse a JSON file asynchronously.
- * @param {string} filePath - Path to the JSON file.
- * @returns {Promise<object>} Promise resolving to the parsed JSON object.
- */
-export async function readJson(filePath) {
-  try {
-    const content = await fs.promises.readFile(filePath, {
-      encoding: 'utf8',
-    })
-    return JSON.parse(content)
-  } catch (error) {
-    logger.error(`Error loading JSON data from ${filePath}`)
-    throw error
-  }
-}
-
-/**
- * Check if a file exists asynchronously.
- * @param {string} filePath - Path to the file.
- * @returns {Promise<boolean>} Promise resolving to true if file exists, false otherwise.
- */
-export async function fileExists(filePath) {
-  try {
-    await fs.promises.access(filePath)
-    return true
-  } catch (error) {
-    if (error.code !== 'ENOENT') {
-      logger.error(`Error checking file existence for ${filePath}:`, error)
-    }
-    return false
-  }
-}
-
-/**
- * Load required environment variables.
- * @param {Array<string>} requiredVariables - List of required environment variable names.
- * @returns {object} Object with environment variable values.
- * @throws {Error} If any required variable is not set.
- */
-export function loadEnvVariables(requiredVariables) {
-  const envVariables = {}
-
-  requiredVariables.forEach((variable) => {
-    const value = process.env[variable]
-    if (!value) {
-      throw new Error(`Environment variable ${variable} is not set`)
-    }
-    envVariables[variable] = value
-  })
-
-  return envVariables
-}
-
-/**
- * Suppress console warnings for known Bootstrap deprecation, legacy, or @import messages.
- * @param {string} message - The warning message to check and possibly suppress.
- */
-/**
- * Suppress console warnings for known Bootstrap deprecation, legacy, or @import messages.
- * Returns true if the warning should be suppressed, false otherwise.
- * @param {string} message - The warning message to check and possibly suppress.
- * @returns {boolean} True if suppressed, false otherwise.
+ * Predicate to suppress specific console warnings commonly emitted by
+ * legacy Bootstrap versions or @import statements in SASS.
+ * @param {string} message - Warning message string
+ * @returns {boolean} True if the message matches suppression criteria
  */
 export function suppressOutdatedBootstrapWarnings(message) {
+  const suppressedPatterns = [
+    'Deprecation',
+    'deprecated',
+    'legacy',
+    'slash as division',
+  ]
+
   if (
     typeof message === 'string' &&
-    (message.includes('Deprecation') ||
-      message.includes('deprecated') ||
-      message.includes('legacy') ||
-      message.includes('@import'))
+    suppressedPatterns.some((p) => message.includes(p))
   ) {
-    // Suppress this warning
     return true
   }
-  // Not suppressed, log as warning
-  console.warn.apply(console, arguments)
 
+  // Not internally suppressed, but we delegate original args back
   return false
 }
 
 /**
- * Convert a string to kebab-case (lowercase, dash-separated).
- * @param {string} str - The string to convert.
- * @returns {string} The kebab-case version of the input string.
+ * Normalizes a string into kebab-case (lowercase, dash-separated).
+ * Removes special characters and handles leading/trailing whitespace.
+ * @param {string} input - Source string
+ * @returns {string} kebab-case result
  */
-export function toKebabCase(str) {
-  return String(str)
+export function toKebabCase(input) {
+  return String(input)
     .trim()
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
@@ -201,19 +76,117 @@ export function toKebabCase(str) {
 }
 
 /**
- * Checks if the provided paths are empty and logs a message if they are.
- * @param {string|Array<string>} paths - The path(s) to check.
- * @param {string} message - The message to log if paths are empty.
- * @returns {boolean} True if paths are empty, false otherwise.
+ * Extracts a clean directory path from a glob pattern.
+ * @param {string|string[]} pattern - The glob pattern
+ * @returns {string} The base directory
  */
-export function handleEmptyPaths(paths, message) {
-  if (
-    !paths ||
-    (Array.isArray(paths) && paths.length === 0) ||
-    (typeof paths === 'string' && paths.trim() === '')
-  ) {
-    logger.verbose(message)
+export function getDirFromGlob(pattern) {
+  if (!pattern) return ''
+  const base = Array.isArray(pattern) ? pattern[0] : pattern
+  return base
+    .replace(/\/\*\*.*$/, '')
+    .replace(
+      /\/[^*/]*\*[^\n\r/\u2028\u2029]*(?:[\n\r\u2028\u2029][^*/]*\*[^\n\r/\u2028\u2029]*)*(?:\/.*)?$/,
+      ''
+    )
+}
+
+/**
+ * Checks if the provided inputs are empty and logs a warning if they are.
+ * @param {any} target - Path(s), string or array to validate
+ * @param {string} logMessage - Message to display if the target is considered empty
+ * @returns {boolean} True if empty
+ */
+export function handleEmptyPaths(target, logMessage) {
+  const isEmpty =
+    !target ||
+    (Array.isArray(target) && target.length === 0) ||
+    (typeof target === 'string' && target.trim() === '')
+
+  if (isEmpty) {
+    logger.verbose(logMessage)
     return true
   }
   return false
 }
+
+/**
+ * Wraps a Gulp/Node stream into a modern Promise.
+ * @param {import('node:stream').Stream} stream - Node.js stream to promisify
+ * @returns {Promise<import('node:stream').Stream>} Promise resolving with the stream upon completion
+ */
+export function streamToPromise(stream) {
+  if (!stream || typeof stream.on !== 'function') {
+    return Promise.resolve(stream)
+  }
+
+  return new Promise((resolve, reject) => {
+    let completed = false
+
+    const finalize = () => {
+      if (!completed) {
+        completed = true
+        resolve(stream)
+      }
+    }
+
+    const fail = (error) => {
+      if (!completed) {
+        completed = true
+        reject(error)
+      }
+    }
+
+    stream.on('end', finalize)
+    stream.on('finish', finalize)
+    stream.on('error', fail)
+  })
+}
+
+/**
+ * Attaches consistent end/error logging to a Gulp pipeline.
+ * @param {object} options - Logging options
+ * @param {import('node:stream').Stream} options.stream - Target stream
+ * @param {object} options.loggerInstance - Logger object with verbose/error methods
+ * @param {string[]} [options.trackedFiles] - List of processed files
+ * @param {function(string): string} [options.formatFilePath] - Optional formatter for file output
+ * @param {string} options.successLabel - Label prefix for generated assets
+ * @param {string} options.emptyMessage - Message used when no files were processed
+ * @param {string} options.errorMessage - Message used when stream emits error
+ * @returns {import('node:stream').Stream} The same stream for chaining
+ */
+export function attachPipelineLogging({
+  stream,
+  loggerInstance,
+  trackedFiles = [],
+  formatFilePath,
+  successLabel,
+  emptyMessage,
+  errorMessage,
+}) {
+  const format =
+    typeof formatFilePath === 'function'
+      ? formatFilePath
+      : function (value) {
+          return value
+        }
+
+  stream.on('end', () => {
+    if (trackedFiles.length > 0) {
+      const formattedFiles = trackedFiles.map((filePath) => format(filePath))
+      loggerInstance.info(`${successLabel} [${trackedFiles.length} files]`)
+      loggerInstance.list(successLabel, formattedFiles)
+      return
+    }
+
+    loggerInstance.debug(emptyMessage)
+  })
+
+  stream.on('error', (error) => {
+    loggerInstance.error(errorMessage, error)
+  })
+
+  return stream
+}
+
+export { getEnv } from './env.js'

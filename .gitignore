@@ -1,5 +1,5 @@
 ############################
-# OS X
+# OS
 ############################
 
 ._*
@@ -8,58 +8,29 @@
 .LSOverride
 .Spotlight-V100
 .Trashes
+Desktop.ini
 Icon
-
-
-############################
-# Linux
-############################
-
+Thumbs.db
 *~
 
-
 ############################
-# Windows
-############################
-
-*.cab
-*.msi
-*.msm
-*.msp
-$RECYCLE.BIN/
-Desktop.ini
-ehthumbs.db
-Thumbs.db
-
-
-############################
-# Packages
+# Archives & binaries
 ############################
 
 *.7z
-*.class
-*.com
-*.csv
-*.dat
-*.dll
-*.dmg
-*.exe
 *.gz
-*.iso
-*.jar
-*.o
-*.out
-*.pid
 *.rar
-*.seed
-*.so
-*.swm
-*.swn
-*.swo
-*.swp
 *.tar
 *.zip
 
+############################
+# Swap & editor files
+############################
+
+*.bak
+*.code-workspace
+*.sw[mnop]
+*#
 
 ############################
 # Logs and databases
@@ -67,9 +38,7 @@ Thumbs.db
 
 *.log
 *.sql
-*.sqlite
-*.sqlite3
-
+*.sqlite*
 
 ############################
 # Misc.
@@ -78,26 +47,18 @@ Thumbs.db
 .cache
 .claude
 .dccache
-.env
+.env*
+!.env.example
 .eslintcache
 .idea
 .temp
 .tmp
-*.bak
-*.code-workspace
-*#
-build
-build-dev
-build-export
-build-prod
-CLAUDE.md
+build*
 dist
 export
-GEMINI.md
 nbproject
 ssl
 temp
-
 
 ############################
 # Node.js
@@ -110,7 +71,6 @@ logs
 node_modules
 pids
 results
-
 
 ############################
 # Tests

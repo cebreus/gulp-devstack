@@ -23,6 +23,8 @@ export default {
       'vw',
       'dvw',
       'ch',
+      'fr',
+      'ms',
     ],
     'plugin/no-low-performance-animation-properties': true,
     'plugin/selector-bem-pattern': {
@@ -39,6 +41,14 @@ export default {
     // Reset for visionapps
     'selector-nested-pattern': null,
     'selector-class-pattern': null,
+    'order/order': [
+      'dollar-variables',
+      'custom-properties',
+      { name: 'extend', type: 'at-rule' },
+      'declarations',
+      { name: 'include', type: 'at-rule' },
+      'rules',
+    ],
   },
   ignoreFiles: ['**/*.js', '**/*.jsx', '**/*.ts', '**/*.tsx'],
 }

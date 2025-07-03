@@ -1,0 +1,6 @@
+{
+	"customFilters": ["md", "date"],
+	"rules": {
+		"checkFilters": true
+	}
+}

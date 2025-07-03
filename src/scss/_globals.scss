@@ -1,0 +1,18 @@
+@use 'sass:map';
+@use 'sass:color';
+
+// Core Foundation (functions, variables, maps, mixins)
+// This file should not generate any CSS output.
+
+@import '../../node_modules/bootstrap/scss/functions';
+
+// Project overrides
+@import 'variables';
+@import 'variables-dark';
+
+// Bootstrap core
+@import '../../node_modules/bootstrap/scss/variables';
+@import '../../node_modules/bootstrap/scss/variables-dark';
+@import '../../node_modules/bootstrap/scss/maps';
+@import '../../node_modules/bootstrap/scss/mixins';
+@import '../../node_modules/bootstrap/scss/utilities';

@@ -1,0 +1,221 @@
+{% from "components/card/card.njk" import card %}
+
+<section id="component-card" class="c-ds__section">
+  <h3 class="c-ds__section-title">Cards by Bootstrap</h3>
+  <div class="c-ds__grid mb-5">
+    <div class="c-ds__item">
+      <h4 class="c-ds__item-header-title">Bootstrap Default</h4>
+      <div class="c-ds__item-preview">
+        <div class="card u-card-fixed-width">
+          <div class="card-body">
+            <h5 class="card-title">Bootstrap Card</h5>
+            <p class="card-text small">Using default <code>.card</code> classes from the Bootstrap toolkit.</p>
+            <a href="#" class="btn btn-primary btn-sm">Primary action</a>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="c-ds__doc-item">
+      <h4 class="c-ds__item-header-title">Usage (HTML)</h4>
+      <pre class="c-ds__code"><code>{% raw %}
+        &lt;div class="card u-card-fixed-width"&gt; &lt;div class="card-body"&gt; &lt;h5 class="card-title"&gt;Bootstrap
+        Card&lt;/h5&gt; &lt;p class="card-text small"&gt; Using default &lt;code&gt;.card&lt;/code&gt; classes from the
+        Bootstrap toolkit. &lt;/p&gt; &lt;a href="#" class="btn btn-primary btn-sm"&gt;Primary action&lt;/a&gt;
+        &lt;/div&gt; &lt;/div&gt;
+      {% endraw %}</code></pre>
+    </div>
+  </div>
+</section>
+
+<section id="component-card-custom" class="c-ds__section">
+  <h3 class="c-ds__section-title">Cards Custom</h3>
+
+  <div class="table-responsive mb-5 c-about__surface c-about__surface--table">
+    <table class="table mb-0 c-about__table">
+      <thead class="table-light">
+        <tr>
+          <th scope="col" class="px-3 text-muted w-prop">Property / Parameter</th>
+          <th scope="col" class="text-muted w-type">Type</th>
+          <th scope="col" class="text-muted">Description &amp; Usage</th>
+        </tr>
+      </thead>
+      <tbody class="small">
+        <tr>
+          <td class="bg-light px-3 fw-semibold text-muted"><code>title</code></td>
+          <td><code class="text-primary">string</code></td>
+          <td>Main heading. Automatically supports HTML via the safe filter.</td>
+        </tr>
+        <tr>
+          <td class="bg-light px-3 fw-semibold text-muted"><code>body</code></td>
+          <td><code class="text-primary">string</code></td>
+          <td>Body text paragraph rendered beneath the title.</td>
+        </tr>
+        <tr>
+          <td class="bg-light px-3 fw-semibold text-muted"><code>icon</code></td>
+          <td><code class="text-primary">string | html</code></td>
+          <td>SVG filename (e.g. <code>info.svg</code>) to include, or raw SVG element.</td>
+        </tr>
+        <tr>
+          <td class="bg-light px-3 fw-semibold text-muted"><code>badge</code></td>
+          <td><code class="text-primary">string</code></td>
+          <td>Text for an absolute-positioned floating pill badge.</td>
+        </tr>
+        <tr>
+          <td class="bg-light px-3 fw-semibold text-muted"><code>img</code></td>
+          <td><code class="text-primary">html</code></td>
+          <td>Injected element (like a chart or illustration) inside the card body.</td>
+        </tr>
+        <tr>
+          <td class="bg-light px-3 fw-semibold text-muted"><code>footer</code></td>
+          <td><code class="text-primary">html</code></td>
+          <td>Buttons or links pushed to a localized bottom section.</td>
+        </tr>
+        <tr>
+          <td class="bg-light px-3 fw-semibold text-muted"><code>href</code></td>
+          <td><code class="text-primary">string</code></td>
+          <td>If provided, wraps the entire card in a clickable <code>&lt;a&gt;</code> element.</td>
+        </tr>
+        <tr>
+          <td class="bg-light px-3 fw-semibold text-muted"><code>variant</code></td>
+          <td><code class="text-primary">string</code></td>
+          <td>BEM modifier parameter (e.g. <code>bento</code> produces <code>.c-card--bento</code>).</td>
+        </tr>
+        <tr>
+          <td class="bg-light px-3 fw-semibold text-muted"><code>featured</code></td>
+          <td><code class="text-primary">boolean</code></td>
+          <td>Activates <code>.c-card--featured</code> for highlighted or visually distinct styling.</td>
+        </tr>
+        <tr>
+          <td class="bg-light px-3 fw-semibold text-muted"><code>compact</code></td>
+          <td><code class="text-primary">boolean</code></td>
+          <td>Applies tighter typography tracking and spacing via <code>.c-card--compact-title</code>.</td>
+        </tr>
+        <tr>
+          <td class="bg-light px-3 fw-semibold text-muted"
+            ><code>class</code> / <code>bodyClass</code> / <code>iconClass</code></td
+          >
+          <td><code class="text-primary">string</code></td>
+          <td>Pass global utility classes directly.</td>
+        </tr>
+        <tr>
+          <td class="bg-light px-3 fw-semibold text-muted"><code>caller()</code> blocks</td>
+          <td><code class="text-primary">html</code></td>
+          <td
+            >HTML within a <code>{% raw %}{% call %}{% endraw %}</code> block binds securely into the content
+            wrapper.</td
+          >
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Basic Custom Card -->
+  <div class="c-ds__grid c-ds__spacer-5">
+    <div class="c-ds__item">
+      <h4 class="c-ds__header-title">Basic Custom Card</h4>
+      <div class="c-ds__item-preview">
+        <div class="c-ds__item-preview-inner">
+          {% set dsCardActions %}
+            <button type="button" class="btn btn-primary btn-sm">Primary action</button>
+          {% endset %}
+          {% call card(title = "Standard Card Title", icon = "brush.svg", iconClass = "text-primary", footer = dsCardActions, class = "h-auto u-card-fixed-width", body = "Default card <code>body</code> text.") %}
+            <p class="small mb-0"
+              >This example demonstrates the <code>call</code> syntax for injecting custom HTML content directly into
+              the card body.</p
+            >
+          {% endcall %}
+        </div>
+      </div>
+    </div>
+    <div class="c-ds__doc-item">
+      <h4 class="c-ds__header-title">Usage (Macro)</h4>
+      <pre class="c-ds__code"><code>{% raw %}
+        {% set dsCardActions %}
+          &lt;button class="btn btn-primary btn-sm"&gt;Action&lt;/button&gt;
+        {% endset %}
+      {% endraw %}&#123;% call card(
+  title = "Standard Card Title",
+  icon = "brush.svg",
+  iconClass = "text-primary",
+  footer = dsCardActions,
+  class = "h-auto u-card-fixed-width",
+  body = "Default card &lt;code&gt;body&lt;/code&gt; text."
+) %&#125;
+  &lt;p class="small mb-0"&gt;This example demonstrates the &lt;code&gt;call&lt;/code&gt; syntax for injecting custom HTML content directly into the card body.&lt;/p&gt;
+&#123;% endcall %&#125;</code></pre>
+    </div>
+  </div>
+
+  <!-- Compact Title Card -->
+  <div class="c-ds__grid c-ds__spacer-5">
+    <div class="c-ds__item">
+      <h4 class="c-ds__header-title">Compact Title Card</h4>
+      <div class="c-ds__item-preview">
+        <div class="c-ds__item-preview-inner">
+          {{
+            card(
+              title = "Standard Card Title",
+              body = "The <code>.c-card--compact</code> modifier reduces font size and spacing, making it ideal for information-dense layouts or secondary grid items.",
+              icon = "brush.svg",
+              variant = "bento",
+              compact = true,
+              class = "h-auto u-card-fixed-width"
+            )
+          }}
+        </div>
+      </div>
+    </div>
+    <div class="c-ds__doc-item">
+      <h4 class="c-ds__header-title">Usage (Macro)</h4>
+      <pre class="c-ds__code"><code>{% raw %}{{
+        card(
+          title = "Standard Card Title",
+          body = "The &lt;code&gt;.c-card--compact&lt;/code&gt; modifier reduces font size and spacing, making it ideal for information-dense layouts or secondary grid items.",
+          icon = "brush.svg",
+          variant = "bento",
+          compact = true,
+          class = "h-auto u-card-fixed-width"
+        )
+      }}{% endraw %}</code></pre>
+    </div>
+  </div>
+
+  <!-- Featured Bento Card -->
+  <div class="c-ds__grid">
+    <div class="c-ds__item">
+      <h4 class="c-ds__header-title">Featured Bento Card</h4>
+      <div class="c-ds__item-preview">
+        <div class="c-ds__item-preview-inner">
+          {{
+            card(
+              title = "Standard Card Title",
+              body = "The <code>.c-card--featured</code> modifier applies a high-contrast theme (different background and icon style) to highlight important content.",
+              icon = "brush.svg",
+              badge = "Hot",
+              variant = "bento",
+              featured = true,
+              class = "h-auto u-card-fixed-width",
+              href = "#"
+            )
+          }}
+        </div>
+      </div>
+    </div>
+    <div class="c-ds__doc-item">
+      <h4 class="c-ds__header-title">Usage (Macro)</h4>
+      <pre class="c-ds__code"><code>{% raw %}{{
+        card(
+          title = "Standard Card Title",
+          body = "The &lt;code&gt;.c-card--featured&lt;/code&gt; modifier applies a high-contrast theme (different background and icon style) to highlight important content.",
+          icon = "brush.svg",
+          badge = "Hot",
+          variant = "bento",
+          featured = true,
+          footer = dsCardActions,
+          class = "h-auto u-card-fixed-width",
+          href = "#"
+        )
+      }}{% endraw %}</code></pre>
+    </div>
+  </div>
+</section>

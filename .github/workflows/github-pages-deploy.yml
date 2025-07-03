@@ -1,37 +1,66 @@
-name: Build and Deploy
-on:
+name: Deploy Pages (pnpm)
+
+'on':
   push:
     branches: ['master']
   workflow_dispatch:
-    branches: ['master', 'develop']
 
 permissions:
-  contents: write
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '22'
+  PNPM_VERSION: '10'
 
 jobs:
   build-and-deploy:
+    name: Build & Deploy
     runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
 
     steps:
-      - name: Checkout 🔄
-        uses: actions/checkout@v3
-
-      - name: Cache dependencies 🗄️
-        id: cache
-        uses: actions/cache@v3
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
-          path: ./node_modules
-          key: modules-${{ hashFiles('package-lock.json') }}
+          fetch-depth: 1
 
-      - name: Install dependencies ⬇️
-        if: steps.cache.outputs.cache-hit != 'true'
-        run: npm ci --legacy-peer-deps
-
-      - name: Build project 🔨
-        run: |
-          npm run build
-
-      - name: Deploy to GitHub Pages 🚀
-        uses: JamesIves/github-pages-deploy-action@v4
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
         with:
-          folder: build
+          version: ${{ env.PNPM_VERSION }}
+          run_install: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --prefer-offline --ignore-scripts
+        env:
+          CI: true
+
+      - name: Build project
+        run: pnpm run build
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: build-prod
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

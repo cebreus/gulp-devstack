@@ -1,5 +1,73 @@
-<footer class="o-footer mt-5 pt-5 pb-3 text-body-secondary">
-  <div class="container">
-    <div class="copyright small">{{ site.copyright | safe }}</div>
+{%
+  set navigation = [
+    {
+      title: "Resources",
+      links: [
+        { label: "Home", url: "/" },
+        { label: "Guide", url: "/about/" },
+        { label: "Repository", url: "https://github.com/cebreus/gulp-devstack" }
+      ]
+    },
+    {
+      title: "Development",
+      links: [
+        { label: "Issue Tracker", url: "https://github.com/cebreus/gulp-devstack/issues" },
+        { label: "Changelog", url: "https://github.com/cebreus/gulp-devstack/blob/main/CHANGELOG.md" },
+        { label: "Releases", url: "https://github.com/cebreus/gulp-devstack/releases" }
+      ]
+    }
+  ]
+%}
+
+<footer class="py-5 border-top bg-light" data-testid="footer">
+  <div class="container" data-testid="footer-inner">
+    <div class="row g-4 align-items-start" data-testid="footer-layout">
+      <div class="col-sm-6 col-lg-4" data-testid="footer-column-brand">
+        <h3 class="h6 mb-2 fw-semibold" data-testid="footer-heading">
+          {{ site.title }}
+          <small class="text-muted" data-testid="footer-version">v{{ site.version }}</small>
+        </h3>
+        <div class="text-muted small" data-testid="footer-first-row">
+          {{ site.description }} <br />
+          &copy; {{ site.now | date({ year: 'numeric' }) }}
+          <a href="https://cebre.us" target="_blank" rel="noopener" class="text-muted text-decoration-underline"
+            >{{ site.author }}</a
+          >. {{ site.copyright | safe }}
+        </div>
+      </div>
+
+      {% for group in navigation %}
+        <div class="col-6 col-sm-3 col-md-3 col-lg-2" data-testid="footer-column">
+          <h3 class="h6 mb-2 fw-semibold" data-testid="footer-heading">{{ group.title }}</h3>
+          <nav class="nav flex-column gap-1" data-testid="footer-nav" aria-label="{{ group.title }} navigation">
+            {% for link in group.links %}
+              <a href="{{ link.url }}" class="text-muted small text-decoration-none">{{ link.label }}</a>
+            {% endfor %}
+          </nav>
+        </div>
+      {% endfor %}
+
+      <div class="col-12 col-lg-4" data-testid="footer-column-maturity">
+        <h3 class="h6 mb-2 text-dark fw-semibold" data-testid="footer-heading">Project Maturity</h3>
+        <div class="opacity-75" data-testid="footer-first-row">
+          <img src="https://img.shields.io/github/license/cebreus/gulp-devstack" alt="License" />
+          <img src="https://img.shields.io/github/v/release/cebreus/gulp-devstack" alt="Release" />
+          <img src="https://img.shields.io/github/last-commit/cebreus/gulp-devstack" alt="Last Commit" />
+          <br />
+          <img src="https://app.codacy.com/project/badge/Grade/16e0c62b123d4dbfb27c216f5107f464" alt="Codacy" />
+          <img src="https://img.shields.io/github/issues/cebreus/gulp-devstack" alt="Issues" />
+          <img src="https://img.shields.io/github/license/cebreus/gulp-devstack" alt="License" />
+          <img
+            src="https://github.com/cebreus/gulp-devstack/actions/workflows/github-pages-deploy-pnpm.yml/badge.svg"
+            alt="Build"
+          />
+        </div>
+        {% if page.updated_at %}
+          <div class="text-muted small fst-italic opacity-75" data-testid="footer-updated">
+            Last build: {{ page.updated_at | date({ day: 'numeric', month: 'long', year: 'numeric' }) }}
+          </div>
+        {% endif %}
+      </div>
+    </div>
   </div>
 </footer>

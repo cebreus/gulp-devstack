@@ -1,17 +1,36 @@
-// Node.js v20+ supports --env-file, so .env/.env.local can be loaded at runtime by the CLI.
-// This utility just reads from process.env, which is already populated.
+/**
+ * Environment Variable Utility.
+ *
+ * Note: Node.js 20+ supports --env-file directly for loading .env files.
+ * This utility provides safe reading with type coercion and defaults.
+ */
 
 /**
- * Get an environment variable with optional fallback and type conversion.
- * @param {string} key - The environment variable name.
- * @param {any} fallback - Fallback value if not set.
- * @returns {string|boolean|number} The value of the environment variable, converted to boolean or number if applicable, or the fallback.
+ * Retrieves a value from an environment object with type-safe conversion.
+ * @param {string} key - The environment variable name
+ * @param {any} [fallback] - Value to return if the key is undefined
+ * @param {object} [env] - The environment object to read from
+ * @returns {string|boolean|number|any} The processed value
  */
-export function getEnv(key, fallback = undefined) {
-  const val = process.env[key]
-  if (val === undefined) return fallback
-  if (val === 'true') return true
-  if (val === 'false') return false
-  if (!isNaN(val) && val.trim() !== '') return Number(val)
-  return val
+export function getEnv(key, fallback, env = process.env) {
+  const rawValue = env[key]
+
+  if (rawValue === undefined) {
+    return fallback
+  }
+
+  const value = String(rawValue)
+
+  // Handle boolean strings
+  if (value.toLowerCase() === 'true') return true
+  if (value.toLowerCase() === 'false') return false
+
+  // Handle numeric strings
+  if (!isNaN(value) && value.trim() !== '') {
+    return Number(value)
+  }
+
+  return rawValue
 }
+
+export default getEnv

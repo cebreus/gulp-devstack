@@ -5,9 +5,9 @@ objects for Nunjucks templates.
 
 ## Data Sources & Structure
 
-* **Site data**: Global config from
+- **Site data**: Global config from
   [`/src/config/site.js`](../src/config/site.js)
-  * Example structure:
+  - Example structure:
     ```js
     export const siteDefaults = {
       title: 'Gulp DevStack',
@@ -18,9 +18,9 @@ objects for Nunjucks templates.
       },
     }
     ```
-* **Page data**: Frontmatter in Markdown files under
+- **Page data**: Frontmatter in Markdown files under
   [`/src/routes/`](../src/routes/) (or `/content/pages/`)
-  * Example frontmatter:
+  - Example frontmatter:
     ```md
     ---
     title: Home
@@ -38,29 +38,29 @@ objects for Nunjucks templates.
 
 ## Data Access in Templates
 
-* **`site`**: Global config, always available
-  * `{{ site.title }}`
-  * `{{ site.menu }}`
-  * `{{ site.meta.lang }}`
-* **`page`**: All frontmatter fields for the current page
-  * `{{ page.title }}`
-  * `{{ page.hero.title }}`
-  * `{{ page.features.items }}`
-* **Direct variables**: Top-level frontmatter fields are also available directly
-  * `{{ title }}`
-  * `{{ hero.title }}`
+- **`site`**: Global config, always available
+  - `{{ site.title }}`
+  - `{{ site.menu }}`
+  - `{{ site.meta.lang }}`
+- **`page`**: All frontmatter fields for the current page
+  - `{{ page.title }}`
+  - `{{ page.hero.title }}`
+  - `{{ page.features.items }}`
+- **Direct variables**: Top-level frontmatter fields are also available directly
+  - `{{ title }}`
+  - `{{ hero.title }}`
 
-***
+---
 
 ## Custom Nunjucks Filters
 
 Custom filters are defined in
 [`gulp/utils/nunjucks-filters.js`](../gulp/utils/nunjucks-filters.js):
 
-* `md` — Render Markdown to HTML
-* `dump` — Pretty-print objects for debugging
-* `safe` — Mark string as safe HTML
-* (See the file for more filters)
+- `md` — Render Markdown to HTML
+- `dump` — Pretty-print objects for debugging
+- `safe` — Mark string as safe HTML
+- (See the file for more filters)
 
 Usage example:
 
@@ -69,7 +69,7 @@ Usage example:
 <pre>{{ page | dump(2) }}</pre>
 ```
 
-***
+---
 
 ## Common Patterns
 

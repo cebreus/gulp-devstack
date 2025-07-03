@@ -1,5 +1,7 @@
+// Systematic component library with shared global context
+@import 'globals';
+
 // Import all component styles
-@import '../components/card/card';
-@import '../components/features/features';
-@import '../components/header/header';
-@import '../components/hero/hero';
+@import '../lib/components/card/card';
+@import '../lib/components/header/header';
+@import '../lib/components/hero/hero';

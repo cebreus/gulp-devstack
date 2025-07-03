@@ -36,12 +36,12 @@ twitter_cards:
 Gulp DevStack je sada nástrojů pro moderní frontend vývoj. Poskytuje kompletní
 workflow pro:
 
-* Vývoj statických webových stránek s Nunjucks šablonami
-* Komponentový přístup s možností znuvupoužití kódu
-* Live reload pro rychlé zobrazení změn
-* Optimalizaci všech zdrojů (kód, obrázky, fonty)
-* Bootstrap framework s možností přizpůsobení
-* Efektivní strukturu projektu s odděleným obsahem a prezentací
+- Vývoj statických webových stránek s Nunjucks šablonami
+- Komponentový přístup s možností znuvupoužití kódu
+- Live reload pro rychlé zobrazení změn
+- Optimalizaci všech zdrojů (kód, obrázky, fonty)
+- Bootstrap framework s možností přizpůsobení
+- Efektivní strukturu projektu s odděleným obsahem a prezentací
 
 Používá moderní technologie jako Nunjucks, SCSS, ES6, Babel a další pro
 zajištění nejlepších vývojářských zkušeností.

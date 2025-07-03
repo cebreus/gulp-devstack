@@ -1,51 +1,63 @@
+import { Transform } from 'node:stream'
+import gulpNewer from 'gulp-newer'
+import pc from 'picocolors'
 import gulp from 'gulp'
 
-import { getRelativePath } from '../utils/helpers.js'
-import logger from '../utils/logger.js'
-import pc from 'picocolors'
-import through2 from 'through2'
+import {
+  attachPipelineLogging,
+  getRelativePath,
+  streamToPromise,
+} from '../utils/helpers.js'
+import loggerLib from '../utils/logger.js'
+
+const logger = loggerLib.createLogger('Copy')
 
 /**
- * Copies static files from source to destination using Gulp streams.
- * Uses async/await for testability and modern error handling.
- * @param {string|string[]} src - Source paths (glob or array)
- * @param {string} baseDir - Base directory to resolve relative paths from
+ * Copies static assets from source to destination using Gulp streams.
+ * Implements incremental copy using the 'gulp-newer' plugin.
+ * @param {string|string[]} src - Source glob pattern(s)
+ * @param {string} baseDir - Base directory for resolving relative paths
  * @param {string} dest - Destination directory
- * @returns {Promise<void>} Resolves when copy is complete
+ * @returns {Promise<import('node:stream').Readable>} Gulp stream result
  */
-export default async function copyStatic(src, baseDir, dest) {
-  logger.debug(`[Copy] From ${src} to ${dest}`)
-  const copiedFiles = []
-  return new Promise((resolve, reject) => {
-    gulp
-      .src(src, {
-        base: baseDir,
-        allowEmpty: true,
-      })
-      .pipe(
-        through2.obj(function (file, enc, cb2) {
+export async function copyStatic(src, baseDir, dest) {
+  logger.list(
+    `Starting copy to ${pc.cyan(dest)} (base: ${pc.dim(baseDir)})`,
+    Array.isArray(src) ? src : [src]
+  )
+
+  const processedFiles = []
+
+  const copyPipeline = gulp
+    .src(src, {
+      base: baseDir,
+      allowEmpty: true,
+      dot: true,
+    })
+    .pipe(gulpNewer(dest))
+    .pipe(
+      new Transform({
+        objectMode: true,
+        transform(file, _enc, cb) {
           if (file.path) {
-            const relPath = getRelativePath(file.path)
-            copiedFiles.push(relPath)
+            processedFiles.push(getRelativePath(file.path))
           }
-          cb2(null, file)
-        })
-      )
-      .pipe(gulp.dest(dest))
-      .on('end', () => {
-        if (copiedFiles.length > 0) {
-          logger.verbose(
-            `[Copy] Processed:\n` +
-              copiedFiles.map((f) => `            - ${pc.yellow(f)}`).join('\n')
-          )
-        } else {
-          logger.verbose('[Copy] No files processed.')
-        }
-        resolve()
+          cb(null, file)
+        },
       })
-      .on('error', (err) => {
-        logger.error('[Copy] Error:', err)
-        reject(err)
-      })
+    )
+    .pipe(gulp.dest(dest))
+
+  attachPipelineLogging({
+    stream: copyPipeline,
+    loggerInstance: logger,
+    trackedFiles: processedFiles,
+    successLabel: 'Copied assets',
+    emptyMessage: 'No newer static files found to copy.',
+    errorMessage: 'Copy task failure:',
   })
+
+  return streamToPromise(copyPipeline)
 }
+
+export default copyStatic

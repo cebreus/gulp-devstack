@@ -16,13 +16,13 @@ Replace [ ] by [x] to check these checkboxes!
 
 #### My PR is a:
 
-* [ ] 💥 Breaking change
-* [ ] 🐛 Bug fix
-* [ ] 💅 Enhancement
-* [ ] 🚀 New feature
+- [ ] 💥 Breaking change
+- [ ] 🐛 Bug fix
+- [ ] 💅 Enhancement
+- [ ] 🚀 New feature
 
 #### Main update on the:
 
-* [ ] Templates and Code
-* [ ] Framework
-* [ ] Documentation
+- [ ] Templates and Code
+- [ ] Framework
+- [ ] Documentation

@@ -6,20 +6,20 @@ You can override these blocks in your own templates.
 ## Block Hierarchy
 
 1. `head_tag` - whole `<head>`
-   * `css` - styles
-   * `head_custom` - custom head tags
-   * `meta_seo` - SEO meta
-   * `favicons` - icons
-   * `meta_og` - Open Graph
-   * `meta_twitter` - Twitter Cards
+   - `css` - styles
+   - `head_custom` - custom head tags
+   - `meta_seo` - SEO meta
+   - `favicons` - icons
+   - `meta_og` - Open Graph
+   - `meta_twitter` - Twitter Cards
 2. `body` - whole `<body>`
-   * `header` - header
-   * `hero` - hero section
-   * `main` - main content
-     * `content` - page content
-   * `footer` - footer
-   * `js` - JavaScript files
-   * `scripts` - inline scripts
+   - `header` - header
+   - `hero` - hero section
+   - `main` - main content
+     - `content` - page content
+   - `footer` - footer
+   - `js` - JavaScript files
+   - `scripts` - inline scripts
 
 You can override, extend, or keep any block as needed.
 

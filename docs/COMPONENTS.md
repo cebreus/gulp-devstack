@@ -32,13 +32,13 @@ complex objects to the component.
 
 ## Structure
 
-* Each component is a folder in `src/lib/components/` (e.g. `card/`, `header/`)
-* The main file is usually `component-name.njk`
-* Components can have their own assets (images, styles, docs)
-* Typical files:
-  * `component-name.njk` – Nunjucks template
-  * `component-name.scss` – SCSS styles for the component
-  * `component-name.md` – Documentation and usage
+- Each component is a folder in `src/lib/components/` (e.g. `card/`, `header/`)
+- The main file is usually `component-name.njk`
+- Components can have their own assets (images, styles, docs)
+- Typical files:
+  - `component-name.njk` – Nunjucks template
+  - `component-name.scss` – SCSS styles for the component
+  - `component-name.md` – Documentation and usage
 
 ## Creating Components
 
@@ -49,7 +49,7 @@ You can create components **manually** or using the CLI utility:
 The project provides a CLI for component management (see
 `gulp/tasks/component-manager.js`).
 
-* **Create:**
+- **Create:**
 
   ```sh
   pnpm component:create
@@ -60,7 +60,7 @@ The project provides a CLI for component management (see
   You will be prompted for the component name. The CLI will create a folder with
   starter files (`.njk`, `.scss`, `.md`).
 
-* **Remove:**
+- **Remove:**
 
   ```sh
   pnpm component:remove
@@ -68,7 +68,7 @@ The project provides a CLI for component management (see
 
   Select a component to delete (irreversible).
 
-* **Rename:**
+- **Rename:**
 
   ```sh
   pnpm component:rename
@@ -77,7 +77,7 @@ The project provides a CLI for component management (see
   Select a component and enter a new name. All files and references in the
   component will be renamed.
 
-* **List:**
+- **List:**
   ```sh
   pnpm component:list
   ```
@@ -101,12 +101,12 @@ component's SCSS.
 Some components are not classic UI blocks, but are used for inserting metadata
 or favicons:
 
-* **favicons**: `favicons/favicons.njk` – contains `<link rel="icon">` tags for
+- **favicons**: `favicons/favicons.njk` – contains `<link rel="icon">` tags for
   favicons. Included in the page `<head>`.
-* **meta-rich-snippets**: contains templates for SEO and social networks:
-  * `open-graph.njk` – Open Graph meta tags
-  * `seo.njk` – basic SEO meta tags
-  * `twitter-cards.njk` – Twitter Cards meta tags
+- **meta-rich-snippets**: contains templates for SEO and social networks:
+  - `open-graph.njk` – Open Graph meta tags
+  - `seo.njk` – basic SEO meta tags
+  - `twitter-cards.njk` – Twitter Cards meta tags
 
 Usage:
 
@@ -119,12 +119,12 @@ Usage:
 
 ## Best Practices
 
-* Keep components small and focused
-* Use variables for dynamic content
-* Document expected input in the component file (in `.md` or as a comment in
+- Keep components small and focused
+- Use variables for dynamic content
+- Document expected input in the component file (in `.md` or as a comment in
   `.njk`)
-* Prefer kebab-case for names
-* Avoid special characters, spaces, or uppercase in names
+- Prefer kebab-case for names
+- Avoid special characters, spaces, or uppercase in names
 
 See [Nunjucks Blocks Documentation](./NUNJUCKS-BLOCKS.md) for block usage in
 layouts.

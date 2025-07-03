@@ -1,94 +1,95 @@
+import { createGulpEsbuild } from 'gulp-esbuild'
+import pc from 'picocolors'
 import gulp from 'gulp'
 
-import * as config from '../config.js'
-import { getRelativePath } from '../utils/helpers.js'
-import logger from '../utils/logger.js'
-import babel from 'gulp-babel'
-import concat from 'gulp-concat'
-import plumber from 'gulp-plumber'
-import sourcemaps from 'gulp-sourcemaps'
-import pc from 'picocolors'
+import * as defaultConfig from '../config.js'
+import {
+  attachPipelineLogging,
+  getRelativePath,
+  streamToPromise,
+} from '../utils/helpers.js'
+import loggerLib from '../utils/logger.js'
+
+const logger = loggerLib.createLogger('JavaScript')
+const gulpEsbuild = createGulpEsbuild()
 
 /**
- * Processes JavaScript files with Babel, optional concatenation, and source maps.
- * Always uses async/await and returns a Promise that resolves when processing is complete.
- * @param {string[]|string} filePaths - Source JS file(s) to process.
- * @param {string} outputDir - Output directory for processed JS files.
- * @param {object} options - Processing options.
- * @param {boolean} [options.concatFiles] - Whether to concatenate all files.
- * @param {string} [options.outputConcatPrefixFileName] - Prefix for concatenated file.
- * @param {boolean} [options.sourceMaps] - Override source maps setting.
- * @returns {Promise<void>} Resolves when processing is complete.
+ * @typedef {object} JsProcessingOptions
+ * @property {boolean} [bundle=false] - Whether to bundle all dependencies
+ * @property {string} [outputFormat='esm'] - Output module format (esm, iife, cjs)
+ * @property {boolean} [minify] - Whether to minify the output
+ * @property {boolean} [sourceMaps] - Explicitly enable/disable sourcemaps
  */
-export default async function processJs(filePaths, outputDir, options = {}) {
-  const {
-    concatFiles = false,
-    outputConcatPrefixFileName = 'app',
-    sourceMaps,
-  } = options
 
-  const createSourceMaps = sourceMaps ?? config.sourceMaps()
+/**
+ * Generates esbuild configuration object based on options and environment.
+ * @param {JsProcessingOptions} options - Task options
+ * @param {object} [buildConfig] - Configuration provider
+ * @returns {object} Esbuild configuration object
+ */
+export function getEsbuildConfig(options = {}, buildConfig = defaultConfig) {
+  const { bundle = false, outputFormat = 'esm', minify, sourceMaps } = options
 
-  // Simple filePaths validation
-  const isArray = Array.isArray(filePaths)
-  if (
-    !filePaths ||
-    (isArray && filePaths.length === 0) ||
-    (!isArray && typeof filePaths !== 'string') ||
-    (typeof filePaths === 'string' && filePaths.trim() === '')
-  ) {
-    logger.warn(
-      '[JavaScript] No valid input files provided to processJs. Skipping processing.'
-    )
+  const shouldMinify = minify ?? buildConfig.minifyJs()
+  const shouldGenerateSourceMaps = sourceMaps ?? buildConfig.sourceMaps()
+
+  return {
+    bundle,
+    format: outputFormat,
+    minify: shouldMinify,
+    sourcemap: shouldGenerateSourceMaps ? 'external' : false,
+    loader: { '.js': 'js' },
+    target: ['es2022'],
+    logLevel: loggerLib.isDebugEnabled() ? 'info' : 'warning',
+  }
+}
+
+/**
+ * Gulp Task: Processes JavaScript source files using esbuild.
+ * @param {string|string[]} filePaths - Input glob pattern(s) for JS files
+ * @param {string} outputDir - Destination directory
+ * @param {JsProcessingOptions} [options] - Task options
+ * @returns {Promise<void>} Resolves when processing is complete
+ */
+export async function processJs(filePaths, outputDir, options = {}) {
+  // Input validation
+  if (!filePaths || (Array.isArray(filePaths) && filePaths.length === 0)) {
+    logger.warn('JS Task: Skipping execution (no valid input files provided).')
     return
   }
 
+  const esbuildConfig = getEsbuildConfig(options)
+
   logger.debug(
-    `[JavaScript] Processing from ${filePaths} to ${outputDir} with options: concatFiles=${concatFiles}, sourceMaps=${createSourceMaps}`
+    `Processing JS with esbuild to ${pc.dim(outputDir)} (bundle: ${esbuildConfig.bundle}, minify: ${esbuildConfig.minify})`
   )
 
-  return new Promise((resolve, reject) => {
-    let stream = gulp.src(filePaths).pipe(plumber())
-    if (createSourceMaps) stream = stream.pipe(sourcemaps.init())
-    stream = stream.pipe(babel())
-    if (concatFiles) {
-      logger.debug(
-        `[JavaScript] Concatenating to ${outputConcatPrefixFileName}.js`
-      )
-      stream = stream.pipe(concat(`${outputConcatPrefixFileName}.js`))
+  const processedFiles = []
+  const jsPipeline = gulp
+    .src(filePaths)
+    .pipe(gulpEsbuild(esbuildConfig))
+    .pipe(gulp.dest(outputDir))
+
+  jsPipeline.on('data', (file) => {
+    if (file && file.path) {
+      try {
+        processedFiles.push(getRelativePath(file.path))
+      } catch {
+        // Skip extension artifacts
+      }
     }
-    if (createSourceMaps) stream = stream.pipe(sourcemaps.write('.'))
-
-    const writtenFiles = []
-    const destStream = stream.pipe(gulp.dest(outputDir))
-
-    destStream.on('data', (file) => {
-      if (file && typeof file.path === 'string') {
-        try {
-          writtenFiles.push(getRelativePath(file.path))
-        } catch {
-          logger.warn(
-            `[JavaScript] Could not get relative path for file: ${file.path}`
-          )
-        }
-      }
-    })
-    destStream.on('finish', () => {
-      if (writtenFiles.length > 0) {
-        logger.verbose(
-          `[JavaScript] Written files:\n` +
-            writtenFiles.map((f) => `            - ${pc.yellow(f)}`).join('\n')
-        )
-      } else {
-        logger.verbose(
-          `[JavaScript] No files written to: ${getRelativePath(outputDir)}`
-        )
-      }
-      resolve()
-    })
-    destStream.on('error', (err) => {
-      logger.error('[JavaScript] Error during processing:', err)
-      reject(err)
-    })
   })
+
+  attachPipelineLogging({
+    stream: jsPipeline,
+    loggerInstance: logger,
+    trackedFiles: processedFiles,
+    successLabel: 'JS assets generated',
+    emptyMessage: 'No JS assets were generated.',
+    errorMessage: 'esbuild processing failed!',
+  })
+
+  return streamToPromise(jsPipeline)
 }
+
+export default processJs

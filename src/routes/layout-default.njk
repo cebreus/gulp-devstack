@@ -4,11 +4,13 @@
     <head>
       <meta charset="{{ site.meta.charset | default('utf-8') }}" />
       <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-      {% if page.seo.title or page.title %}
-        <title>{{ (page.seo.title or page.title) | striptags }}</title>
-      {% endif %}
+      <title>{{ (page.seo.title or page.title or site.title) | striptags }}</title>
       {% block css %}
         <!-- inject:css --><!-- endinject -->
+
+        {% for style in pageStyles or [] %}
+          <link rel="stylesheet" href="{{ style }}" />
+        {% endfor %}
       {% endblock %}
 
       {% block head_custom %}
@@ -37,25 +39,27 @@
     {% endblock %}
 
     {# <pre>{{ page | dump(2) }}</pre> #}
+    {# <pre>{{ site | dump(2) }}</pre> #}
 
     {% block hero %}
       {% if page.hero %}
-        {%
-          set heroData = {
-            title: page.hero.title,
-            description: page.hero.description,
-            content: page.hero.content,
-            modifier: page.hero.modifier
-          }
-        %}
-        {% include "components/hero/hero.njk" %}
+        {% from "components/hero/hero.njk" import hero %}
+        {{
+          hero(
+            title = page.hero.title,
+            description = page.hero.description,
+            content = page.hero.content,
+            modifier = page.hero.modifier,
+            badge = page.hero.badge
+          )
+        }}
       {% endif %}
     {% endblock %}
 
     {% block main %}
       <main class="o-main">
         {% block content %}
-          {{ page.content | safe }}
+          <div class="container py-5"> {{ page.content | md | safe }} </div>
         {% endblock %}
       </main>
     {% endblock %}
@@ -67,6 +71,10 @@
     {% block js %}
       <!-- inject:js --><!-- endinject -->
       <!-- inject:cdn:js --><!-- endinject -->
+
+      {% for script in pageScripts or [] %}
+        <script src="{{ script }}"></script>
+      {% endfor %}
     {% endblock %}
 
     {% block scripts %}

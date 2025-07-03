@@ -15,10 +15,8 @@ const config = {
     '',
     '^[./]',
   ],
-  importOrderSeparation: true,
-  importOrderSortSpecifiers: true,
   plugins: [
-    '@trivago/prettier-plugin-sort-imports',
+    '@ianvs/prettier-plugin-sort-imports',
     'prettier-plugin-jinja-template',
   ],
   overrides: [

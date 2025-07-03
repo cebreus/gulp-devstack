@@ -1,14 +1,4 @@
+@use 'sass:map';
+@import 'globals';
+
 // Custom utility class definitions.
-
-// Utilities for full-width background effects
-.u-clip-inset-full {
-  clip-path: inset(0 -100dvw);
-}
-
-.u-box-shadow-inset-full-white {
-  box-shadow: 0 0 0 100dvw var(--bs-white);
-}
-
-.u-box-shadow-inset-full-tertiary-bg {
-  box-shadow: 0 0 0 100dvw var(--bs-tertiary-bg);
-}

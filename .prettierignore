@@ -24,3 +24,7 @@ _variables.scss
 package-lock.json
 u-debugger.scss
 u-show-grid.scss
+pnpm-lock.yaml
+
+# Ignore Markdown files, Remark handles formatting for them
+**/*.md

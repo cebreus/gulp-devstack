@@ -1,8 +1,5 @@
-@use 'sass:map';
-@use 'sass:color';
-@import '../../node_modules/bootstrap/scss/functions';
-@import '../../node_modules/bootstrap/scss/mixins';
-@import './variables';
+@import 'globals';
+@import 'utils';
 
 // @import './variables-dark';
 // @import '../../node_modules/bootstrap/scss/maps';
@@ -17,7 +14,7 @@
 // We don't need explicit imports here anymore
 
 // Bootstrap overrides
-// --------------
+$deep-blue-bg: #0a1d39;
 
 :root {
   --deep-blue-bg: #0a1d39;
@@ -27,17 +24,6 @@ body {
   min-width: 320px;
 }
 
-// Remove void in the bottom of the alert component
-.alert {
-  p:last-child,
-  ol:last-child,
-  ul:last-child {
-    margin-bottom: 0;
-  }
-}
-
-// Reset for SVG images in `<img src=""`
-img:not([src$='.svg']) {
-  max-width: 100%;
-  height: auto;
+.bg-deep-blue {
+  background-color: var(--deep-blue-bg);
 }

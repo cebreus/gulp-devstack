@@ -1,15 +1,17 @@
-document.addEventListener('DOMContentLoaded', function () {
-  console.log('Gulp DevStack initialized')
+/**
+ * Binds DOM event handlers for the main app runtime.
+ * @returns {void}
+ */
+function bindEvents() {
+  // Add event listeners here.
+}
 
-  const app = {
-    init: function () {
-      this.bindEvents()
-    },
+/**
+ * Initializes the main frontend runtime.
+ * @returns {void}
+ */
+function initializeApp() {
+  bindEvents()
+}
 
-    bindEvents: function () {
-      // Add event listeners here.
-    },
-  }
-
-  app.init()
-})
+document.addEventListener('DOMContentLoaded', initializeApp)
