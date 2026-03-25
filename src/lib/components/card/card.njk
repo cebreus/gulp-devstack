@@ -1,0 +1,22 @@
+{# Component: Card #}
+<div class="c-card p-4 rounded-3">
+  {% if cardData.cardIcon %}
+    <div class="c-card__icon mb-3">{{ cardData.cardIcon | safe }}</div>
+  {% endif %}
+
+  {% if cardData.title %}
+    <h3 class="c-card__title mb-3 fs-5">{{ cardData.title }}</h3>
+  {% endif %}
+
+  {% if cardData.text %}
+    <div class="c-card__text mb-3">{{ cardData.text | safe }}</div>
+  {% endif %}
+
+  {% if cardData.cardButtons %}
+    <div class="c-card__actions mt-3">
+      {% for button in cardData.cardButtons %}
+        <a href="{{ button.url }}" class="btn {{ button.class }}">{{ button.text }}</a>
+      {% endfor %}
+    </div>
+  {% endif %}
+</div>

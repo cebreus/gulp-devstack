@@ -77,6 +77,26 @@
       "data-.*",
       "aria-.*",
     ],
+    "workbench.colorCustomizations": {
+      "activityBar.activeBackground": "#123364",
+      "activityBar.background": "#123364",
+      "activityBar.foreground": "#e7e7e7",
+      "activityBar.inactiveForeground": "#e7e7e799",
+      "activityBarBadge.background": "#bd2260",
+      "activityBarBadge.foreground": "#e7e7e7",
+      "commandCenter.border": "#e7e7e799",
+      "sash.hoverBorder": "#123364",
+      "statusBar.background": "#0a1d39",
+      "statusBar.foreground": "#e7e7e7",
+      "statusBarItem.hoverBackground": "#123364",
+      "statusBarItem.remoteBackground": "#0a1d39",
+      "statusBarItem.remoteForeground": "#e7e7e7",
+      "titleBar.activeBackground": "#0a1d39",
+      "titleBar.activeForeground": "#e7e7e7",
+      "titleBar.inactiveBackground": "#0a1d3999",
+      "titleBar.inactiveForeground": "#e7e7e799"
+    },
+    "peacock.color": "#0a1d39",
   },
   "extensions": {
     "recommendations": [

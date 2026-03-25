@@ -1,3 +1,4 @@
+// This configuration extends the conventional commit format.
 export default {
   extends: ['@commitlint/config-conventional'],
   rules: {
@@ -20,4 +21,4 @@ export default {
       ],
     ],
   },
-};
+}

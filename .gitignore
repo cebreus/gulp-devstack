@@ -76,18 +76,24 @@ Thumbs.db
 ############################
 
 .cache
+.claude
 .dccache
 .env
 .eslintcache
-.husky
 .idea
 .temp
 .tmp
 *.bak
+*.code-workspace
 *#
 build
+build-dev
+build-export
+build-prod
+CLAUDE.md
 dist
 export
+GEMINI.md
 nbproject
 ssl
 temp

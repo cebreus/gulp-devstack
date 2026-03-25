@@ -1,0 +1,15 @@
+.o-header {
+  &[data-bs-theme='dark'] {
+    color: var(--bs-dark-text-emphasis);
+    background-color: var(--deep-blue-bg);
+  }
+
+  .navbar-brand {
+    --bs-navbar-brand-color: var(--bs-orange);
+  }
+
+  .navbar-nav .nav-link.active,
+  .navbar-nav .nav-link.show {
+    --bs-navbar-active-color: var(--bs-orange);
+  }
+}

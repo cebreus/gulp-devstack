@@ -1,132 +1,61 @@
-import gulp from 'gulp';
-import nunjucksRender from 'gulp-nunjucks-render';
-import data from 'gulp-data';
-import fs from 'fs';
-import path from 'path';
-import inject from 'gulp-inject';
-import htmlbeautify from 'gulp-html-beautify';
-import plumber from 'gulp-plumber';
-import replace from 'gulp-replace';
-import {
-  glob
-} from 'glob';
-// Convert CommonJS modules to ESM imports
-import nunjucksDateFilter from 'nunjucks-date-filter-locale';
-import nunjucksMarkdownFilter from 'nunjucks-markdown-filter';
+import gulp from 'gulp'
 
-import logger from '../utils/logger.js';
+import { getRelativePath } from '../utils/helpers.js'
+import logger from '../utils/logger.js'
+import data from 'gulp-data'
+import inject from 'gulp-inject'
+import jsbeautifier from 'gulp-jsbeautifier'
+import nunjucksRender from 'gulp-nunjucks-render'
+import plumber from 'gulp-plumber'
+import replace from 'gulp-replace'
+import MarkdownIt from 'markdown-it'
+import fs from 'node:fs'
+import path from 'node:path'
+import nunjucksDateFilter from 'nunjucks-date-filter-locale'
+import pc from 'picocolors'
+import through2 from 'through2'
 
-// Rename imported functions to match previously used variables
-const dateFilter = nunjucksDateFilter;
-const markdownFilter = nunjucksMarkdownFilter;
+const dateFilter = nunjucksDateFilter
+const markdownParser = new MarkdownIt({
+  html: true,
+  breaks: false,
+  linkify: true,
+})
 
-// Pomocná funkce pro práci s meta daty stránky - upravena pro striktnější zacházení s daty
-function generateMetadata(page = {}, options = {}) {
-  const {
-    fileName = '',
-      routePath = '',
-      baseUrl
-  } = options;
-
-  // Kontrola povinných parametrů
-  if (!baseUrl) {
-    throw new Error('baseUrl is required for metadata generation');
-  }
-
-  // Výchozí meta data - minimální verze bez fallbacků
-  const defaultMeta = {
-    title: page.title || '',
-    description: page.description || '',
-    robots: 'index, follow',
-    canonical: `${baseUrl}/${routePath ? routePath + '/' : ''}`,
-    og: {
-      use: true,
-      type: 'website',
-      title: '',
-      description: '',
-      site_name: '',
-      image: []
-    },
-    twitter: {
-      use: false,
-      type: 'summary_large_image',
-      title: '',
-      description: '',
-      site: '',
-      creator: '',
-      image: []
-    }
-  };
-
-  // Zpracování SEO metadat
-  const seo = {
-    ...defaultMeta,
-    ...(page.seo || {})
-  };
-
-  // Zpracování Open Graph metadat
-  let og = {
-    ...defaultMeta.og
-  };
-
-  if (page.open_graph) {
-    og = {
-      ...og,
-      use: page.open_graph.use !== undefined ? page.open_graph.use : og.use,
-      type: page.open_graph.type || og.type,
-      title: page.open_graph.title || seo.title,
-      description: page.open_graph.description || seo.description,
-      site_name: page.open_graph.site_name || '',
-      image: page.open_graph.image || []
-    };
-  }
-
-  // Zpracování Twitter Cards metadat
-  let twitter = {
-    ...defaultMeta.twitter
-  };
-
-  if (page.twitter_cards) {
-    twitter = {
-      ...twitter,
-      use: page.twitter_cards.use !== undefined ? page.twitter_cards.use :
-        twitter.use,
-      type: page.twitter_cards.type || twitter.type,
-      title: page.twitter_cards.title || seo.title,
-      description: page.twitter_cards.description || seo.description,
-      site: page.twitter_cards.site || twitter.site,
-      creator: page.twitter_cards.creator || twitter.creator,
-      image: page.twitter_cards.image || []
-    };
-  }
-
-  // Vytvoření finálního objektu metadat
-  return {
-    title: seo.title,
-    description: seo.description,
-    robots: seo.robots,
-    canonical: seo.canonical,
-    og: og,
-    twitter: twitter
-  };
-}
-
-// Hlavní funkce pro build HTML
+/**
+ * Build HTML pages from JSON data and Nunjucks templates.
+ * @param {object} params - The build parameters.
+ * @returns {any} - The Gulp stream.
+ */
 export default function htmlBuild(params) {
-  // Nastavení jazyka pro nunjucks date filter
-  dateFilter.setLocale('cs');
+  // Load the menu data if it exists
+  let menuData = { menu: [] }
+  if (params.dataSource) {
+    const menuFile = path.join(params.dataSource, 'menu.json')
+    try {
+      if (fs.existsSync(menuFile)) {
+        const menuContent = fs.readFileSync(menuFile, 'utf8')
+        menuData = JSON.parse(menuContent)
+        logger.debug(
+          `Loaded menu data: ${pc.dim(JSON.stringify(menuData).slice(0, 100))}`
+        )
+      }
+    } catch (error) {
+      logger.debug('No menu data found or error loading menu:', error.message)
+    }
+  }
 
-  // Nastavení pro Nunjucks
+  const siteWithMenu = { ...params.siteDefaults, ...menuData }
+  dateFilter.setLocale(siteWithMenu.meta?.lang || undefined)
+
   const nunjucksOptions = {
     path: params.processPaths,
     envOptions: {
       autoescape: false,
       trimBlocks: true,
       lstripBlocks: true,
-    }
-  };
-
-  // Konfigurace pro zkrášlovač HTML
+    },
+  }
   const htmlBeautifyOptions = {
     indent_size: 2,
     indent_char: ' ',
@@ -134,342 +63,213 @@ export default function htmlBuild(params) {
     preserve_newlines: true,
     indent_inner_html: false,
     end_with_newline: true,
-  };
+  }
 
-  // Načtení dat pro každou stránku
-  const loadData = function (file) {
-    const filePath = file.path;
-    const fileDir = path.dirname(filePath);
-    const fileName = path.basename(filePath, path.extname(filePath));
+  logger.debug('Starting HTML build with JSON input files')
+  logger.debug(
+    `Input files: \n${params.input.map((f) => `            - ${pc.yellow(getRelativePath(f))}`).join('\n')}`
+  )
 
-    // Pro debug - vypíšeme přesně, jaký soubor zpracováváme
-    logger.debug('Processing file:', filePath);
-
-    // Relativní cesta ke stránce pro zjištění adresářové struktury - oprava relativní cesty
-    const relativePath = path.relative(
-      path.resolve('./src/routes'),
-      fileDir
-    );
-
-    // Určení typu stránky
-    const isSpecialPage = params.specialPages && params.specialPages.includes(
-      fileName + path.extname(filePath));
-    const isRootPage = relativePath === '';
-
-    // Debug informace
-    logger.debug('File info:', {
-      filePath,
-      fileDir,
-      fileName,
-      relativePath,
-      isSpecialPage,
-      isRootPage
-    });
-
-    // Cesta k JSON souborům s daty - oprava cest k JSON datům
-    let jsonFilePath;
-    if (isSpecialPage) {
-      // Speciální stránky (např. 404.njk) jsou v kořenu
-      jsonFilePath = path.join(params.dataSource, `${fileName}.json`);
-    } else {
-      // Ostatní stránky respektují adresářovou strukturu
-      if (isRootPage) {
-        jsonFilePath = path.join(params.dataSource, `${fileName}.json`);
-      } else {
-        jsonFilePath = path.join(params.dataSource, relativePath,
-          `${fileName}.json`);
+  const getOutputPath = (inputPath, extFrom, extTo, baseDir, outDir) => {
+    const rel = path.relative(baseDir, inputPath)
+    return path.resolve(outDir, rel.replace(extFrom, extTo))
+  }
+  const getJsonData = (jsonPath) => {
+    try {
+      if (fs.existsSync(jsonPath)) {
+        return JSON.parse(fs.readFileSync(jsonPath, 'utf8'))
       }
+    } catch (e) {
+      logger.debug(`Error loading JSON data: ${e.message}`)
     }
+    return {}
+  }
 
-    logger.debug('Looking for JSON data at:', jsonFilePath);
-
-    // Base page data without fallbacks
-    let pageData = {
-      title: '',
-      description: '',
-      content: '',
-      // Site defaults from gulpconfig.js
-      site: params.siteDefaults || {}
-    };
-
-    // Require site configuration to be provided
-    if (!pageData.site || !pageData.site.baseUrl) {
-      logger.error(
-        'Site configuration is missing or invalid. Check siteDefaults in config.'
-      );
-    }
-
-    // Pokus o načtení dat z JSON souboru
-    if (fs.existsSync(jsonFilePath)) {
-      try {
-        const fileData = JSON.parse(fs.readFileSync(jsonFilePath, 'utf8'));
-
-        logger.debug('Found JSON data:', JSON.stringify(fileData, null, 2));
-
-        // Konvertujeme Markdown obsah do HTML - oprava konverze markdown
-        let htmlContent = '';
-
-        try {
-          if (fileData.content && typeof fileData.content === 'string') {
-            // Zkusíme použít markdownFilter ze závislostí
-            htmlContent = markdownFilter(fileData.content);
-            logger.debug('Markdown successfully converted to HTML');
-
-            // Pro debug - ukázka části HTML obsahu
-            logger.debug('HTML preview:', htmlContent.substring(0, 150) +
-              '...');
-          } else {
-            logger.warn('Content is not a valid string:', fileData.content);
-          }
-        } catch (mdError) {
-          logger.error('Error converting Markdown to HTML:', mdError);
-        }
-
-        // Sloučit data s výchozími hodnotami
-        pageData = {
-          ...pageData,
-          ...fileData,
-          // Zajistit, že správně strukturujeme data pro šablonu
-          page: {
-            ...fileData,
-            content: htmlContent,
-            features: fileData.features || []
-          }
-        };
-
-        // Pro jistotu přiřadíme obsah i na úrovni kořene objektu
-        pageData.content = htmlContent;
-
-        try {
-          // Generate metadata using the helper function
-          const routePath = isRootPage ? '' : relativePath;
-
-          // Use strict baseUrl from site config
-          if (!pageData.site || !pageData.site.baseUrl) {
-            throw new Error(
-              'Site baseUrl is required for metadata generation');
-          }
-
-          const meta = generateMetadata(pageData, {
-            fileName,
-            routePath,
-            baseUrl: pageData.site.baseUrl
-          });
-
-          // Assign metadata to page data
-          pageData.meta = meta;
-        } catch (metaError) {
-          logger.error(`Error generating metadata for ${fileName}:`,
-            metaError);
-          // Set empty metadata object rather than using fallbacks
-          pageData.meta = {
-            title: pageData.title || '',
-            description: pageData.description || ''
-          };
-        }
-
-        if (params.verbose) {
-          logger.debug('Final page data:', JSON.stringify(pageData, null, 2));
-        }
-      } catch (err) {
-        logger.error(`Error parsing JSON data for ${jsonFilePath}:`, err);
-      }
-    } else {
-      logger.warn(`No JSON data found for ${fileName} at ${jsonFilePath}`);
-
-      // Don't generate metadata if no JSON data exists - page should fail properly
-      pageData.meta = {
-        title: '',
-        description: ''
-      };
-    }
-
-    return pageData;
-  };
-
-  // Stream pro zpracování HTML
-  let stream = gulp.src(params.input, {
-      base: './src/routes'
-    }) // Přidáme base pro zachování struktury adresářů
+  let stream = gulp
+    .src(params.input)
     .pipe(plumber())
-    .pipe(data(loadData))
-    .pipe(nunjucksRender({
-      ...nunjucksOptions,
-      manageEnv: (env) => {
-        // Přidání filtrů do Nunjucks prostředí
-        env.addFilter('date', dateFilter);
-        // Markdown filtr s možnostmi
-        env.addFilter('md', (content) => {
-          if (typeof content !== 'string') {
-            return '';
+    .pipe(
+      through2.obj(function (file, enc, cb) {
+        const basename = path.basename(file.path)
+        if (basename === 'menu.json' || basename.startsWith('layout-')) {
+          logger.debug(
+            `Skipping file ${getRelativePath(file.path)} - excluded from HTML generation`
+          )
+          return cb()
+        }
+        const ext = path.extname(file.path)
+        let pageData = {}
+        if (!file.contents) {
+          logger.error(`File has no contents: ${file.path}`)
+          return cb()
+        }
+        if (ext === '.json') {
+          pageData = JSON.parse(file.contents.toString('utf8'))
+          file.path = getOutputPath(
+            file.path,
+            '.json',
+            '.html',
+            params.dataSource,
+            params.output
+          )
+          file.base = path.resolve(params.output)
+          file.contents = Buffer.from(
+            '{% extends "layout-default.njk" %}{% block content %}{{ content | md | safe }}{% endblock %}'
+          )
+          file.isFromJson = true
+        } else if (ext === '.njk') {
+          const routesBase =
+            params.routesBase || params.processPaths?.[1] || './src/routes'
+          file.path = getOutputPath(
+            file.path,
+            '.njk',
+            '.html',
+            routesBase,
+            params.output
+          )
+          file.base = path.resolve(params.output)
+          const rel = path
+            .relative(routesBase, file.path)
+            .replace('.html', '.json')
+          if (params.dataSource && routesBase) {
+            const jsonPath = path.join(params.dataSource, rel)
+            pageData = getJsonData(jsonPath)
           }
-          return markdownFilter(content);
-        });
+          file.isFromJson = false
+        } else {
+          return cb()
+        }
+        file.data = pageData
+        cb(null, file)
+      })
+    )
+    .pipe(
+      data((file) => ({
+        page: file.data
+          ? typeof structuredClone === 'function'
+            ? structuredClone(file.data)
+            : JSON.parse(JSON.stringify(file.data))
+          : {},
+        site: siteWithMenu,
+      }))
+    )
+    .pipe(
+      nunjucksRender({
+        ...nunjucksOptions,
+        manageEnv: (env) => {
+          env.addFilter('md', (str) => (!str ? '' : markdownParser.render(str)))
+        },
+      })
+    )
 
-        // Přidáme další užitečné filtry
-        env.addFilter('json', (obj) => {
-          return JSON.stringify(obj, null, 2);
-        });
-
-        env.addFilter('dump', (obj) => {
-          return `<pre>${JSON.stringify(obj, null, 2)}</pre>`;
-        });
-
-        // Filtr pro jedinečné hodnoty v poli
-        env.addFilter('unique', (arr) => {
-          if (Array.isArray(arr)) {
-            return arr.filter((e, i, a) => a.indexOf(e) === i);
-          }
-          return arr;
-        });
-
-        // Globální funkce pro převod na datum
-        env.addGlobal('toDate', (date) => {
-          return date ? new Date(date) : new Date();
-        });
-      }
-    }));
-
-  // Injektování CSS souborů
+  // Inject the CSS files into the HTML.
   if (params.injectCss && params.injectCss.length > 0) {
-    logger.debug('CSS files for injection:', params.injectCss);
-
-    // Najít všechny odpovídající CSS soubory
-    const cssFilePatterns = Array.isArray(params.injectCss) ?
-      params.injectCss : [params.injectCss];
-    let cssFiles = [];
-    cssFilePatterns.forEach(pattern => {
-      const files = glob.sync(pattern);
-      logger.debug(`Pattern ${pattern} matched ${files.length} files`);
-      files.forEach(file => cssFiles.push(file));
-    });
-
-    // Ruční kontrola existence bootstrap.css
-    const bootstrapCss = path.join(params.injectIgnorePath, 'css',
-      'bootstrap.css');
-    if (fs.existsSync(bootstrapCss) && !cssFiles.includes(bootstrapCss)) {
-      logger.debug('Manually adding missing bootstrap.css:', bootstrapCss);
-      cssFiles.push(bootstrapCss);
-    }
-
-    if (cssFiles.length > 0) {
-      logger.debug('Found CSS files for injection:', cssFiles);
-
-      stream = stream.pipe(inject(
-        gulp.src(cssFiles, {
-          read: false
-        }), {
-          starttag: '<!-- inject:css -->',
-          endtag: '<!-- endinject -->',
-          transform: params.transformCss || ((filepath) => {
-            logger.debug(`Transforming path: ${filepath}`);
-            // Odstranění build/ z cesty a přidání lomítka na začátek
-            const cleanPath = filepath.replace(/.*build[\/\\]/, '');
-            const absolutePath = cleanPath.startsWith('/') ? cleanPath :
-              `/${cleanPath}`;
-            logger.debug(`Transformed to: ${absolutePath}`);
-            return `<link rel="stylesheet" href="${absolutePath}">`;
-          }),
-          relative: false
-        }
-      ));
-    } else {
-      console.warn(
-        'No CSS files found for injection! Check compilation steps.');
-      // Odstranit placeholder, pokud nejsou CSS soubory
-      stream = stream.pipe(replace(
-        /<!-- inject:css -->[\s\S]*?<!-- endinject -->/,
-        '<!-- No CSS files found for injection -->'
-      ));
-    }
+    logger.debug('CSS files for injection:')
+    params.injectCss.forEach((file) =>
+      logger.debug(` - ${getRelativePath(file)}`)
+    )
+    const cssGlob = params.injectCss.map((file) => {
+      const glob = file
+      logger.debug(`CSS Pattern: ${getRelativePath(glob)}`)
+      return glob
+    })
+    logger.debug(
+      `Found CSS files for injection: \n${cssGlob.map((f) => `            - ${pc.yellow(getRelativePath(f))}`).join('\n')}`
+    )
+    stream = stream.pipe(
+      inject(gulp.src(cssGlob, { read: false }), {
+        starttag: '<!-- inject:css -->',
+        endtag: '<!-- endinject -->',
+        transform: params.transformCss,
+        ignorePath: params.injectIgnorePath,
+        relative: params.relative,
+      })
+    )
   }
 
-  // Injektování JS souborů
+  // Inject the JavaScript files into the HTML.
   if (params.injectJs && params.injectJs.length > 0) {
-    logger.debug('JS files for injection:', params.injectJs);
+    logger.debug('JS files for injection:')
+    params.injectJs.forEach((file) =>
+      logger.debug(` - ${getRelativePath(file)}`)
+    )
+    const jsGlob = params.injectJs.map((file) => {
+      const glob = file
+      logger.debug(`JS Pattern: ${getRelativePath(glob)}`)
+      return glob
+    })
+    logger.debug(
+      `Found JS files: \n${jsGlob.map((f) => `            - ${pc.yellow(getRelativePath(f))}`).join('\n')}`
+    )
 
-    // Najít všechny odpovídající JS soubory
-    const jsFilePatterns = Array.isArray(params.injectJs) ?
-      params.injectJs : [params.injectJs];
+    // Debug: Show transformed script tags for each JS file
+    jsGlob.forEach((filepath) => {
+      const tag = params.transformJs
+        ? params.transformJs(filepath)
+        : `<script src=\"${filepath}\"></script>`
+      logger.debug(`Would inject JS: ${tag}`)
+    })
 
-    const jsFiles = jsFilePatterns
-      .flatMap(pattern => glob.sync(pattern))
-      .filter(Boolean);
-
-    if (jsFiles.length > 0) {
-      logger.debug('Found JS files:', jsFiles);
-
-      stream = stream.pipe(inject(
-        gulp.src(jsFiles, {
-          read: false
-        }), {
-          starttag: '<!-- inject:js -->',
-          endtag: '<!-- endinject -->',
-          transform: params.transformJs || ((filepath) => {
-            // Odstranění build/ z cesty a přidání lomítka na začátek
-            const cleanPath = filepath.replace(/.*build[\/\\]/, '');
-            const absolutePath = cleanPath.startsWith('/') ? cleanPath :
-              `/${cleanPath}`;
-            return `<script src="${absolutePath}"></script>`;
-          }),
-          relative: false
-        }
-      ));
-    } else {
-      console.warn('No JS files found for injection!');
-      // Odstranit placeholder, pokud nejsou JS soubory
-      stream = stream.pipe(replace(
-        /<!-- inject:js -->[\s\S]*?<!-- endinject -->/,
-        '<!-- No JS files found for injection -->'
-      ));
-    }
+    stream = stream.pipe(
+      inject(gulp.src(jsGlob, { read: false }), {
+        starttag: '<!-- inject:js -->',
+        endtag: '<!-- endinject -->',
+        transform: params.transformJs,
+        ignorePath: params.injectIgnorePath,
+        relative: params.relative,
+      })
+    )
   }
 
-  // Injektování CDN JS
+  // Inject the CDN JavaScript files into the HTML.
   if (params.injectCdnJs && params.injectCdnJs.length > 0) {
-    stream = stream.pipe(replace(
-      '<!-- inject:cdn:js -->\n<!-- endinject -->',
-      params.injectCdnJs.join('\n')
-    ));
-  } else {
-    // Odstranit placeholder, pokud nejsou CDN JS
-    stream = stream.pipe(replace(
-      /<!-- inject:cdn:js -->[\s\S]*?<!-- endinject -->/,
-      ''
-    ));
+    stream = stream.pipe(
+      inject(gulp.src(params.injectCdnJs), {
+        starttag: '<!-- inject:cdn:js -->',
+        endtag: '<!-- endinject -->',
+        transform: (filepath) => `<script src=\"${filepath}\"></script>`,
+      })
+    )
   }
 
-  // Nahrazení bootstrap js placeholderu
-  stream = stream.pipe(replace(
-    '<!-- inject: bootstrap js -->',
-    '<!-- Bootstrap JS injected via CDN -->'
-  ));
+  // Remove HTML comments outside <script> and <style> tags (conservative, not perfect, but safer).
+  // This regex will not remove comments inside <script> or <style> tags.
+  stream = stream.pipe(
+    // Remove HTML comments that are not inside <script> or <style> tags.
+    // This regex attempts to match and remove HTML comments (<!-- ... -->) except for those that:
+    //   - are conditional comments (e.g., <!--[if ...]-->),
+    //   - are inside <script> or <style> tags (to avoid breaking inline scripts/styles).
+    // Limitations: This approach is not perfect and may fail for edge cases such as nested comments or comments inside malformed HTML.
+    // For complex scenarios, consider using an HTML parser instead of regex.
+    replace(
+      /<!--(?!\s*\[if|\s*<!|\s*\])(?![\s\S]*?(?:<script|<style)[\s\S]*?<!--)[\s\S]*?-->/g,
+      ''
+    )
+  )
 
-  // Vylepšení přístupnosti tabulek - přidání scope="col" k TH elementům
-  stream = stream.pipe(replace(/<th>/g, '<th scope="col">'));
-
-  // Odstranění komentářů z HTML pro lepší optimalizaci
-  stream = stream.pipe(replace(
-    /( )*<!--((.*)|[^<]*|[^!]*|[^-]*|[^>]*)-->\n*/g,
-    ''
-  ));
-
-  // Zkrášlení HTML a zápis do výstupní složky
+  // Beautify the HTML and write it to the output directory.
   stream = stream
-    .pipe(htmlbeautify(htmlBeautifyOptions))
+    .pipe(jsbeautifier(htmlBeautifyOptions))
     .pipe(gulp.dest(params.output))
-    .on('end', () => {
-      if (params.verbose) {
-        logger.debug(`HTML vygenerováno do: ${params.output}`);
-        // Pro debugging: výpis všech generovaných souborů
-        const generatedFiles = glob.sync(`${params.output}/**/*.html`);
-        logger.debug(`Vygenerované soubory (${generatedFiles.length}):`);
-        generatedFiles.forEach(file => logger.debug(` - ${file}`));
+    .on('end', async () => {
+      logger.debug(`HTML generated to: ${getRelativePath(params.output)}`)
+      const outputFiles = []
+      const walkDir = async (dir) => {
+        const entries = await fs.promises.readdir(dir, { withFileTypes: true })
+        for (const entry of entries) {
+          const fullPath = path.join(dir, entry.name)
+          if (entry.isDirectory()) {
+            await walkDir(fullPath)
+          } else if (entry.isFile() && fullPath.endsWith('.html')) {
+            outputFiles.push(getRelativePath(fullPath))
+          }
+        }
       }
-      if (params.cb) {
-        params.cb();
-      }
-    });
+      await walkDir(params.output)
+      logger.verbose(
+        `Generated HTML files:\n${outputFiles.map((f) => `            - ${pc.yellow(f)}`).join('\n')}`
+      )
+    })
 
-  return stream;
+  return stream
 }

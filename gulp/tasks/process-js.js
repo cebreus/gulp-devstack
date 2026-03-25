@@ -1,69 +1,94 @@
-import gulp from 'gulp';
-import sourcemaps from 'gulp-sourcemaps';
-import concat from 'gulp-concat';
-import babel from 'gulp-babel';
-import plumber from 'gulp-plumber';
-import gulpif from 'gulp-if';
-import logger from '../utils/logger.js';
-import * as config from '../config/gulpconfig.js';
+import gulp from 'gulp'
 
-
+import * as config from '../config.js'
+import { getRelativePath } from '../utils/helpers.js'
+import logger from '../utils/logger.js'
+import babel from 'gulp-babel'
+import concat from 'gulp-concat'
+import plumber from 'gulp-plumber'
+import sourcemaps from 'gulp-sourcemaps'
+import pc from 'picocolors'
 
 /**
- * Process JavaScript files with optional concatenation and source maps
- *
- * @param {Array|string} filePaths - Paths to source JS files
- * @param {string} outputDir - Output directory for processed JS files
- * @param {Object} options - Processing options
- * @param {boolean} options.concatFiles - Whether to concatenate all files
- * @param {string} options.outputConcatPrefixFileName - Prefix for concatenated file
- * @param {Function} options.cb - Callback function
- * @returns {Object} - Gulp stream
+ * Processes JavaScript files with Babel, optional concatenation, and source maps.
+ * Always uses async/await and returns a Promise that resolves when processing is complete.
+ * @param {string[]|string} filePaths - Source JS file(s) to process.
+ * @param {string} outputDir - Output directory for processed JS files.
+ * @param {object} options - Processing options.
+ * @param {boolean} [options.concatFiles] - Whether to concatenate all files.
+ * @param {string} [options.outputConcatPrefixFileName] - Prefix for concatenated file.
+ * @param {boolean} [options.sourceMaps] - Override source maps setting.
+ * @returns {Promise<void>} Resolves when processing is complete.
  */
-export default function processJs(filePaths, outputDir, options = {}) {
+export default async function processJs(filePaths, outputDir, options = {}) {
   const {
     concatFiles = false,
-      outputConcatPrefixFileName = 'app',
-      cb = null,
-  } = options;
+    outputConcatPrefixFileName = 'app',
+    sourceMaps,
+  } = options
 
-  const createSourceMaps = config.sourceMaps ? config.sourceMaps.development :
-    false;
+  const createSourceMaps = sourceMaps ?? config.sourceMaps()
+
+  // Simple filePaths validation
+  const isArray = Array.isArray(filePaths)
+  if (
+    !filePaths ||
+    (isArray && filePaths.length === 0) ||
+    (!isArray && typeof filePaths !== 'string') ||
+    (typeof filePaths === 'string' && filePaths.trim() === '')
+  ) {
+    logger.warn(
+      '[JavaScript] No valid input files provided to processJs. Skipping processing.'
+    )
+    return
+  }
 
   logger.debug(
-    `Processing JS files to ${outputDir} with options: concatFiles=${concatFiles}, sourceMaps=${createSourceMaps}`
-  );
+    `[JavaScript] Processing from ${filePaths} to ${outputDir} with options: concatFiles=${concatFiles}, sourceMaps=${createSourceMaps}`
+  )
 
-  // Mark that processJs has run to avoid duplicate processing
-  global.processJsRun = true;
+  return new Promise((resolve, reject) => {
+    let stream = gulp.src(filePaths).pipe(plumber())
+    if (createSourceMaps) stream = stream.pipe(sourcemaps.init())
+    stream = stream.pipe(babel())
+    if (concatFiles) {
+      logger.debug(
+        `[JavaScript] Concatenating to ${outputConcatPrefixFileName}.js`
+      )
+      stream = stream.pipe(concat(`${outputConcatPrefixFileName}.js`))
+    }
+    if (createSourceMaps) stream = stream.pipe(sourcemaps.write('.'))
 
-  // Create a stream for processing JS files
-  let stream = gulp.src(filePaths)
-    .pipe(plumber())
-    .pipe(gulpif(createSourceMaps, sourcemaps.init()))
-    .pipe(babel({
-      presets: ['@babel/env']
-    }));
+    const writtenFiles = []
+    const destStream = stream.pipe(gulp.dest(outputDir))
 
-  // Handle concatenation if enabled
-  if (concatFiles) {
-    logger.debug(`Concatenating JS files to ${outputConcatPrefixFileName}.js`);
-    stream = stream.pipe(concat(`${outputConcatPrefixFileName}.js`));
-  }
-
-  // Write source maps if enabled
-  if (createSourceMaps) {
-    stream = stream.pipe(sourcemaps.write('.'));
-  }
-
-  // Output to destination directory
-  stream = stream.pipe(gulp.dest(outputDir));
-
-  // Handle errors with callback if provided
-  if (cb && typeof cb === 'function') {
-    stream.on('error', cb);
-    stream.on('end', cb);
-  }
-
-  return stream;
+    destStream.on('data', (file) => {
+      if (file && typeof file.path === 'string') {
+        try {
+          writtenFiles.push(getRelativePath(file.path))
+        } catch {
+          logger.warn(
+            `[JavaScript] Could not get relative path for file: ${file.path}`
+          )
+        }
+      }
+    })
+    destStream.on('finish', () => {
+      if (writtenFiles.length > 0) {
+        logger.verbose(
+          `[JavaScript] Written files:\n` +
+            writtenFiles.map((f) => `            - ${pc.yellow(f)}`).join('\n')
+        )
+      } else {
+        logger.verbose(
+          `[JavaScript] No files written to: ${getRelativePath(outputDir)}`
+        )
+      }
+      resolve()
+    })
+    destStream.on('error', (err) => {
+      logger.error('[JavaScript] Error during processing:', err)
+      reject(err)
+    })
+  })
 }

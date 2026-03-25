@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="{{ site.meta.lang | default('en') }}">
+  {% block head_tag %}
+    <head>
+      <meta charset="{{ site.meta.charset | default('utf-8') }}" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      {% if page.seo.title or page.title %}
+        <title>{{ (page.seo.title or page.title) | striptags }}</title>
+      {% endif %}
+      {% block css %}
+        <!-- inject:css --><!-- endinject -->
+      {% endblock %}
+
+      {% block head_custom %}
+      {% endblock %}
+
+      {% block meta_seo %}
+        {% include "components/meta-rich-snippets/seo.njk" %}
+      {% endblock %}
+
+      {% block favicons %}
+        {% include "components/favicons/favicons.njk" %}
+      {% endblock %}
+
+      {% block meta_og %}
+        {% include "components/meta-rich-snippets/open-graph.njk" %}
+      {% endblock %}
+
+      {% block meta_twitter %}
+        {% include "components/meta-rich-snippets/twitter-cards.njk" %}
+      {% endblock %}
+    </head>
+  {% endblock %}
+  <body data-template="page" data-bs-theme="light">
+    {% block header %}
+      {% include "components/header/header.njk" %}
+    {% endblock %}
+
+    {# <pre>{{ page | dump(2) }}</pre> #}
+
+    {% block hero %}
+      {% if page.hero %}
+        {%
+          set heroData = {
+            title: page.hero.title,
+            description: page.hero.description,
+            content: page.hero.content,
+            modifier: page.hero.modifier
+          }
+        %}
+        {% include "components/hero/hero.njk" %}
+      {% endif %}
+    {% endblock %}
+
+    {% block main %}
+      <main class="o-main">
+        {% block content %}
+          {{ page.content | safe }}
+        {% endblock %}
+      </main>
+    {% endblock %}
+
+    {% block footer %}
+      {% include "components/footer/footer.njk" %}
+    {% endblock %}
+
+    {% block js %}
+      <!-- inject:js --><!-- endinject -->
+      <!-- inject:cdn:js --><!-- endinject -->
+    {% endblock %}
+
+    {% block scripts %}
+    {% endblock %}
+  </body>
+</html>

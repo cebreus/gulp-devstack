@@ -2,7 +2,8 @@
 
 ## [4.5.0](https://github.com/cebreus/gulp-devstack/compare/4.4.0...4.5.0) (2024-05-13)
 
-> It contains Bootstrap 5.3.2, Node,je version bump to 18.x, security updates and major package upgrades.
+> It contains Bootstrap 5.3.2, Node,je version bump to 18.x, security updates
+> and major package upgrades.
 
 ### ⚠️ BREAKING CHANGES
 
@@ -23,7 +24,8 @@
 
 ## [4.4.1](https://github.com/cebreus/gulp-devstack/compare/4.0.0...4.4.1) (2023-07-03)
 
-> Fix a glob in the `copyStaticFnc()` function, refactor the `buildTodo()` function and security updates.
+> Fix a glob in the `copyStaticFnc()` function, refactor the `buildTodo()`
+> function and security updates.
 
 ## [4.4.0](https://github.com/cebreus/gulp-devstack/compare/4.0.0...4.4.0) (2023-06-12)
 
@@ -44,7 +46,8 @@
 
 ## Release [4.2.0](https://github.com/cebreus/gulp-devstack/compare/4.0.0...4.2.0) (2023-03-29)
 
-> Security updates, minor enhancements and upgrade of gulp-imagemin to version 8.
+> Security updates, minor enhancements and upgrade of gulp-imagemin to
+> version 8.
 
 ## Release [4.1.1](https://github.com/cebreus/gulp-devstack/compare/4.0.0...4.1.1) (2023-03-29)
 
@@ -52,7 +55,8 @@
 
 ## Release [4.1.0](https://github.com/cebreus/gulp-devstack/compare/4.0.0...4.1.0) (2023-01-29)
 
-> Code cleanup, security fixes, major code maintenance, Stylelint fixes and Babel upgrade.
+> Code cleanup, security fixes, major code maintenance, Stylelint fixes and
+> Babel upgrade.
 
 ### 🚀 New Features
 
@@ -60,7 +64,8 @@
 
 ## Release [4.0.0](https://github.com/cebreus/gulp-devstack/compare/3.5.0...4.0.0) (2022-10-05)
 
-> **Major release!** Refactored all Gulp tasks and scripts. Contains Bootstrap 5.2.2 and security updates.
+> **Major release!** Refactored all Gulp tasks and scripts. Contains Bootstrap
+> 5.2.2 and security updates.
 
 ### ⚠️ BREAKING CHANGES
 
@@ -117,7 +122,8 @@ Updated npm packages include `gulp-sass` (version 5) & `sass` (Dart Sass).
 
 ### 🚀 New Features
 
-* feat: Bootstrap 5.1.3 [`60da2f6`](https://github.com/cebreus/gulp-devstack/commit/60da2f6b6d7343c41c09983cdfd8ba604a6195c1)
+* feat: Bootstrap 5.1.3
+  [`60da2f6`](https://github.com/cebreus/gulp-devstack/commit/60da2f6b6d7343c41c09983cdfd8ba604a6195c1)
 
 ## Release [3.1.1](https://github.com/cebreus/gulp-devstack/compare/3.1.0...3.1.1) (2021-09-22)
 
@@ -131,7 +137,8 @@ Required node 14.x, updated npm packages
 
 ### 🚀 New Features
 
-* feat: Bootstrap 5.0.1 [`507d13c`](https://github.com/cebreus/gulp-devstack/commit/507d13c45b77e1fc47ee8c232ddba165649946a6)
+* feat: Bootstrap 5.0.1
+  [`507d13c`](https://github.com/cebreus/gulp-devstack/commit/507d13c45b77e1fc47ee8c232ddba165649946a6)
 
 ## Release [3.0.0](https://github.com/cebreus/gulp-devstack/compare/2.0.0...3.0.0) (2021-03-10)
 

@@ -1,138 +1,73 @@
-import {
-  createRequire
-} from 'module';
-import gulp from 'gulp';
-import autoprefixer from 'autoprefixer';
-import concat from 'gulp-concat';
-import cssnano from 'cssnano';
-import pixrem from 'pixrem';
-import postcss from 'gulp-postcss';
-import sourcemaps from 'gulp-sourcemaps';
-import merge from 'merge-stream';
-import fs from 'fs';
-import logger from '../utils/logger.js';
+import gulp from 'gulp'
 
-
-
-// Potlačení varování v node procesu pomocí přepsání console.warn
-const originalWarn = console.warn;
-logger.warn = function (message) {
-  if (typeof message === 'string' && (
-      message.includes('Deprecation') ||
-      message.includes('deprecated') ||
-      message.includes('legacy') ||
-      message.includes('@import')
-    )) {
-    // Ignoruj varování o zastaralosti
-    return;
-  }
-  originalWarn.apply(console, arguments);
-};
-
-// Use create require for CommonJS modules
-const require = createRequire(
-  import.meta.url);
-// Použijeme sass s tichým režimem pro varování
-const sass = require('gulp-sass')(require('sass'));
-// Použijeme glob jako CommonJS modul - oprava chyby importu
-const glob = require('glob');
+import { suppressOutdatedBootstrapWarnings } from '../utils/helpers.js'
+import logger from '../utils/logger.js'
+import { initializeSass } from '../utils/module-manager.js'
+import autoprefixer from 'autoprefixer'
+import concat from 'gulp-concat'
+import postcss from 'gulp-postcss'
+import path from 'node:path'
+import pc from 'picocolors'
 
 /**
- * Compiles SASS files to CSS
- * @param {string|Array} src - Source files or glob patterns
+ * Compiles SASS files to CSS using modern ESM patterns with centralized module management
+ * @param {string|Array} src - Source file(s) glob pattern
  * @param {string} dest - Destination directory
  * @param {string} outputFilename - Output filename
- * @param {Array} postcssPlugins - PostCSS plugins
- * @param {Object} options - Additional options
- * @returns {NodeJS.ReadWriteStream} - Gulp stream
+ * @param {Array} postcssPlugins - PostCSS plugins array
+ * @param {object} options - Configuration options
+ * @param {object} [options.sassOptions] - Sass compiler options
+ * @returns {Promise<import('stream').Readable>} Promise that resolves to a Gulp stream
  */
-export default function compileSass(src, dest, outputFilename,
-  postcssPlugins = [], options = {}) {
-
-  // Přidáme debug informace pro lepší řešení problémů
-  logger.debug(`SASS Compilation: ${src} -> ${dest}/${outputFilename}`);
-
-  // Kontrola, zda zdrojové soubory existují
-  const sources = Array.isArray(src) ? src : [src];
-  sources.forEach(source => {
-    if (!glob.sync(source).length) {
-      logger.warn(`Warning: No files found matching ${source}`);
-    } else {
-      logger.debug(`Found source files for ${source}`);
-    }
-  });
-
-  // Vytvoření adresáře pro minifikované soubory
-  const minDir = `${dest}/min`;
-  if (!fs.existsSync(minDir)) {
-    fs.mkdirSync(minDir, {
-      recursive: true
-    });
-  }
-
-  const {
-    cb = null
-  } = options;
-  const postcssPluginsFinal = postcssPlugins || [autoprefixer(), pixrem()];
-  const postcssPluginsMin = [...postcssPluginsFinal, cssnano()];
-
-  // Nastavení pro potlačení varování
-  const sassOptions = {
-    quietDeps: true,
-    outputStyle: 'expanded',
-    logger: {
-      warn: function (message) {
-        // Filtrování varování obsahujících klíčová slova
-        if (message.includes('Deprecation') ||
-          message.includes('deprecated') ||
-          message.includes('legacy')) {
-          return;
-        }
-        logger.warn('SASS Warning:', message);
+export default async function compileSass(
+  src,
+  dest,
+  outputFilename,
+  postcssPlugins = [],
+  options = {}
+) {
+  try {
+    const sass = await initializeSass()
+    const { sassOptions: customSassOptions = {} } = options
+    // Use default PostCSS plugins if none are provided.
+    const postcssPluginsFinal = postcssPlugins.length
+      ? postcssPlugins
+      : [autoprefixer()]
+    const sassOptions = {
+      quietDeps: true,
+      outputStyle: 'expanded',
+      ...customSassOptions,
+      logger: {
+        warn: suppressOutdatedBootstrapWarnings,
       },
-      debug: function () {}
     }
-  };
 
-  // Compile expanded CSS
-  const expandedStream = gulp
-    .src(src)
-    .pipe(sourcemaps.init())
-    .pipe(sass(sassOptions).on('error', function (error) {
-      // Vlastní handler, který ignoruje varování
-      if (error.messageType !== 'deprecation') {
-        logger.warn(error.messageFormatted);
-      }
-      this.emit('end');
-    }))
-    .pipe(postcss(postcssPluginsFinal))
-    .pipe(concat(outputFilename))
-    .pipe(sourcemaps.write('./maps'))
-    .pipe(gulp.dest(dest));
-
-  // Compile minified CSS
-  const minifiedStream = gulp
-    .src(src)
-    .pipe(sourcemaps.init())
-    .pipe(sass(sassOptions).on('error', function (error) {
-      // Vlastní handler, který ignoruje varování
-      if (error.messageType !== 'deprecation') {
-        logger.error(error.messageFormatted);
-      }
-      this.emit('end');
-    }))
-    .pipe(postcss(postcssPluginsMin))
-    .pipe(concat(outputFilename.replace('.css', '.min.css')))
-    .pipe(sourcemaps.write('./maps'))
-    .pipe(gulp.dest(`${dest}/min`));
-
-  // Použití merge-stream pro zpracování obou streamů současně
-  if (cb) {
-    return merge(expandedStream, minifiedStream)
-      .on('end', function () {
-        cb();
-      });
+    // Create the Gulp stream for SASS compilation.
+    return gulp
+      .src(src, {
+        allowEmpty: true,
+      })
+      .pipe(
+        sass(sassOptions).on('error', function (...args) {
+          const isSuppressed = suppressOutdatedBootstrapWarnings(...args)
+          if (isSuppressed) {
+            this.emit('end')
+          } else {
+            logger.error('[SASS] Error:', ...args)
+            this.emit('error', ...args)
+          }
+        })
+      )
+      .pipe(postcss(postcssPluginsFinal))
+      .pipe(concat(outputFilename))
+      .pipe(gulp.dest(dest))
+      .on('end', () => {
+        logger.verbose(
+          `[SASS] Generated: ${pc.yellow(path.relative(process.cwd(), path.join(dest, outputFilename)))}`
+        )
+      })
+  } catch (error) {
+    logger.error('[SASS] Original error:', error)
+    throw error
   }
-
-  return expandedStream;
 }

@@ -1,0 +1,25 @@
+{% if features and features.items and features.items.length > 0 %}
+  {% if features.title %}
+    <h2 class="c-features__heading display-6 mb-4 visually-hidden">{{ features.title }}</h2>
+  {% endif %}
+  {% if features.description %}
+    {{ features.description }}
+  {% endif %}
+  <div class="c-features__row row lg:row-cols-4">
+    {% for feature in features.items %}
+      <div class="c-features__col col">
+        <div class="c-features__card d-flex flex-column p-4 rounded-3">
+          {% if feature.icon %}
+            <div class="c-features__icon w-100 mb-2 text-primary">{{ feature.icon | safe }}</div>
+          {% endif %}
+          {% if feature.name %}
+            <h3 class="c-features__title h5 mb-2">{{ feature.name }}</h3>
+          {% endif %}
+          {% if feature.description %}
+            <div class="c-features__description">{{ feature.description }}</div>
+          {% endif %}
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}

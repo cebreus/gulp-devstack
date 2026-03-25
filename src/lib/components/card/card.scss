@@ -1,0 +1,14 @@
+.c-card {
+  height: 100%;
+  background: #fff;
+  box-shadow: 0 4px 6px rgb(0 0 0 / 10%);
+
+  &__icon {
+    font-size: 2rem;
+    color: var(--bs-primary);
+  }
+
+  &__text {
+    color: var(--bs-gray-700);
+  }
+}

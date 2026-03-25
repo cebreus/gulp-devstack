@@ -1,7 +1,9 @@
 @use 'sass:map';
 @use 'sass:color';
 @import '../../node_modules/bootstrap/scss/functions';
+@import '../../node_modules/bootstrap/scss/mixins';
 @import './variables';
+
 // @import './variables-dark';
 // @import '../../node_modules/bootstrap/scss/maps';
 // @import '../../node_modules/bootstrap/scss/mixins';
@@ -14,16 +16,18 @@
 // Component imports are handled automatically by the Gulp task
 // We don't need explicit imports here anymore
 
-// Přetížení Bootatrapu
+// Bootstrap overrides
 // --------------
 
-// Set minimum reasonable width on very small devices
+:root {
+  --deep-blue-bg: #0a1d39;
+}
 
 body {
   min-width: 320px;
 }
 
-// Remove viod in the bottom of the alert component
+// Remove void in the bottom of the alert component
 .alert {
   p:last-child,
   ol:last-child,
@@ -36,52 +40,4 @@ body {
 img:not([src$='.svg']) {
   max-width: 100%;
   height: auto;
-}
-
-// Záhlaví webu
-// --------------
-
-.o-header {
-  color: var(--bs-dark-text-emphasis);
-
-  &[data-bs-theme='dark'] {
-    background-color: #0a1d39;
-  }
-
-  .navbar {
-    --bs-navbar-brand-color: var(--bs-orange);
-    --bs-navbar-brand-hover-color: var(--bs-link-hover-color);
-  }
-}
-
-.navbar-nav {
-  --bs-nav-link-color: var(--bs-orange);
-  --bs-nav-link-hover-color: var(--bs-link-hover-color);
-}
-
-// Hlavní obsah
-// --------------
-
-.o-main {
-  background-color: var(--bs-tertiary-bg);
-
-  h1 {
-    padding-bottom: 0.5rem;
-    line-height: 0.9;
-    letter-spacing: 0.15rem;
-
-    // prettier-ignore
-    background-image: linear-gradient(130deg, var(--bs-red) 20%, var(--bs-orange) 40%);
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-  }
-}
-
-// Zápatí webu
-// --------------
-
-.o-footer {
-  padding-top: map.get($spacers, 5);
-  padding-bottom: map.get($spacers, 3);
-  color: map.get($grays, '600');
 }

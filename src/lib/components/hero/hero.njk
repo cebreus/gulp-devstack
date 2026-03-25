@@ -1,0 +1,16 @@
+{# Component: Hero #}
+<section class="c-hero {% if heroData.modifier %}c-hero--{{ heroData.modifier }}{% endif %}">
+  <div class="container">
+    {% if heroData.title %}
+      <h1 class="c-hero__title display-4 pb-2 mb-3">{{ heroData.title | safe }}</h1>
+    {% endif %}
+
+    {% if heroData.description %}
+      <div class="c-hero__description fs-5">{{ heroData.description | md | safe }}</div>
+    {% endif %}
+
+    {% if heroData.content %}
+      <div class="c-hero__content mt-4">{{ heroData.content | md | safe }}</div>
+    {% endif %}
+  </div>
+</section>
