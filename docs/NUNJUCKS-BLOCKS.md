@@ -1,252 +1,119 @@
-# Nunjucks Template Blocks Documentation
+# Nunjucks Template Blocks
 
-This document lists all available blocks in the `layout-default.njk` template.
-You can override these blocks in your own templates.
+Gulp DevStack uses a modular block system in layouts `src/routes/layout-default.njk` or `src/routes/layout-minimal.njk`. This allows individual pages to be seamlessly inserted into the global structure as architectural wrappers while maintaining a consistent system.
 
-## Block Hierarchy
+## 0. Template Vocabulary
 
-1. `head_tag` - whole `<head>`
-   - `css` - styles
-   - `head_custom` - custom head tags
-   - `meta_seo` - SEO meta
-   - `favicons` - icons
-   - `meta_og` - Open Graph
-   - `meta_twitter` - Twitter Cards
-2. `body` - whole `<body>`
-   - `header` - header
-   - `hero` - hero section
-   - `main` - main content
-     - `content` - page content
-   - `footer` - footer
-   - `js` - JavaScript files
-   - `scripts` - inline scripts
+Understanding the hierarchy of Nunjucks elements is key to mastering this architecture:
 
-You can override, extend, or keep any block as needed.
+- **Layout**: The top-level HTML wrapper (e.g., `layout-default.njk`). It defines the global structure and blocks.
+- **Page**: The specific template (e.g., `index.njk`) or content source (`index.md`) that extends a Layout.
+- **Block**: An overrideable placeholder defined in a Layout (e.g., `{% block content %}`).
+- **Macro**: A reusable templating function (like a "Component function"), stored in `src/lib/components/`.
+- **Component**: A modular UI element (e.g., Hero, Card) built using Nunjucks Macros for full reuse.
 
-## HTML Structure Blocks
+## 1. Block Hierarchy
 
-### `{% block head_tag %}`
+### Direct Overrides (Common)
 
-Overrides the entire `<head>` tag, all code in it.
+These blocks are the most frequent targets for customization in your `.njk` templates.
 
-### `{% block body %}`
+- `css`: External and route-specific styles.
+- `content`: The primary content area.
+- `js`: External and route-specific scripts.
 
-Overrides the entire `<body>` tag, including all components.
+### Full Hierarchy (Default Layout)
 
-## Head Section Blocks
+- `head_tag`: Entire `<head>` container.
+  - `css`: Global and page styles.
+  - `head_custom`: Generic hook for custom scripts/styles.
+  - `meta_seo`: SEO metadata (via `seo.njk`).
+  - `favicons`: Favicons (via `favicons.njk`).
+  - `meta_og`: Open Graph social tags.
+  - `meta_twitter`: Twitter Cards.
+- `body`: Entire `<body>` container.
+  - `header`: Global navigation component.
+  - `hero`: Conditional hero section (macro-based).
+  - `main`: Wrapper for the central content.
+    - `content`: Rendered Markdown body.
+  - `footer`: Global footer component.
+  - `js`: Global and page scripts.
+  - `scripts`: Custom inline scripts hook.
 
-### `{% block css %}`
+## 2. Practical Usage
 
-CSS styles. Use `{{ super() }}` to keep default styles.
+### Overriding Content
 
-```njk
-{% block css %}
-  {{ super() }}
-  <link rel="stylesheet" href="/custom.css">
-{% endblock %}
-```
+In `layout-default.njk`, the `content` block is nested inside `main`. Overriding it preserves the standard page structure:
 
-### `{% block head_custom %}`
+```nunjucks
+{% extends "layout-default.njk" %}
 
-Custom tags in the head (e.g. analytics, structured data).
-
-```njk
-{% block head_custom %}
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "WebPage"
-  }
-  </script>
-{% endblock %}
-```
-
-### `{% block meta_seo %}`
-
-Basic SEO meta tags (title, description, robots, etc). By default, includes
-`components/meta-rich-snippets/seo.njk`. You can override this block to use your
-own meta tags.
-
-```njk
-{% block meta_seo %}
-  {% include "components/meta-rich-snippets/seo.njk" %}
-{% endblock %}
-```
-
-### `{% block favicons %}`
-
-Favicon links. By default, includes `components/favicons/favicons.njk`. You can
-override this block to use your own favicons.
-
-```njk
-{% block favicons %}
-  {% include "components/favicons/favicons.njk" %}
-{% endblock %}
-```
-
-Or use custom links:
-
-```njk
-{% block favicons %}
-  <link rel="shortcut icon" href="/custom-favicon.ico">
-  <link rel="icon" type="image/png" sizes="32x32" href="/custom-favicon-32x32.png">
-{% endblock %}
-```
-
-### `{% block meta_og %}`
-
-Open Graph meta tags for social media. By default, includes
-`components/meta-rich-snippets/open-graph.njk`. You can override this block to
-use your own Open Graph tags.
-
-```njk
-{% block meta_og %}
-  {% include "components/meta-rich-snippets/open-graph.njk" %}
-{% endblock %}
-```
-
-### `{% block meta_twitter %}`
-
-Twitter Card meta tags. By default, includes
-`components/meta-rich-snippets/twitter-cards.njk`. You can override this block
-to use your own Twitter meta tags.
-
-```njk
-{% block meta_twitter %}
-  {% include "components/meta-rich-snippets/twitter-cards.njk" %}
-{% endblock %}
-```
-
-## Body Section Blocks
-
-### `{% block header %}`
-
-Main navigation/header component.
-
-```njk
 {% block header %}
-  <header class="custom-header">
-    <nav>Custom Navigation</nav>
-  </header>
+  <header>Custom Page Header</header>
 {% endblock %}
 ```
 
-### `{% block hero %}`
-
-Hero section (banner, intro). Leave empty to hide.
-
-```njk
-{% block hero %}
-{# empty block #}
-{% endblock %}
-```
-
-or
-
-```njk
-{% block hero %}
-  <section class="custom-hero">
-    <h1>Custom Hero Title</h1>
-  </section>
-{% endblock %}
-```
-
-### `{% block main %}`
-
-Main content wrapper. Contains `{% block content %}`.
-
-```njk
-{% block main %}
-  <main class="custom-main">
-    <div class="custom-container">
-      {% block content %}
-        {{ page.content | safe }}
-      {% endblock %}
-    </div>
-  </main>
-{% endblock %}
-```
-
-### `{% block content %}`
-
-Main page content.
-
-```njk
+```nunjucks
 {% block content %}
-  <h1>Custom Content</h1>
-  <p>Your custom content here.</p>
+  <div class="text-center">
+    <h1>Coming Soon</h1>
+    <p>Our site is under construction.</p>
+  </div>
 {% endblock %}
 ```
 
-### `{% block footer %}`
+### Extending a Block (`super()`)
 
-Footer component.
+Use `{{ super() }}` to keep the original content and add more to it:
 
-```njk
-{% block footer %}
-  <footer class="custom-footer">
-    <p>Custom Footer Content</p>
-  </footer>
-{% endblock %}
-```
-
-### `{% block js %}`
-
-JavaScript files. Use `{{ super() }}` to keep default scripts.
-
-```njk
-{% block js %}
-  {{ super() }}
-  <script src="/custom.js"></script>
-{% endblock %}
-```
-
-### `{% block scripts %}`
-
-Inline JavaScript.
-
-```njk
-{% block scripts %}
-  <script>
-    console.log('Custom inline script');
-  </script>
-{% endblock %}
-```
-
-## Usage Examples
-
-### Hide a component
-
-```njk
-{% block hero %}
-{% endblock %}
-```
-
-### Keep default content and add your own
-
-```njk
+```nunjucks
 {% block css %}
   {{ super() }}
-  <link rel="stylesheet" href="/custom.css">
+  <link rel="stylesheet" href="/custom-styles.css">
 {% endblock %}
 ```
 
-### Fully override a component
+## 5. Macros & Advanced Templating
 
-```njk
-{% block header %}
-  <header class="completely-custom-header">
-    <!-- completely new content -->
-  </header>
-{% endblock %}
+Gulp DevStack utilizes Nunjucks `macro` calls with content blocks. For fundamental documentation, see the [Nunjucks Macro Guide](https://mozilla.github.io/nunjucks/templating.html#macro).
+
+### The Power of `{% call %}`
+
+The `call` tag is the equivalent of "children" or "slots" in modern frontend frameworks (React, Vue). It allows you to pass a full block of HTML into a macro:
+
+```nunjucks
+{% from "components/hero/hero.njk" import hero %}
+
+{% call hero(title="Welcome Page", badge="Annoucement") %}
+  <div class="d-flex gap-2 mt-4">
+    <button class="btn btn-primary">Primary Action</button>
+    <button class="btn btn-outline-light">Secondary Action</button>
+  </div>
+{% endcall %}
 ```
 
-### Conditional override
+**Why it's beneficial**: Inside the component (`hero.njk`), the content above is rendered using `{{ caller() if caller }}`. This keeps the component logic clean while allowing the page to define its own complex layouts inside the macro.
 
-```njk
-{% block hero %}
-  {% if page.show_hero %}
-    {{ super() }}
-  {% endif %}
-{% endblock %}
+### Using `{% set %}` for Content Buffering
+
+Sometimes you need to prepare complex data or HTML snippets before passing them into a macro:
+
+```nunjucks
+{% set custom_hero_description %}
+  Our project reached <strong>v5.0.0</strong>! Check out the <a href="/docs/">documentation</a>.
+{% endset %}
+
+{{ hero(description = custom_hero_description) }}
 ```
+
+**Why it's beneficial**: It prevents template bloat and avoids messy string concatenations inside macro parameters. It keeps your templates readable and modular.
+
+---
+
+## 6. Key Conventions
+
+- **`{{ super() }}`**: Appends content to an inherited block (common in `css` and `js` blocks).
+- **Root Wrappers**: Following Nunjucks hierarchy, layouts serve as top-level wrappers. Individual pages populate pre-defined blocks without overriding the global HTML shell.
+- **Macro Logic**: The `hero` block in the default layout is automated via frontmatter. In the minimal layout, use `{% call hero() %}` manually for full control.
+- **`layout-` Prefix**: Files with this prefix in `src/routes/` are internal templates and are excluded from the final routable HTML generation.

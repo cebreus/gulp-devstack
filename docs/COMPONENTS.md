@@ -1,130 +1,91 @@
-# Components in Nunjucks
+# Component Architecture & Strategy
 
-Components are reusable Nunjucks partials stored in `src/lib/components/`. Use
-them to keep templates modular and maintainable.
+Components in Gulp DevStack are reusable Nunjucks partials and macros stored in `src/lib/components/`. They provide a modular foundation for building scalable UI systems while leveraging the full power of Bootstrap.
 
-## Usage
+## 1. Quick Start: Component Management CLI
 
-Include a component in your template with:
+The easiest way to begin your own work is via our interactive CLI. It ensures that every component you create follows our architectural standards.
 
-```nunjucks
-{% include "components/card/card.njk" %}
+```bash
+pnpm component
 ```
 
-You can pass data to components as variables:
+This single entry point handles the entire component lifecycle:
+
+- **Create**: Scaffolds a new component directory with `.njk` and `.scss` boilerplates.
+- **Rename**: Safely renames the component and its assets without breaking dependencies.
+- **Remove**: Cleans up the component and its registered styles recursively.
+
+> \[!IMPORTANT]
+> **CMS Readiness & Strategy**: Our component-based approach is deeply linked with our [Routing & Frontmatter System](docs/ROUTING.md). When you isolate UI into components, you can easily map complex data from a Headless CMS (via `.md` or `.json` frontmatter) straight into your Macros. This decoupling of data and presentation is what makes the project "Enterprise ready."
+
+## 2. Framework-First Strategy
+
+Gulp DevStack is built on top of **Bootstrap 5**, providing a vast library of battle-tested UI components out of the box.
+
+- **Don't Over-Engineer**: If a piece of UI is unique to a single page and simple in logic, keep it in the page template.
+- **Use Native Bootstrap**: For standard elements like buttons, cards, or navigation, simply copy-paste refined HTML from the [Bootstrap Documentation](https://getbootstrap.com/docs/5.3/components/) and use Bootstrap's utility classes.
+
+### Choosing the Right Approach
+
+- **Prototyping**: Stick to plain HTML, partials via `{% include %}`, and global CSS classes.
+- **Advanced UI Systems**: Use the **Nunjucks Macro System** for large projects requiring strict data structures, complex conditional logic, and high reusability across multiple layouts.
+
+## 3. Nunjucks Macro Pattern
+
+For complex components (like our `hero`), we use macros to ensure type-safety and predictable data handling.
+
+### Macro Import & Usage
+
+Import the component from its directory and call it with specific parameters:
 
 ```nunjucks
-{% include "components/card/card.njk" with { title: "Card Title", content: "Text here." } %}
+{% from "components/hero/hero.njk" import hero %}
+
+{{ hero(
+  title = "Our Hero Component",
+  description = "A clean example of a reusable UI block.",
+  badge = "V5.0"
+) }}
 ```
 
-Or set the data in a variable and then include the component:
+### Content Injections (`call`)
+
+Use the `call` block to pass complex HTML structures directly into the component's body:
 
 ```nunjucks
-{% set cardData = {
-  title: "Developing",
-  text: "Landing pages or prototypes (npm run dev)."
-} %}
-{% include "components/card/card.njk" with cardData %}
+{% call hero(title="Interactive Hero") %}
+  <div class="d-flex justify-content-center gap-3">
+    <a href="#" class="btn btn-primary">Get Started</a>
+    <a href="#" class="btn btn-outline-light">Learn More</a>
+  </div>
+{% endcall %}
 ```
 
-This approach is useful when you want to reuse the same data or pass more
-complex objects to the component.
+## 4. Physical Directory Structure
 
-## Structure
+Each component is self-contained within its own directory in `src/lib/components/`:
 
-- Each component is a folder in `src/lib/components/` (e.g. `card/`, `header/`)
-- The main file is usually `component-name.njk`
-- Components can have their own assets (images, styles, docs)
-- Typical files:
-  - `component-name.njk` – Nunjucks template
-  - `component-name.scss` – SCSS styles for the component
-  - `component-name.md` – Documentation and usage
-
-## Creating Components
-
-You can create components **manually** or using the CLI utility:
-
-### CLI Utility
-
-The project provides a CLI for component management (see
-`gulp/tasks/component-manager.js`).
-
-- **Create:**
-
-  ```sh
-  pnpm component:create
-  # or
-  npm run component:create
-  ```
-
-  You will be prompted for the component name. The CLI will create a folder with
-  starter files (`.njk`, `.scss`, `.md`).
-
-- **Remove:**
-
-  ```sh
-  pnpm component:remove
-  ```
-
-  Select a component to delete (irreversible).
-
-- **Rename:**
-
-  ```sh
-  pnpm component:rename
-  ```
-
-  Select a component and enter a new name. All files and references in the
-  component will be renamed.
-
-- **List:**
-  ```sh
-  pnpm component:list
-  ```
-  Lists all components and their files.
-
-### Manual Creation
-
-1. Create a folder in `src/lib/components/` (e.g. `my-component/`).
-2. Add a `.njk` template, `.scss` style, and optionally a `.md` doc file.
-3. Follow naming conventions: **kebab-case** for folder and file names.
-
-## SCSS Manifest Generation
-
-All component SCSS files are automatically imported via a generated manifest
-(`_components.scss`). This is handled by the build system
-(`gulp/tasks/sass-components.js`). You do not need to manually import each
-component's SCSS.
-
-## Special/Non-standard Components
-
-Some components are not classic UI blocks, but are used for inserting metadata
-or favicons:
-
-- **favicons**: `favicons/favicons.njk` – contains `<link rel="icon">` tags for
-  favicons. Included in the page `<head>`.
-- **meta-rich-snippets**: contains templates for SEO and social networks:
-  - `open-graph.njk` – Open Graph meta tags
-  - `seo.njk` – basic SEO meta tags
-  - `twitter-cards.njk` – Twitter Cards meta tags
-
-Usage:
-
-```nunjucks
-{% include "components/favicons/favicons.njk" %}
-{% include "components/meta-rich-snippets/seo.njk" %}
-{% include "components/meta-rich-snippets/open-graph.njk" %}
-{% include "components/meta-rich-snippets/twitter-cards.njk" %}
+```text
+src/lib/components/hero/
+├── hero.njk   # Macro Template (Nunjucks)
+├── hero.scss  # Scoped Styles (SASS)
+└── hero.md    # API Documentation (Internal Styleguide)
 ```
 
-## Best Practices
+- **Clean Imports (CSS)**: You **never** need to manually import component SCSS files. Gulp automatically scans the library and bundles styles.
+- **JavaScript Isolation**: Component logic (`.js`) **does not belong in this directory**. To preserve **tree-shaking** and performance, explicitly import and define your component logic in the `src/js/` entry points (e.g., `src/js/app.js`). Auto-globbing JS would pollute the global scope.
+- **Internal Documentation**: The `.md` files are intended solely for developers (API reference) and never reach the production build.
 
-- Keep components small and focused
-- Use variables for dynamic content
-- Document expected input in the component file (in `.md` or as a comment in
-  `.njk`)
-- Prefer kebab-case for names
-- Avoid special characters, spaces, or uppercase in names
+## 5. Architectural Infrastructure
 
-See [Nunjucks Blocks Documentation](./NUNJUCKS-BLOCKS.md) for block usage in
-layouts.
+Some components serve as systemic infrastructure and are typically managed within the Layouts:
+
+- `meta-rich-snippets/`: Centralized management for SEO, OG, and Twitter metadata.
+- `favicons/`: Automated generation of multi-platform favicon tags.
+- `header/` & `footer/`: Global structural units for the application.
+
+## 6. Implementation Best Practices
+
+- **Strict Defaults**: Always use Nunjucks `default` filters to prevent templates from breaking when data is missing.
+- **Style Isolation**: Keep SASS rules scoped to the component's root class (e.g., `.c-hero`) to prevent global style leakage.

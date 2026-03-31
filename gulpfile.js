@@ -2,16 +2,16 @@ import { existsSync } from 'node:fs'
 import gulp from 'gulp'
 
 import * as config from './gulp/config.js'
-import cleanFnc from './gulp/tasks/clean-build.js'
-import copyStaticFnc from './gulp/tasks/copy-static.js'
-import debugFilesFnc from './gulp/tasks/debug-build.js'
-import faviconsFnc from './gulp/tasks/generate-favicons.js'
+import cleanTask from './gulp/tasks/clean-build.js'
+import copyStatic from './gulp/tasks/copy-static.js'
+import debugFiles from './gulp/tasks/debug-build.js'
+import faviconsTask from './gulp/tasks/generate-favicons.js'
 import revisionTask from './gulp/tasks/generate-revision.js'
-import sriHashTask from './gulp/tasks/generate-sri.js'
-import todoFnc from './gulp/tasks/generate-todo.js'
+import sriTask from './gulp/tasks/generate-sri.js'
+import todoTask from './gulp/tasks/generate-todo.js'
 import componentsTask from './gulp/tasks/manage-components.js'
-import datasetPrepareFnc from './gulp/tasks/process-data.js'
-import fontLoadFnc from './gulp/tasks/process-fonts.js'
+import datasetPrepare from './gulp/tasks/process-data.js'
+import fontLoad from './gulp/tasks/process-fonts.js'
 import processHtml from './gulp/tasks/process-html.js'
 import {
   convertToAvif,
@@ -20,12 +20,13 @@ import {
   optimizePng,
   optimizeSvg,
 } from './gulp/tasks/process-images.js'
-import processJsFnc from './gulp/tasks/process-js.js'
-import cssCompileFnc, {
+import processJs from './gulp/tasks/process-js.js'
+import compileSass, {
   compileAllComponentStyles,
+  compileIsolatedComponentStyles,
   compileRouteStyles,
 } from './gulp/tasks/process-sass.js'
-import purgeCssTask from './gulp/tasks/purge-css.js'
+import purgeCss from './gulp/tasks/purge-css.js'
 import {
   initializeServer,
   refreshServer,
@@ -54,9 +55,7 @@ for (const envFile of envFiles) {
 
 config.getConfig(BUILD_MODE)
 
-const isDevMode = BUILD_MODE === 'dev'
-const isBuildMode = BUILD_MODE === 'build'
-const isExportMode = BUILD_MODE === 'export'
+// Initialize configuration based on BUILD_MODE
 
 /**
  * Resolves mode-specific task handler.
@@ -75,20 +74,24 @@ function resolveMode(modeMap) {
 }
 
 /**
- * Runs individual CSS builds for development mode.
- * @returns {Function} Parallel task execution
+ * Factory for core CSS tasks shared across modes.
+ * @returns {object} Map of task functions
  */
-function runDevCss() {
+function buildCssCoreTasks() {
   /**
    * Builds core Bootstrap stylesheet.
    * @returns {Promise<void>} Task result
    */
   function cssCore() {
-    return cssCompileFnc(
+    return compileSass(
       config.sassCore,
       config.sassBuild(),
       'bootstrap.css',
-      config.postcssPluginsBase()
+      config.postcssPluginsBase(),
+      {
+        minify: config.minifyCss(),
+        sourceMaps: false,
+      }
     )
   }
 
@@ -97,7 +100,7 @@ function runDevCss() {
    * @returns {Promise<void>} Task result
    */
   function cssCustom() {
-    return cssCompileFnc(
+    return compileSass(
       [config.sassCustom],
       config.sassBuild(),
       'custom.css',
@@ -110,7 +113,7 @@ function runDevCss() {
    * @returns {Promise<void>} Task result
    */
   function cssUtils() {
-    return cssCompileFnc(
+    return compileSass(
       config.sassUtils,
       config.sassBuild(),
       'utils.css',
@@ -118,33 +121,34 @@ function runDevCss() {
     )
   }
 
-  /**
-   * Builds debug-only stylesheets.
-   * @returns {Promise<void>} Parallel task execution
-   */
-  function cssDebug() {
-    const compile = (file, name) =>
-      cssCompileFnc(
-        `${config.sassBase}/${file}`,
-        config.sassBuild(),
-        name,
-        config.postcssPluginsBase()
-      )
+  return { cssCore, cssCustom, cssUtils }
+}
 
-    /**
-     * @returns {Function} Task function
-     */
-    function cssDevstack() {
-      return compile('u-devstack.scss', 'u-devstack.css')
-    }
-    return cssDevstack
-  }
+/**
+ * Builds debug-only stylesheets.
+ * @returns {Promise<void>} Task result
+ */
+function cssDevstack() {
+  return compileSass(
+    `${config.sassBase}/u-devstack.scss`,
+    config.sassBuild(),
+    'u-devstack.css',
+    config.postcssPluginsBase()
+  )
+}
+
+/**
+ * Runs individual CSS builds for development mode.
+ * @returns {Function} Parallel task execution
+ */
+function runDevCss() {
+  const { cssCore, cssCustom, cssUtils } = buildCssCoreTasks()
 
   return gulp.parallel(
     cssCore,
     cssCustom,
     cssUtils,
-    cssDebug(),
+    cssDevstack,
     compileAllComponentStyles,
     compileRouteStyles
   )
@@ -155,8 +159,12 @@ function runDevCss() {
  * @returns {Promise<void>} Task result
  */
 function runBundleCss() {
-  const bundleTask = () =>
-    cssCompileFnc(
+  /**
+   * Builds the merged index.css.
+   * @returns {import('node:stream').ReadWriteStream} Gulp stream
+   */
+  function bundleCss() {
+    return compileSass(
       [
         config.sassCore,
         config.sassCustom,
@@ -167,12 +175,29 @@ function runBundleCss() {
       'index.css',
       config.postcssPluginsBase(),
       {
-        minify: isBuildMode,
+        minify: config.minifyCss(),
         sourceMaps: false,
       }
     )
+  }
 
-  return gulp.parallel(bundleTask, compileRouteStyles)
+  return gulp.parallel(bundleCss, compileRouteStyles)
+}
+
+/**
+ * Runs isolated CSS compilation for export mode (CMS handoff).
+ * @returns {Promise<void>} Task result
+ */
+function runExportCss() {
+  const { cssCore, cssCustom, cssUtils } = buildCssCoreTasks()
+
+  return gulp.parallel(
+    cssCore,
+    cssCustom,
+    cssUtils,
+    compileIsolatedComponentStyles,
+    compileRouteStyles
+  )
 }
 
 /**
@@ -185,7 +210,7 @@ function runBuildDataset() {
    * @returns {Promise<void>} Task result
    */
   function datasetSite() {
-    return datasetPrepareFnc(config.siteConfigFile, config.tempBase)
+    return datasetPrepare(config.siteConfigFile, config.tempBase)
   }
 
   /**
@@ -193,10 +218,7 @@ function runBuildDataset() {
    * @returns {Promise<void>} Task result
    */
   function datasetPages() {
-    return datasetPrepareFnc(
-      config.datasetPagesSource,
-      config.datasetPagesBuild
-    )
+    return datasetPrepare(config.datasetPagesSource, config.datasetPagesBuild)
   }
 
   return gulp.parallel(datasetSite, datasetPages)()
@@ -207,7 +229,7 @@ function runBuildDataset() {
  * @returns {Promise<void>} Task result
  */
 function runPageDataset() {
-  return datasetPrepareFnc(config.datasetPagesSource, config.datasetPagesBuild)
+  return datasetPrepare(config.datasetPagesSource, config.datasetPagesBuild)
 }
 
 /**
@@ -215,7 +237,7 @@ function runPageDataset() {
  * @returns {Promise<string[]>} List of deleted paths
  */
 export function clean() {
-  return cleanFnc([`${config.tempBase}/**/*`, config.buildBase()])
+  return cleanTask([`${config.tempBase}/**/*`, config.buildBase()])
 }
 
 /**
@@ -224,19 +246,29 @@ export function clean() {
  * @returns {import('node:stream').Readable} Gulp stream
  */
 export function copy(done) {
-  const publicCopy = () =>
-    copyStaticFnc(
+  /**
+   * Copies public folder static files.
+   * @returns {import('node:stream').Readable} Gulp stream
+   */
+  function publicCopy() {
+    return copyStatic(
       [`${config.staticBase}/**/*`],
       config.staticBase,
       config.buildBase()
     )
+  }
 
-  const assetsCopy = () =>
-    copyStaticFnc(
+  /**
+   * Copies asset folder fonts and CSS.
+   * @returns {import('node:stream').Readable} Gulp stream
+   */
+  function assetsCopy() {
+    return copyStatic(
       [`${config.assetsBase}/fonts/**/*`, `${config.assetsBase}/css/fonts.css`],
       config.assetsBase,
       `${config.buildBase()}/assets`
     )
+  }
 
   return gulp.parallel(publicCopy, assetsCopy)(done)
 }
@@ -250,7 +282,7 @@ export function css(done) {
   const taskFunction = resolveMode({
     dev: runDevCss,
     build: runBundleCss,
-    export: runBundleCss,
+    export: runExportCss,
   })
 
   return taskFunction()(done)
@@ -262,11 +294,11 @@ export function css(done) {
  */
 export function js() {
   const params = {
-    bundle: isBuildMode || isExportMode,
-    minify: isBuildMode,
-    sourceMaps: isDevMode,
+    bundle: config.concatFiles(),
+    minify: config.minifyJs(),
+    sourceMaps: config.sourceMaps(),
   }
-  return processJsFnc(config.jsFiles, config.jsBuild(), params)
+  return processJs(config.jsFiles, config.jsBuild(), params)
 }
 
 /**
@@ -319,7 +351,7 @@ export async function images() {
  * @returns {Promise<void>}
  */
 export function favicons() {
-  return faviconsFnc(
+  return faviconsTask(
     `${config.srcBase}/assets/icons/favicons-source.png`,
     config.faviconBuild(),
     config.faviconGenConfig
@@ -331,7 +363,7 @@ export function favicons() {
  * @returns {import('node:stream').Readable} Gulp stream
  */
 export function fonts() {
-  return fontLoadFnc(config.fontloadFile, config.assetsBase, {
+  return fontLoad(config.fontloadFile, config.assetsBase, {
     config: config.fontLoadConfig(),
   })
 }
@@ -341,9 +373,13 @@ export function fonts() {
  * @returns {import('node:stream').Readable} Gulp stream
  */
 export function purge() {
-  return purgeCssTask(
-    `${config.sassBuild()}/index.css`,
-    `${config.buildBase()}/**/*.html`,
+  return purgeCss(
+    [`${config.sassBuild()}/**/*.css`, `!${config.sassBuild()}/**/*.min.css`],
+    [
+      `${config.srcBase}/**/*.njk`,
+      `${config.srcBase}/**/*.md`,
+      `${config.buildBase()}/**/*.html`,
+    ],
     config.sassBuild()
   )
 }
@@ -369,7 +405,7 @@ export function revision() {
  * @returns {import('node:stream').Readable} Gulp stream
  */
 export function sri() {
-  return sriHashTask(`${config.buildBase()}/**/*.html`, config.buildBase())
+  return sriTask(`${config.buildBase()}/**/*.html`, config.buildBase())
 }
 
 /**
@@ -385,7 +421,7 @@ export function validate() {
  * @returns {Promise<void>}
  */
 export function debug() {
-  return debugFilesFnc()
+  return debugFiles()
 }
 
 /**
@@ -393,7 +429,7 @@ export function debug() {
  * @returns {import('node:stream').Readable} Gulp stream
  */
 export function todo() {
-  return todoFnc()
+  return todoTask()
 }
 
 /**
@@ -427,8 +463,8 @@ const buildPipeline = gulp.series(
   favicons,
   fonts,
   gulp.parallel(css, js),
+  purge, // Ensure CSS is purged before HTML task inlines it
   html,
-  purge,
   revision,
   sri,
   validate
@@ -442,8 +478,8 @@ const exportPipeline = gulp.series(
   dataset,
   css,
   js,
+  purge, // Ensure CSS is purged before HTML task inlines it
   html,
-  purge,
   images,
   validate
 )

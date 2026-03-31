@@ -92,7 +92,7 @@ const BUILD_CONFIGS = {
     postcssPluginsBase: [],
     minifyJs: false,
     minifyCss: false,
-    concatFiles: false,
+    concatFiles: true,
     optimizeImages: false,
     imageOptimizationConfig: {
       ...imageOptimizationConfigBase,
@@ -140,7 +140,7 @@ const BUILD_CONFIGS = {
     postcssPluginsBase: [],
     minifyJs: false,
     minifyCss: false,
-    concatFiles: false,
+    concatFiles: true,
     optimizeImages: true,
     imageOptimizationConfig: {
       ...imageOptimizationConfigBase,

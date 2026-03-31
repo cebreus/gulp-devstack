@@ -23,6 +23,32 @@ const sassCompiler = gulpSass(sass)
 const logger = loggerLib.createLogger('Sass')
 
 /**
+ * Matches the prelude of a SCSS file:
+ * - line comments  (//)
+ * - block comments (/* ... *\/)
+ * - @use / @forward directives
+ * Captures everything before the first real rule.
+ */
+const SASS_PRELUDE_REGEX =
+  /^\s*(?:(?:\/\/[^\r\n]*|\/\*[\s\S]*?\*\/|@(?:use|forward)\s[^;]+;)\s*)*/
+
+/**
+ * Builds standard SASS include paths.
+ * @param {string} [extraPath] - Optional additional path to include
+ * @param {object} [buildConfig] - Configuration provider
+ * @returns {string[]} Resolved include paths
+ */
+export function buildSassIncludePaths(extraPath, buildConfig = defaultConfig) {
+  return [
+    path.resolve('./src'),
+    path.resolve(buildConfig.sassBase),
+    path.resolve('./'),
+    path.resolve('./node_modules'),
+    ...(extraPath ? [path.resolve(extraPath)] : []),
+  ]
+}
+
+/**
  * Generates options for the SASS compiler.
  * @param {object} customSassOptions - Overrides
  * @param {boolean} minify - Minification flag
@@ -38,13 +64,10 @@ export function getSassCompilerOptions(
     quietDeps: true,
     outputStyle: minify ? 'compressed' : 'expanded',
     ...customSassOptions,
-    includePaths: [
-      ...(customSassOptions.includePaths || []),
-      path.resolve(buildConfig.sassBase),
-      path.resolve('./src'),
-      path.resolve('./'),
-      path.resolve('./node_modules'),
-    ],
+    includePaths: buildSassIncludePaths(
+      customSassOptions.includePaths?.[0],
+      buildConfig
+    ),
     logger: {
       warn: (message, options) => {
         if (!suppressOutdatedBootstrapWarnings(message)) {
@@ -99,21 +122,32 @@ export function buildSassPipeline({
   let pipeline = gulp.src(src, { allowEmpty: true })
 
   // Auto-prepend global configuration (@use/forward must be first)
-  const SASS_PRELUDE_REGEX =
-    /^\s*(?:(?:\/\/[^\r\n]*|\/\*[\s\S]*?\*\/|@(?:use|forward)\s[^;]+;)\s*)*/
   pipeline = pipeline.pipe(
     replace(SASS_PRELUDE_REGEX, function (match) {
       const content = this.file.contents ? this.file.contents.toString() : ''
-      if (
-        content.includes('globals') ||
-        this.file.path.endsWith('_globals.scss')
-      ) {
-        return match
-      }
-      const globalsPath = path
+      const isComponent = this.file.path.includes('/components/')
+      const isGlobals =
+        content.includes('globals') || this.file.path.endsWith('_globals.scss')
+
+      let prelude = match
+
+      const componentsBase = path
+        .resolve(defaultConfig.sassBase, '_components.scss')
+        .replace(/\\/g, '/')
+      const globalsBase = path
         .resolve(defaultConfig.sassBase, '_globals.scss')
         .replace(/\\/g, '/')
-      return `${match}@use "${globalsPath}" as *;\n`
+
+      if (!isGlobals && !content.includes('_globals.scss')) {
+        if (isComponent) {
+          // Individual components only need globals
+          prelude += `@import "${globalsBase}";\n`
+        } else if (!content.includes('_components.scss')) {
+          // Routes/Utilities get the full library (which carries globals)
+          prelude += `@import "${componentsBase}";\n`
+        }
+      }
+      return prelude
     })
   )
 
@@ -194,76 +228,88 @@ export async function processSass(
     sourceMaps: options.sourceMaps ?? defaultConfig.sourceMaps(),
     minify: options.minify ?? defaultConfig.minifyCss(),
     beautify: options.beautify ?? defaultConfig.formatCode(),
-    loggerContext: '[SASS]',
+    loggerContext: options.loggerContext || '[SASS]',
   })
   return streamToPromise(pipeline)
+}
+
+/**
+ * Compiles SCSS files matching a pattern into the target directory.
+ * @param {object} options - Compilation options
+ * @param {string} options.sourceDir - Directory to scan for .scss files
+ * @param {string} options.dest - Output directory
+ * @param {string|null} [options.outputFilename] - Output filename (null = keep originals)
+ * @param {string} [options.loggerContext] - Log prefix
+ * @param {object} [options.options] - Additional processSass options
+ * @returns {Promise<void>}
+ */
+async function compileScssGroup({
+  sourceDir,
+  dest,
+  outputFilename = null,
+  loggerContext = '[SCSS]',
+  options = {},
+}) {
+  try {
+    const pattern = path.join(sourceDir, '**/*.scss').replace(/\\/g, '/')
+    const files = await glob(pattern)
+    if (files.length === 0) return
+
+    return processSass(
+      pattern,
+      dest,
+      outputFilename,
+      defaultConfig.postcssPluginsBase(),
+      {
+        ...options,
+        loggerContext,
+        sassOptions: {
+          includePaths: buildSassIncludePaths(sourceDir),
+          ...(options.sassOptions || {}),
+        },
+      }
+    )
+  } catch (error) {
+    logger.error(`${loggerContext} Failure:`, error)
+  }
 }
 
 /**
  * Compiles all component styles.
  * @returns {Promise<void>}
  */
-export async function compileAllComponentStyles() {
-  try {
-    const componentScssPattern = path
-      .join(defaultConfig.componentsPath, '**/*.scss')
-      .replace(/\\/g, '/')
-
-    // We process components in a stream to allow the auto-prepend logic
-    // to act on each file individually before they are joined.
-    const pipeline = buildSassPipeline({
-      src: componentScssPattern,
-      dest: defaultConfig.sassBuild(),
-      outputFilename: 'components.css',
-      postcssPlugins: defaultConfig.postcssPluginsBase(),
-      sassOptions: {
-        includePaths: [
-          path.resolve('./src'),
-          path.resolve(defaultConfig.sassBase),
-          path.resolve(defaultConfig.componentsPath),
-        ],
-      },
-      loggerContext: '[Components]',
-    })
-
-    return streamToPromise(pipeline)
-  } catch (error) {
-    logger.error('[Components] Failure:', error)
-  }
+export function compileAllComponentStyles() {
+  return compileScssGroup({
+    sourceDir: defaultConfig.componentsPath,
+    dest: defaultConfig.sassBuild(),
+    outputFilename: 'components.css',
+    loggerContext: '[Components]',
+  })
 }
 
 /**
  * Compiles all route-specific SCSS files.
  * @returns {Promise<void>}
  */
-export async function compileRouteStyles() {
-  try {
-    const routeScssPattern = path
-      .join(defaultConfig.routesBase, '**/*.scss')
-      .replace(/\\/g, '/')
+export function compileRouteStyles() {
+  return compileScssGroup({
+    sourceDir: defaultConfig.routesBase,
+    dest: defaultConfig.sassBuild(),
+    loggerContext: '[Routes]',
+  })
+}
 
-    // Check if files exist to avoid empty promise racing
-    const files = await glob(routeScssPattern)
-    if (files.length === 0) return Promise.resolve()
-
-    return processSass(
-      routeScssPattern,
-      defaultConfig.sassBuild(),
-      null,
-      defaultConfig.postcssPluginsBase(),
-      {
-        sassOptions: {
-          includePaths: [
-            path.resolve('./src'),
-            path.resolve(defaultConfig.sassBase),
-            path.resolve(defaultConfig.routesBase),
-          ],
-        },
-      }
-    )
-  } catch (error) {
-    logger.error('[Routes] Failure:', error)
-  }
+/**
+ * Compiles component styles natively, producing isolated CSS files mirroring the source directory structure.
+ * Ideal for transparent CMS handoffs (export mode).
+ * @returns {Promise<void>}
+ */
+export function compileIsolatedComponentStyles() {
+  return compileScssGroup({
+    sourceDir: defaultConfig.componentsPath,
+    dest: `${defaultConfig.sassBuild()}/components`,
+    loggerContext: '[Components Isolated]',
+  })
 }
 
 export default processSass

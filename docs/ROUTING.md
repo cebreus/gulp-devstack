@@ -1,80 +1,78 @@
 # Routing & Template Data
 
-This project uses file-based routing: each file in `/src/routes` becomes a URL
-on the site.
+Gulp DevStack implements **filesystem-based routing** combined with a hybrid Markdown/Nunjucks data mapping strategy. This provides a clean separation between content (Markdown) and presentation (Nunjucks).
 
-## How Routing Works
+## 1. How Routing Works
+
+Every folder and file within `src/routes/` directly maps to a public URL.
 
 - `src/routes/index.md` → `/` (homepage)
 - `src/routes/about/index.md` → `/about/`
-- You can use `.md` (Markdown) for content or `.njk` (Nunjucks) for custom
-  templates
+- `src/routes/blog/post-1.md` → `/blog/post-1/`
 
-If both `index.md` and `index.njk` exist in the same folder, the `.njk` file is
-used as the template, but all data from the corresponding `.md` file
-(frontmatter and content) is available in the template as variables. This allows
-you to customize layout and logic while keeping content in Markdown.
+### File Types
 
-**Example:**
+- **`.njk` files (Required)**: Serve as the primary entry point and presentation template. A routing directory *must* contain at least one `.njk` file to be rendered.
+- **`.md` files (Optional)**: Serve as content and data sources (via YAML frontmatter). Using `.md` for data isolation is ideal for future **CMS integrations** (Headless CMS can easily map to these files).
+- **`.scss` & `.js` (Optional)**: Isolated route assets. They are only loaded on their respective page, preventing global bundle bloat.
 
-```
-src/routes/
-├── index.md            # → /
-├── index.njk           # → / (uses index.njk as template, index.md for data)
-├── about/
-│   ├── index.md        # → /about/
-│   └── index.njk       # → /about/ (uses index.njk as template, index.md for data)
-```
+## 1. Directory Structure & Precedence
 
-## Layouts
+Gulp DevStack follows a "File-system Routing" pattern similar to modern meta-frameworks:
 
-- Files named `layout-*.njk` (e.g. `layout-default.njk`) are base templates, not
-  pages.
-- Pages use `{% extends "layout-default.njk" %}` to inherit layout structure.
-- Layouts define blocks (see
-  [Nunjucks Blocks Documentation](./NUNJUCKS-BLOCKS.md)) that pages can
-  override.
-- Layouts are not routable URLs themselves.
+- **`.njk` files (Required)**: These represent your routes. A file at `src/routes/about.njk` generates `/about/`.
+- **`.md` or `.json` files (Optional)**: Serve as content and data sources. Both are normalized into the `page` object in your templates.
+- **`.scss` & `.js` (Optional)**: Isolated route assets. They are only loaded on their respective page.
 
-**Example:**
+Gulp DevStack supports an **"Override & Merge"** pattern:
 
-```nunjucks
-{# src/routes/about/index.njk #}
-{% extends "layout-default.njk" %}
+1. If only `index.md` exists, it is rendered using the default layout (`layout-default.njk`).
+2. If `index.njk` exists alongside `index.md`, the **`.njk` file takes precedence** as the template.
+3. However, all data from the `.md` file (frontmatter and rendered content) is **automatically injected** into the `.njk` template.
+
+> \[!TIP]
+> Keep your data in `.md` files even if you use `.njk` templates. This keeps your structure "CMS-ready" and decouples content from presentation logic.
+
+## 3. Asset Autodiscovery (Isolated Assets)
+
+The pipeline automatically detects and injects assets based on the route name:
+
+- If you are on the `/about/` page, the build system looks for `src/routes/about/index.scss` and `src/routes/about/index.js`.
+- These assets are compiled and injected **only** into the respective page. This is the preferred way to handle page-specific styles and logic.
+
+## 2. Output Path Mapping
+
+The build system maps source files to output paths deterministically:
+
+| Source File                  | Build Output        | Final URL     |
+| :--------------------------- | :------------------ | :------------ |
+| `src/routes/index.njk`       | `/index.html`       | `/`           |
+| `src/routes/404.njk`         | `/404.html`         | `/404`        |
+| `src/routes/404/index.njk`   | `/404/index.html`   | `/404/`       |
+| `src/routes/about/index.njk` | `/about/index.html` | `/about/`     |
+| `src/routes/docs/intro.njk`  | `/docs/intro.html`  | `/docs/intro` |
+
+> \[!WARNING]
+> While both `404.njk` and `404/index.njk` are valid, most static hosting providers (Netlify, Vercel, S3) expect a top-level **`404.html`** to act as the global error page. Stick to `src/routes/404.njk` for error pages to ensure it works as a catch-all.
+
+## 3. Data Injections & Hydration
+
+## 4. Layouts & Custom System Pages
+
+- Layouts are stored in `src/routes/` with the prefix `layout-` (e.g., `layout-default.njk`).
+- To change a layout for a specific page (like a 404 page), simply extend a different layout file.
+
+**Example: Custom 404 Page**
+For system pages, you might want a minimal layout without the standard header/footer:
+
+```njk
+{# src/routes/404.njk #}
+{% extends "layout-minimal.njk" %}
+
 {% block content %}
-  <h1>{{ page.title }}</h1>
-  <p>{{ page.description }}</p>
+  <div class="o-404-container">
+    <h1>Page Not Found</h1>
+    <a href="/">Back to Home</a>
+  </div>
 {% endblock %}
 ```
-
-## Data in Templates
-
-- `site` — global config from [`src/config/site.js`](../src/config/site.js)
-- `page` — all frontmatter fields from the current Markdown file
-- Direct variables — top-level frontmatter fields (e.g. `title`, `hero`)
-
-See [Template Data Reference](./TEMPLATE-DATA.md) for details and examples.
-
-## Components
-
-Reusable Nunjucks components are stored in
-[`src/lib/components/`](../src/lib/components/). Include them in templates for
-modular design. See [Components documentation](./COMPONENTS.md) for usage and
-best practices.
-
-## Custom Nunjucks Filters
-
-Custom filters are defined in
-[`gulp/utils/nunjucks-filters.js`](../gulp/utils/nunjucks-filters.js):
-
-- `md` — render Markdown to HTML
-- `dump` — pretty-print objects
-- `safe` — mark as safe HTML
-
-See [Template Data Reference](./TEMPLATE-DATA.md) for usage.
-
-## Template Blocks
-
-You can override any block from the base layout. See
-[Nunjucks Blocks Documentation](./NUNJUCKS-BLOCKS.md) for a full list and usage
-examples.

@@ -139,21 +139,26 @@ function loadMenuData(dataSource) {
 }
 
 /**
+ * @typedef {object} OutputPathOptions
+ * @property {string} inputPath - Absolute source path
+ * @property {string} extFrom - Source extension
+ * @property {string} extTo - Target extension
+ * @property {string} baseDir - Base source directory
+ * @property {string} outDir - Output directory
+ */
+
+/**
  * Resolves destination HTML path from a source file.
- * @param {string} inputPath - Absolute source path
- * @param {string} extFrom - Source extension
- * @param {string} extTo - Target extension
- * @param {string} baseDir - Base source directory
- * @param {string} outDir - Output directory
+ * @param {OutputPathOptions} options - Path mapping options
  * @returns {string} Resolved destination path
  */
-export function calculateOutputPath(
+export function calculateOutputPath({
   inputPath,
   extFrom,
   extTo,
   baseDir,
-  outDir
-) {
+  outDir,
+}) {
   const relativePart = path.relative(baseDir, inputPath)
   return path.resolve(outDir, relativePart.replace(extFrom, extTo))
 }
@@ -191,12 +196,21 @@ function createTemplateContext(pageData, params) {
 }
 
 /**
+ * Maps injection tags to their corresponding transform parameter keys.
+ */
+const INJECT_TAG_TO_TRANSFORM_KEY = {
+  css: 'transformCss',
+  js: 'transformJs',
+  'cdn-js': 'transformCdnJs',
+}
+
+/**
  * Resolves transform option key name for gulp-inject params.
  * @param {string} tag - Injection tag
- * @returns {string} Corresponding transform property key
+ * @returns {string|null} Corresponding transform property key
  */
-function resolveTransformKey(tag) {
-  return `transform${tag.charAt(0).toUpperCase() + tag.slice(1).replace(':js', 'Js')}`
+export function resolveTransformKey(tag) {
+  return INJECT_TAG_TO_TRANSFORM_KEY[tag] || null
 }
 
 /**
@@ -211,8 +225,10 @@ function resolveTransformKey(tag) {
 function injectSet(stream, assets, tag, params, defaultTransform) {
   if (!assets || assets.length === 0) return stream
 
+  const shouldRead = tag === 'css'
+
   return stream.pipe(
-    inject(gulp.src(assets, { read: false }), {
+    inject(gulp.src(assets, { read: shouldRead }), {
       starttag: `<!-- inject:${tag} -->`,
       endtag: `<!-- endinject -->`,
       transform: params[resolveTransformKey(tag)] || defaultTransform,
@@ -223,52 +239,82 @@ function injectSet(stream, assets, tag, params, defaultTransform) {
 }
 
 /**
- * Resolves source files used for HTML rendering.
- * @param {object} buildConfig - Active build configuration
- * @returns {Promise<{cssPayload: string[], jsPayload: string[], routesTemplateFiles: string[], optimizedDataSourceFiles: string[]}>} Collected source lists for HTML processing
+ * Ensures build output directories exist.
+ * @param {string[]} dirs - List of directories to create
  */
-async function collectHtmlSources(buildConfig) {
+export function ensureBuildDirs(dirs) {
+  dirs.forEach((dir) => {
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true })
+  })
+}
+
+/** CSS core filenames injected into HTML per build mode. */
+const CSS_CORES_BASE = [
+  'bootstrap.css',
+  'custom.css',
+  'utils.css',
+  'components.css',
+  'index.css',
+]
+const CSS_CORES_DEV = [...CSS_CORES_BASE, 'u-devstack.css']
+
+/**
+ * Returns the list of core CSS filenames for a build mode.
+ * @param {string} mode - Build version string
+ * @returns {string[]} Core CSS filenames
+ */
+function getCssCoreNames(mode) {
+  return mode === 'dev' ? CSS_CORES_DEV : CSS_CORES_BASE
+}
+
+/**
+ * Checks if a CSS asset should be included in the HTML payload.
+ * @param {string} filePath - Path to the CSS file
+ * @param {string} mode - Active build mode
+ * @returns {boolean} True if asset should be included
+ */
+function isCssAssetIncluded(filePath, mode) {
+  const fileName = path.basename(filePath)
+  const normalizedPath = filePath.replace(/\\/g, '/')
+
+  if (mode === 'export' && normalizedPath.includes('/components/')) {
+    return true
+  }
+
+  return getCssCoreNames(mode).some((core) => fileName.includes(core))
+}
+
+/**
+ * Resolves CSS/JS asset lists for HTML injection.
+ * @param {object} buildConfig - Active build configuration
+ * @returns {Promise<{cssPayload: string[], jsPayload: string[]}>} Object containing arrays of CSS and JS file paths for injection
+ */
+async function resolveAssetPayloads(buildConfig) {
   const assetsCssPath = buildConfig.sassBuild()
   const assetsJsPath = buildConfig.jsBuild()
 
-  ;[assetsCssPath, assetsJsPath].forEach((dir) => {
-    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true })
-  })
-
   const cssPayload = (
     await glob(`${assetsCssPath}/**/*.css`.replace(/\\/g, '/'))
-  ).filter((filePath) => {
-    const fileName = path.basename(filePath)
-    const cores = [
-      'bootstrap.css',
-      'custom.css',
-      'utils.css',
-      'components.css',
-      'index.css',
-    ]
-
-    if (buildConfig.version() === 'dev') {
-      cores.push('u-devstack.css')
-    }
-
-    return cores.some((core) => fileName.includes(core))
-  })
+  ).filter((filePath) => isCssAssetIncluded(filePath, buildConfig.version()))
 
   const jsPayload = (
     await glob(`${assetsJsPath}/**/*.js`.replace(/\\/g, '/'))
-  ).filter(function (filePath) {
-    return !filePath.includes('.min.js')
-  })
+  ).filter((filePath) => !filePath.includes('.min.js'))
 
-  const rawDataSourceFiles = await glob(
-    path.join(buildConfig.datasetPagesBuild, '**/*.json').replace(/\\/g, '/')
-  )
+  return { cssPayload, jsPayload }
+}
 
+/**
+ * Resolves template and dataset source file lists.
+ * @param {object} buildConfig - Active build configuration
+ * @returns {Promise<{routesTemplateFiles: string[], optimizedDataSourceFiles: string[]}>} Object containing arrays of template and datasource file paths
+ */
+async function resolveTemplateSources(buildConfig) {
   const routesTemplateFiles = (
     await glob(
       path.join(buildConfig.routesBase, '**/*.njk').replace(/\\/g, '/')
     )
-  ).filter(function (filePath) {
+  ).filter((filePath) => {
     const fileName = path.basename(filePath)
     return (
       !fileName.startsWith('layout-') &&
@@ -277,33 +323,145 @@ async function collectHtmlSources(buildConfig) {
     )
   })
 
-  const njkShadowPaths = routesTemplateFiles.map(function (filePath) {
-    return path
-      .relative(buildConfig.routesBase, filePath)
-      .replace('.njk', '.json')
-  })
-
-  const optimizedDataSourceFiles = rawDataSourceFiles.filter(
-    function (filePath) {
-      const relativePath = path.relative(
-        buildConfig.datasetPagesBuild,
-        filePath
-      )
-      const baseName = path.basename(filePath)
-      return (
-        baseName !== 'menu.json' &&
-        !baseName.startsWith('layout-') &&
-        !njkShadowPaths.includes(relativePath)
-      )
-    }
+  const rawDataSourceFiles = await glob(
+    path.join(buildConfig.datasetPagesBuild, '**/*.json').replace(/\\/g, '/')
   )
 
-  return {
-    cssPayload,
-    jsPayload,
-    routesTemplateFiles,
-    optimizedDataSourceFiles,
+  const njkShadowPaths = routesTemplateFiles.map((filePath) =>
+    path.relative(buildConfig.routesBase, filePath).replace('.njk', '.json')
+  )
+
+  const optimizedDataSourceFiles = rawDataSourceFiles.filter((filePath) => {
+    const relativePath = path.relative(buildConfig.datasetPagesBuild, filePath)
+    const baseName = path.basename(filePath)
+    return (
+      baseName !== 'menu.json' &&
+      !baseName.startsWith('layout-') &&
+      !njkShadowPaths.includes(relativePath)
+    )
+  })
+
+  return { routesTemplateFiles, optimizedDataSourceFiles }
+}
+
+/**
+ * Resolves source files used for HTML rendering.
+ * @param {object} buildConfig - Active build configuration
+ * @returns {Promise<object>} Collected source lists for HTML processing
+ */
+async function collectHtmlSources(buildConfig) {
+  ensureBuildDirs([buildConfig.sassBuild(), buildConfig.jsBuild()])
+
+  const [assets, templates] = await Promise.all([
+    resolveAssetPayloads(buildConfig),
+    resolveTemplateSources(buildConfig),
+  ])
+
+  return { ...assets, ...templates }
+}
+
+/**
+ * Processes a single JSON file for HTML rendering.
+ * @param {object} file - Gulp file object
+ * @param {HtmlBuildParams} params - Configuration parameters
+ * @returns {object} Updated file object
+ */
+export function transformJsonToHtml(file, params) {
+  const pageData = JSON.parse(file.contents.toString('utf8'))
+  file.path = calculateOutputPath({
+    inputPath: file.path,
+    extFrom: '.json',
+    extTo: '.html',
+    baseDir: params.dataSource,
+    outDir: params.output,
+  })
+  file.base = path.resolve(params.output)
+  file.contents = Buffer.from(
+    '{% extends "layout-default.njk" %}{% block content %}{{ page.content | md | safe }}{% endblock %}'
+  )
+  file.data = pageData
+  return file
+}
+
+/**
+ * Discovers and reads inline CSS assets for a given route.
+ * @param {string} routeRelDir - Relative directory of the route
+ * @param {string} routeBaseName - Base name of the route file (without ext)
+ * @param {string} outputBase - Build output directory
+ * @returns {string[]} Array of CSS content strings
+ */
+function discoverInlineStyles(routeRelDir, routeBaseName, outputBase) {
+  let pageAssetName = routeRelDir !== '.' ? routeRelDir : routeBaseName
+  if (pageAssetName === 'index') pageAssetName = 'home'
+
+  const candidates = [
+    `${routeRelDir !== '.' ? routeRelDir : ''}/${routeBaseName}.css`,
+    `${pageAssetName}.css`,
+    `${pageAssetName}/index.css`,
+  ].filter(Boolean)
+
+  const styles = []
+  for (const name of candidates) {
+    const fullPath = path.join(outputBase, 'assets/css', name)
+    if (!fs.existsSync(fullPath)) continue
+    try {
+      const cssContent = fs.readFileSync(fullPath, 'utf8')
+      if (!styles.includes(cssContent)) {
+        styles.push(cssContent)
+      }
+    } catch {
+      // Ignore read errors
+    }
   }
+  return styles
+}
+
+/**
+ * Processes a single Nunjucks file for HTML rendering.
+ * @param {object} file - Gulp file object
+ * @param {HtmlBuildParams} params - Configuration parameters
+ * @returns {object|null} Updated file object or null if skipped
+ */
+export function transformNjkToHtml(file, params) {
+  const routesSourceBase = path.resolve(
+    params.routesBase || params.processPaths?.[2] || './src/routes'
+  )
+  const absoluteFilePath = path.resolve(file.path)
+  const relativeSourcePath = path.relative(routesSourceBase, absoluteFilePath)
+  const relativeJsonPath = relativeSourcePath.replace('.njk', '.json')
+
+  const pageData = params.dataSource
+    ? loadJsonSafe(path.join(path.resolve(params.dataSource), relativeJsonPath))
+    : {}
+
+  file.path = calculateOutputPath({
+    inputPath: absoluteFilePath,
+    extFrom: '.njk',
+    extTo: '.html',
+    baseDir: routesSourceBase,
+    outDir: params.output,
+  })
+  file.base = path.resolve(params.output)
+
+  const routeRelDir = path.dirname(relativeSourcePath)
+  const routeBaseName = path.basename(relativeSourcePath, '.njk')
+
+  const pageInlineStyles = discoverInlineStyles(
+    routeRelDir,
+    routeBaseName,
+    params.output
+  )
+
+  file.data = {
+    ...pageData,
+    pageInlineStyles: [
+      ...(pageData.pageInlineStyles ?? []),
+      ...pageInlineStyles,
+    ],
+    pageScripts: [...(pageData.pageScripts ?? [])],
+  }
+
+  return file
 }
 
 /**
@@ -335,92 +493,16 @@ export async function executeHtmlBuild(params) {
             return cb()
 
           const extension = path.extname(file.path)
-          let pageData = {}
+          let processedFile = null
 
           if (extension === '.json') {
-            pageData = JSON.parse(file.contents.toString('utf8'))
-            file.path = calculateOutputPath(
-              file.path,
-              '.json',
-              '.html',
-              params.dataSource,
-              params.output
-            )
-            file.base = path.resolve(params.output)
-            file.contents = Buffer.from(
-              '{% extends "layout-default.njk" %}{% block content %}{{ page.content | md | safe }}{% endblock %}'
-            )
+            processedFile = transformJsonToHtml(file, params)
           } else if (extension === '.njk') {
-            const routesSourceBase = path.resolve(
-              params.routesBase || params.processPaths?.[2] || './src/routes'
-            )
-            const absoluteFilePath = path.resolve(file.path)
-
-            const relativeSourcePath = path.relative(
-              routesSourceBase,
-              absoluteFilePath
-            )
-            const relativeJsonPath = relativeSourcePath.replace('.njk', '.json')
-
-            if (params.dataSource) {
-              const fullJsonPath = path.join(
-                path.resolve(params.dataSource),
-                relativeJsonPath
-              )
-              pageData = loadJsonSafe(fullJsonPath)
-            }
-
-            file.path = calculateOutputPath(
-              absoluteFilePath,
-              '.njk',
-              '.html',
-              routesSourceBase,
-              params.output
-            )
-            file.base = path.resolve(params.output)
-
-            const routeRelDir = path.dirname(relativeSourcePath)
-            const routeBaseName = path.basename(relativeSourcePath, '.njk')
-
-            let pageAssetName =
-              routeRelDir !== '.' ? routeRelDir : routeBaseName
-            if (pageAssetName === 'index') pageAssetName = 'home'
-
-            const pageStyles = []
-            const pageScripts = []
-
-            const assetCandidates = [
-              `${routeRelDir !== '.' ? routeRelDir : ''}/${routeBaseName}.css`,
-              `${pageAssetName}.css`,
-              `${pageAssetName}/index.css`,
-            ].filter(Boolean)
-
-            assetCandidates.forEach((name) => {
-              const fullPath = path.join(params.output, 'assets/css', name)
-              if (fs.existsSync(fullPath)) {
-                let normalizedPath = path.posix.normalize(`/assets/css/${name}`)
-                if (!normalizedPath.startsWith('/'))
-                  normalizedPath = `/${normalizedPath}`
-
-                if (
-                  normalizedPath !== '/assets/css/index.css' &&
-                  !pageStyles.includes(normalizedPath)
-                ) {
-                  pageStyles.push(normalizedPath)
-                }
-              }
-            })
-
-            pageData.pageStyles = (pageData.pageStyles || []).concat(pageStyles)
-            pageData.pageScripts = (pageData.pageScripts || []).concat(
-              pageScripts
-            )
-          } else {
-            return cb()
+            processedFile = transformNjkToHtml(file, params)
           }
 
-          file.data = pageData
-          cb(null, file)
+          if (!processedFile) return cb()
+          cb(null, processedFile)
         },
       })
     )
@@ -443,7 +525,7 @@ export async function executeHtmlBuild(params) {
             try {
               return getMarkdownParser(lang).render(str)
             } catch (e) {
-              console.error('MD FILTER ERROR:', e)
+              logger.error('MD FILTER ERROR:', e)
               return str
             }
           })
@@ -516,11 +598,15 @@ export async function processHtml(buildConfig) {
   const outputPath = buildConfig.tplBuild()
 
   /**
-   * Transforms CSS file path into a link tag.
+   * Transforms CSS file path into a link tag or inline style string.
    * @param {string} filepath - Path to the CSS file
-   * @returns {string} HTML link tag
+   * @param {object} file - Gulp file object
+   * @returns {string} HTML source tag
    */
-  function transformCss(filepath) {
+  function transformCss(filepath, file) {
+    if (file && file.contents) {
+      return `<style>${file.contents.toString('utf8')}</style>`
+    }
     return `<link rel="stylesheet" href="${resolveInjectionUrl(filepath, outputPath)}">`
   }
 
@@ -530,7 +616,7 @@ export async function processHtml(buildConfig) {
    * @returns {string} HTML script tag
    */
   function transformJs(filepath) {
-    return `<script src="${resolveInjectionUrl(filepath, outputPath)}"></script>`
+    return `<script type="module" src="${resolveInjectionUrl(filepath, outputPath)}"></script>`
   }
 
   return executeHtmlBuild({

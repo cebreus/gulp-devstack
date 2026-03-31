@@ -1,56 +1,78 @@
----
-title: 'Gulp DevStack'
-description: 'High-control static web workflow with predictable output and low operational overhead.'
-menu_main:
-  name: 'Home'
-  order: 1
-  show: true
-hero:
-  badge: 'Version 5 Ready!'
-  title:
-    The predictable alternative to framework complexity.
-  description:
-    Gulp DevStack is a high-control static engine for teams who value 
-    deterministic output, professional hand-off, and low maintenance overhead. 
-    Built for artisans who demand precision over abstraction.
-  modifier: dark
-  content: |-
-    <div class="d-flex flex-column flex-sm-row">
-      <a class="btn btn-primary mb-3 me-sm-3 px-4 py-2" href="/about/">See how it works</a>
-      <a class="btn c-hero__btn mb-3 px-4 py-2" href="https://github.com/cebreus/gulp-devstack" target="_blank" rel="noopener">View on GitHub</a>
-    </div>
-seo:
-  title: 'Gulp DevStack - Predictable Static Web Delivery'
-  description:
-    'A high-control static workflow focused on predictable builds, quality output, and rapid deployment.'
-  robots: 'index,follow'
-open_graph:
-  use: true
-  type: website
-  title: Gulp DevStack
-  description: 'Control, predictability, and fast static delivery.'
-  site_name: Gulp DevStack
-  image: ['/assets/images/gulp-devstack-social.jpg']
-twitter_cards:
-  use: true
-  type: summary_large_image
-  title: Gulp DevStack
-  description: 'A practical build stack for teams that value control and speed.'
-  site: '@gulpdevstack'
-  creator: '@developer'
-  image: ['/assets/images/gulp-devstack-twitter.jpg']
+# Gulp DevStack
+
+Gulp DevStack is a high-control static engine built for developers who demand precision over abstraction. It provides an explicit build pipeline for teams that value deterministic output, professional hand-off, and low operational overhead.
+
+## Core Philosophy: Control Over Abstraction
+
+Modern web development often feels like a "black box" of invisible abstractions. Gulp DevStack reverses this by providing:
+
+- **Explicit Control**: Every asset transformation is transparent, audited, and deterministic.
+- **Production Confidence**: Native SRI (Subresource Integrity) and content-based hashing are integrated, not magical.
+- **Handoff Quality**: Output is clean, human-readable (in Export mode), and ready for any third-party audit or integration.
+
 ---
 
-## Control Over Abstraction
+## Triple Pipeline Strategy
 
-Gulp DevStack was born from a simple observation: modern web development has become a "black box" of invisible abstractions. While frameworks offer speed, they often come at the cost of predictable output and long-term maintenance.
+The engine operates in three distinct modes, each optimized for a specific stage of the development lifecycle:
 
-We believe that professional web delivery requires:
+| Pipeline          | Goal                 | Key Features                                                 | Output          |
+| :---------------- | :------------------- | :----------------------------------------------------------- | :-------------- |
+| **`pnpm dev`**    | Developer Velocity   | Hot-reload (BrowserSync), incremental builds, source maps.   | `build-dev/`    |
+| **`pnpm build`**  | Production Hardening | Asset revisioning (hashing), SRI, minification, CSS purging. | `build-prod/`   |
+| **`pnpm export`** | Professional Handoff | Optimized assets, **clean filenames** (no hashing), no SRI.  | `build-export/` |
 
-- **Explicit Control**: You should know exactly what is happening to every asset in your project.
-- **Production Confidence**: Hashing, SRI, and optimization should be deterministic, not magical.
-- **Handoff Quality**: Deliver code that stakeholders and third-party devs can actually read and audit.
+---
 
-### Designed for Artisans
+## Technical Stack
 
-Whether you are building a high-performance landing page or a complex site structure, Gulp DevStack provides the engine. You provide the intent. The result is a website that is as fast to load as it was to build.
+- **Runtime**: Node.js >= 22.0.0 (Native ESM, `node:test`, `loadEnvFile`).
+- **Orchestration**: Gulp 5 (Modern Task Runner).
+- **Bundling**: esbuild (Lightning-fast JS processing).
+- **Styling**: SASS + PostCSS (Autoprefixer, CSSNano, PurgeCSS) + Custom Bootstrap build.
+- **Templating**: Nunjucks + Markdown (Filesystem-based routing).
+- **Assets**: Sharp-powered pipeline (AVIF, WebP, SVG, LQS) & Local Google Fonts downloader.
+
+---
+
+## Quick Start
+
+```bash
+# 1. Install dependencies
+pnpm install
+
+# 2. Start local development
+pnpm dev
+
+# 3. Generate production-ready site
+pnpm build
+
+# 4. Generate clean static export for hand-off
+pnpm export
+
+# 5. Run the zero-dependency test suite
+pnpm test
+```
+
+---
+
+## Project Architecture
+
+The source structure is designed for modularity and clear ownership:
+
+- `src/config/`: Centralized site metadata and build settings.
+- `src/js/`: Global JavaScript logic, shared utilities, and core entry points.
+- `src/lib/components/`: Reusable UI modules (Nunjucks + SCSS).
+- `src/routes/`: Filesystem-based routing (Nunjucks/Markdown mapping). Also supports isolated route assets (page-specific `.js` and `.scss`).
+- `src/scss/`: Global styling, design tokens, and custom-tailored Bootstrap SCSS build.
+- `src/assets/`: Global assets, including fonts automatically downloaded via Google Fonts API.
+
+---
+
+## Documentation
+
+- [**Routing & Data**](docs/ROUTING.md) — How Markdown and Nunjucks merge into pages.
+- [**Template Data**](docs/TEMPLATE-DATA.md) — Site and Page data reference.
+- [**Nunjucks Blocks**](docs/NUNJUCKS-BLOCKS.md) — Layout hierarchy and override system.
+- [**Component Workflow**](docs/COMPONENTS.md) — Building and managing modular UI units.
+- [**Testing Strategy**](docs/TESTING.md) — Zero-dependency testing with `node:test`.
