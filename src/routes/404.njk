@@ -1,11 +1,26 @@
-{% extends "layout-default.njk" %}
-
+{%
+  set page = {
+    seo: {
+      title: "404 - Page Not Found",
+      description: "Sorry, the page you are looking for doesn't exist or has been moved.",
+      robots: "noindex, follow"
+    }
+  }
+%}
+{% extends "layout-minimal.njk" %}
+{% from "components/hero/hero.njk" import hero %}
 {% block content %}
-  <div class="container py-5">
-    <h1 class="display-1 mb-5">Oops!</h1>
-    <p class="lead">We can’t seem to find the page you’re looking for.</p>
-    <p>
-      <strong>Error code: 404</strong>
-    </p>
-  </div>
+  {%
+    call hero(
+      title = "404",
+      badge = "Page Not Found",
+      description = "Sorry, the page you are looking for doesn't exist or has been moved to a different section.",
+      modifier = "no-gradient",
+      class = "w-100"
+    )
+  %}
+    <div class="d-flex justify-content-center mt-3">
+      <a href="/" class="btn btn-primary btn-lg rounded-pill px-4 py-2"> Back to home </a>
+    </div>
+  {% endcall %}
 {% endblock %}

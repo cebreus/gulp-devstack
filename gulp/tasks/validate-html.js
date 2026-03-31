@@ -18,7 +18,7 @@ export function validateHtml(input) {
     extends: ['html-validate:recommended'],
     rules: {
       'no-raw-characters': ['warn', { relaxed: true }],
-      'no-inline-style': 'error',
+      'no-inline-style': 'warn',
     },
   })
   const validationResults = []

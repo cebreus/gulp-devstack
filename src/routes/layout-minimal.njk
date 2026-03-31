@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="{{ page.lang or site.meta.lang or 'en' }}">
+  <head>
+    <meta charset="{{ site.meta.charset or 'utf-8' }}" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>{{ (page.seo.title or page.title or site.meta.title or site.title) | striptags }}</title>
+    {% if page.seo.description or page.description or site.description %}
+      <meta
+        name="description"
+        content="{{ (page.seo.description or page.description or site.description) | striptags }}"
+      />
+    {% endif %}
+    {% if (page.seo.robots or site.seo.robots) %}
+      <meta name="robots" content="{{ page.seo.robots or site.seo.robots }}" />
+    {% endif %}
+
+    {% block styles %}
+      {% for inlineStyle in pageInlineStyles or [] %}
+        {{ '<style>' | safe }}
+        {{ inlineStyle | safe }}
+        {{ '</style>' | safe }}
+      {% endfor %}
+    {% endblock %}
+  </head>
+  <body class="bg-deep-blue text-light" data-bs-theme="dark">
+    {% block content %}
+    {% endblock %}
+  </body>
+</html>

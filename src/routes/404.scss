@@ -1,0 +1,12 @@
+// Systematic route style integration
+@import '../scss/bootstrap';
+@import '../scss/custom';
+
+// Minimalist shell overrides
+body {
+  margin: 0;
+  font-family: var(--bs-body-font-family);
+  color: var(--bs-body-color);
+  background-color: var(--deep-blue-bg);
+  -webkit-font-smoothing: antialiased;
+}
