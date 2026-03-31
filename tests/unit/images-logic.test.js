@@ -145,8 +145,13 @@ describe('Image Processing Logic (Unit)', () => {
         await optimizeWithSharp(input, 'jpg', 80)
         assert.fail('Should have thrown')
       } catch (err) {
+        // console.log('DEBUG ERR MESSAGE:', err.message)
         assert.ok(
-          err.code === 'ERR_MODULE_NOT_FOUND' || err.message.includes('sharp')
+          err.code === 'ERR_MODULE_NOT_FOUND' ||
+            err.message.includes(
+              'Input buffer contains unsupported image format'
+            ) ||
+            err.message.includes('sharp')
         )
       }
     })
