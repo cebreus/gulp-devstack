@@ -22,6 +22,14 @@ describe('HTML Pipeline Utilities', () => {
       const expected = '<img src="test.png">'
       assert.strictEqual(stripXhtmlSlashes(input), expected)
     })
+
+    it('should preserve self-closing slashes in SVG elements', () => {
+      const input =
+        '<svg viewBox="0 0 16 16"><path d="M8 2" /><circle cx="8" cy="8" r="4" /><rect x="0" y="0" width="16" height="16" /></svg>'
+      const expected =
+        '<svg viewBox="0 0 16 16"><path d="M8 2" /><circle cx="8" cy="8" r="4" /><rect x="0" y="0" width="16" height="16" /></svg>'
+      assert.strictEqual(stripXhtmlSlashes(input), expected)
+    })
   })
 
   describe('cleanHtmlComments', () => {
@@ -64,11 +72,17 @@ describe('HTML Pipeline Utilities', () => {
 
   describe('calculateOutputPath', () => {
     it('should map source path to destination with new extension', () => {
-      const input = '/src/routes/about/index.njk'
-      const base = '/src/routes'
-      const out = '/dist'
+      const inputPath = '/src/routes/about/index.njk'
+      const baseDir = '/src/routes'
+      const outDir = '/dist'
       assert.strictEqual(
-        calculateOutputPath(input, '.njk', '.html', base, out),
+        calculateOutputPath({
+          inputPath,
+          extFrom: '.njk',
+          extTo: '.html',
+          baseDir,
+          outDir,
+        }),
         path.resolve('/dist/about/index.html')
       )
     })
