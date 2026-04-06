@@ -117,7 +117,7 @@
     "@babel/core": "^7.24.5",
     "@babel/eslint-parser": "^7.24.5",
     "@babel/preset-env": "^7.24.5",
-    "@commitlint/cli": "^19.3.0",
+    "@commitlint/cli": "^20.5.0",
     "@commitlint/config-conventional": "^19.2.2",
     "@j-ulrich/release-it-regex-bumper": "^5.1.0",
     "@release-it/conventional-changelog": "^8.0.1",
