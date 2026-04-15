@@ -247,6 +247,8 @@ async function run() {
     '!src/routes/404.njk',
     'src/assets/images/**/*',
     '!src/assets/images/favicon.ico',
+    'src/assets/fonts/**/*',
+    '!src/assets/fonts/.gitkeep',
     'src/scss/u-devstack.scss',
     'public/**/*',
     '!public/robots.txt',
@@ -392,19 +394,33 @@ async function run() {
   }
 
   // 6. Reset COMPONENTS.md documentation
-  const cleanDoc = `# Project Components
+  try {
+    const docsPath = 'docs/COMPONENTS.md'
+    const currentDocs = await fs.readFile(docsPath, 'utf-8')
+    const marker = '## Component List'
+    const markerIndex = currentDocs.indexOf(marker)
 
-This file documents the UI components of the project.
-New components created via \`pnpm component\` will be automatically listed here.
+    let prunedDoc = ''
+    if (markerIndex !== -1) {
+      // Keep everything up to the marker
+      prunedDoc = currentDocs.substring(0, markerIndex + marker.length) + '\n\n'
+    } else {
+      // Fallback if marker is missing
+      prunedDoc = `# Component Architecture & Strategy\n\n## Component List\n\n`
+    }
 
-## Component List
-
-`
-  if (isDryRun) {
-    console.log(pc.dim('Dry run: would reset docs/COMPONENTS.md'))
-  } else {
-    await fs.writeFile('docs/COMPONENTS.md', cleanDoc, 'utf-8')
-    console.log(pc.green('✔ Documentation (COMPONENTS.md) reset.'))
+    if (isDryRun) {
+      console.log(pc.dim(`Dry run: would prune ${docsPath}`))
+    } else {
+      await fs.writeFile(docsPath, prunedDoc, 'utf-8')
+      console.log(
+        pc.green(
+          '✔ Documentation (COMPONENTS.md) pruned, instructions preserved.'
+        )
+      )
+    }
+  } catch (e) {
+    console.log(pc.yellow('! Failed to prune COMPONENTS.md, skipping.'))
   }
 
   // 7. Delete the script itself
