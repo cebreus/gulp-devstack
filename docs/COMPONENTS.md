@@ -89,3 +89,35 @@ Some components serve as systemic infrastructure and are typically managed withi
 
 - **Strict Defaults**: Always use Nunjucks `default` filters to prevent templates from breaking when data is missing.
 - **Style Isolation**: Keep SASS rules scoped to the component's root class (e.g., `.c-hero`) to prevent global style leakage.
+
+## Component List
+
+### card
+
+- **Path**: `src/lib/components/card`
+- **Status**: Ready
+
+### favicons
+
+- **Path**: `src/lib/components/favicons`
+- **Status**: System
+
+### footer
+
+- **Path**: `src/lib/components/footer`
+- **Status**: Ready
+
+### header
+
+- **Path**: `src/lib/components/header`
+- **Status**: Ready
+
+### hero
+
+- **Path**: `src/lib/components/hero`
+- **Status**: Ready
+
+### meta-rich-snippets
+
+- **Path**: `src/lib/components/meta-rich-snippets`
+- **Status**: System
