@@ -4,7 +4,7 @@ import { Transform } from 'node:stream'
 import todoPlugin from 'gulp-todo'
 import gulp from 'gulp'
 
-import { getRelativePath } from '../utils/helpers.js'
+import { getRelativePath, isPrivateFile } from '../utils/helpers.js'
 import loggerLib from '../utils/logger.js'
 
 const logger = loggerLib.createLogger('TODO')
@@ -23,7 +23,7 @@ const MARKDOWN_TABLE_HEADER = [
  * @param {string} content - Markdown content to check
  * @returns {boolean} True if content is effectively empty
  */
-function isReportEmpty(content) {
+export function isReportEmpty(content) {
   const lines = content.trim().split('\n')
   if (lines.length !== MARKDOWN_TABLE_HEADER.length) return false
 
@@ -50,6 +50,15 @@ export default function generateTodo() {
       '!./gulp/**/*.test.js',
       '!./gulp/**/*.spec.js',
     ])
+    .pipe(
+      new Transform({
+        objectMode: true,
+        transform(file, _enc, cb) {
+          if (isPrivateFile(file.path)) return cb(null, null)
+          cb(null, file)
+        },
+      })
+    )
     .pipe(todoPlugin({ fileName: DEFAULT_REPORTS_FILE }))
     .pipe(
       new Transform({

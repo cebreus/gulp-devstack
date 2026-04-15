@@ -4,7 +4,7 @@ import revDeleteOriginal from 'gulp-rev-delete-original'
 import revRewrite from 'gulp-rev-rewrite'
 import { dest, src } from 'gulp'
 
-import { streamToPromise } from '../utils/helpers.js'
+import { isPrivateFile, streamToPromise } from '../utils/helpers.js'
 import loggerLib from '../utils/logger.js'
 
 /**
@@ -28,9 +28,20 @@ export async function generateRevision(options) {
   const { inputAssets, inputHtml, buildBase, manifestPath } = options
 
   try {
+    const { Transform } = await import('node:stream')
+
     // Phase 1: Create fingerprints and manifest
     logger.debug('Generating asset fingerprints and manifest...')
     const assetPipeline = src(inputAssets, { base: buildBase })
+      .pipe(
+        new Transform({
+          objectMode: true,
+          transform(file, _enc, cb) {
+            if (isPrivateFile(file.path)) return cb(null, null)
+            cb(null, file)
+          },
+        })
+      )
       .pipe(rev())
       .pipe(revDeleteOriginal())
       .pipe(dest(buildBase))
@@ -44,6 +55,15 @@ export async function generateRevision(options) {
     const manifestBuffer = fs.readFileSync(manifestPath)
 
     const htmlPipeline = src(inputHtml, { base: buildBase })
+      .pipe(
+        new Transform({
+          objectMode: true,
+          transform(file, _enc, cb) {
+            if (isPrivateFile(file.path)) return cb(null, null)
+            cb(null, file)
+          },
+        })
+      )
       .pipe(revRewrite({ manifest: manifestBuffer }))
       .pipe(dest(buildBase))
 

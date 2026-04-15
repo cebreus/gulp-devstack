@@ -1,12 +1,14 @@
 import fs from 'node:fs'
 import { createRequire } from 'node:module'
 import path from 'node:path'
+import { Transform } from 'node:stream'
 import pc from 'picocolors'
 import gulp from 'gulp'
 
 import {
   attachPipelineLogging,
   getRelativePath,
+  isPrivateFile,
   streamToPromise,
 } from '../utils/helpers.js'
 import loggerLib from '../utils/logger.js'
@@ -52,11 +54,24 @@ export async function processFonts(input, outputDir, options = {}) {
       const cssStats = fs.statSync(cssFile)
       const fonts = fs.readdirSync(fontsDir)
 
-      if (inputStats.mtime <= cssStats.mtime && fonts.length > 0) {
+      const now = new Date()
+      const isCssFromFuture = cssStats.mtime > new Date(now.getTime() + 5000)
+
+      if (
+        !isCssFromFuture &&
+        inputStats.mtime <= cssStats.mtime &&
+        fonts.length > 0
+      ) {
         logger.debug(
           `Fonts are up to date (last updated: ${pc.yellow(cssStats.mtime.toLocaleString())}), skipping.`
         )
         return
+      }
+
+      if (isCssFromFuture) {
+        logger.warn(
+          `Font cache file ${pc.cyan(getRelativePath(cssFile))} has a future timestamp. Forcing rebuild.`
+        )
       }
     }
 
@@ -75,6 +90,15 @@ export async function processFonts(input, outputDir, options = {}) {
 
     const fontPipeline = gulp
       .src(input)
+      .pipe(
+        new Transform({
+          objectMode: true,
+          transform(file, _enc, cb) {
+            if (isPrivateFile(file.path)) return cb(null, null)
+            cb(null, file)
+          },
+        })
+      )
       .pipe(googleWebFontsPlugin(pluginConfig))
       .pipe(gulp.dest(outputDir))
 

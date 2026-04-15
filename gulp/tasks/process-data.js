@@ -6,6 +6,7 @@ import matter from 'gray-matter'
 import gulp from 'gulp'
 
 import { siteDefaults } from '../../src/config/site.js'
+import { isPrivateFile } from '../utils/helpers.js'
 import loggerLib from '../utils/logger.js'
 
 const logger = loggerLib.createLogger('Data')
@@ -222,14 +223,28 @@ export function processData(src, dest, options = {}) {
   let processedCount = 0
   const globalMenuItems = []
   const generatedFiles = []
+  const usedPageIds = new Set()
 
   return gulp.src(src).pipe(
     new Transform({
       objectMode: true,
       async transform(file, _enc, cb) {
         try {
-          const rawContent = file.contents.toString()
+          if (isPrivateFile(file.path)) {
+            logger.verbose(
+              `Skipping private content file: ${path.basename(file.path)}`
+            )
+            return cb(null, null)
+          }
+
+          const rawContent = file.contents.toString().trim()
           const fileName = path.basename(file.path, path.extname(file.path))
+
+          if (!rawContent) {
+            logger.warn(`Skipping empty data file: ${path.basename(file.path)}`)
+            return cb(null, null)
+          }
+
           const { data: frontmatter, content } = matter(rawContent)
 
           const pageLocation = resolvePageLocation(
@@ -237,8 +252,6 @@ export function processData(src, dest, options = {}) {
             fileName,
             routesRoot
           )
-          const outputDir = path.join(dest, pageLocation.relativeDir)
-          mkdirSync(outputDir, { recursive: true })
 
           let jsonData = buildPageData(
             frontmatter,
@@ -248,6 +261,24 @@ export function processData(src, dest, options = {}) {
             options,
             siteDefaults
           )
+
+          if (usedPageIds.has(jsonData.page_id)) {
+            logger.error(
+              `Duplicate page_id '${jsonData.page_id}' found in ${path.basename(file.path)}. This will cause menu conflicts.`
+            )
+          }
+          usedPageIds.add(jsonData.page_id)
+
+          if (!jsonData.title) {
+            jsonData.title =
+              fileName.charAt(0).toUpperCase() + fileName.slice(1)
+            logger.verbose(
+              `Missing title in ${path.basename(file.path)}, using fallback: ${jsonData.title}`
+            )
+          }
+
+          const outputDir = path.join(dest, pageLocation.relativeDir)
+          mkdirSync(outputDir, { recursive: true })
 
           // Handle Menu
           const menuEntry = extractMenuEntry(jsonData, fileName)

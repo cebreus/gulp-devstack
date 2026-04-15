@@ -189,4 +189,18 @@ export function attachPipelineLogging({
   return stream
 }
 
+/**
+ * Determines if a file path points to a "private" file or directory
+ * (starts with _ or __).
+ * @param {string} filePath - Path to evaluate
+ * @returns {boolean} True if the file or any parent directory in its path is private
+ */
+export function isPrivateFile(filePath) {
+  if (!filePath) return false
+  const segments = filePath.split(/[/\\]/)
+  return segments.some(
+    (segment) => segment.startsWith('_') || segment.startsWith('__')
+  )
+}
+
 export { getEnv } from './env.js'

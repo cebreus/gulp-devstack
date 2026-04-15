@@ -9,6 +9,7 @@ import {
   getDirFromGlob,
   getRelativePath,
   handleEmptyPaths,
+  isPrivateFile,
   streamToPromise,
   suppressOutdatedBootstrapWarnings,
   toKebabCase,
@@ -136,6 +137,33 @@ describe('Helpers Utility', () => {
         false
       )
       assert.strictEqual(suppressOutdatedBootstrapWarnings(null), false)
+    })
+  })
+
+  describe('isPrivateFile', () => {
+    it('should return true for files starting with _ or __', () => {
+      assert.strictEqual(isPrivateFile('_private.njk'), true)
+      assert.strictEqual(isPrivateFile('__hidden.js'), true)
+    })
+
+    it('should return true if any parent directory starts with _ or __', () => {
+      assert.strictEqual(
+        isPrivateFile('src/lib/components/_debug/test.js'),
+        true
+      )
+      assert.strictEqual(isPrivateFile('_drafts/post.md'), true)
+      assert.strictEqual(isPrivateFile('src/__tests/helper.js'), true)
+    })
+
+    it('should return false for standard files and paths', () => {
+      assert.strictEqual(isPrivateFile('src/main.js'), false)
+      assert.strictEqual(isPrivateFile('index.njk'), false)
+      assert.strictEqual(isPrivateFile('assets/css/_variables.scss'), true)
+    })
+
+    it('should return false for empty or null input', () => {
+      assert.strictEqual(isPrivateFile(''), false)
+      assert.strictEqual(isPrivateFile(null), false)
     })
   })
 

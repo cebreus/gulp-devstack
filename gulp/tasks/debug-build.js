@@ -1,8 +1,10 @@
-import fs, { glob } from 'node:fs/promises'
+import fs from 'node:fs/promises'
 import path from 'node:path'
+import { glob } from 'glob'
 import pc from 'picocolors'
 
 import { buildBase, routesBase } from '../config.js'
+import { isPrivateFile } from '../utils/helpers.js'
 import loggerLib from '../utils/logger.js'
 
 const logger = loggerLib.createLogger('Debug')
@@ -10,15 +12,37 @@ const logger = loggerLib.createLogger('Debug')
 /**
  * Diagnostic task for verifying the build pipeline state and file existence.
  * Scans key directories and reports potential issues with templates or generated output.
+ * @param {object} [options] - Options for the diagnostic task
+ * @param {string} [options.routesBaseOverride] - Override for routes base directory
+ * @param {Function} [options.buildBaseOverride] - Override for build base directory getter
  * @returns {Promise<void>} Resolves when the diagnostic report is complete
  */
-export async function debugBuild() {
-  logger.info(`${pc.blue('---')} Build Diagnostic Report ${pc.blue('---')}`)
-  // 1. Audit Route Templates
-  const routesGlobPattern = `${routesBase}/**/*.*`.replace(/\\/g, '/')
-  const foundRouteFiles = await Array.fromAsync(glob(routesGlobPattern))
+export async function debugBuild(options = {}) {
+  const activeRoutesBase = options.routesBaseOverride || routesBase
+  const activeBuildBase = options.buildBaseOverride || buildBase
 
-  logger.debug(`Found ${foundRouteFiles.length} source files in ${routesBase}`)
+  logger.info(`${pc.blue('---')} Build Diagnostic Report ${pc.blue('---')}`)
+
+  // Safety check for base directories
+  const routesExist = await fs
+    .access(activeRoutesBase)
+    .then(() => true)
+    .catch(() => false)
+
+  if (!routesExist) {
+    logger.warn(`Source directory missing: ${pc.red(activeRoutesBase)}`)
+    return
+  }
+
+  // 1. Audit Route Templates
+  const routesGlobPattern = `${activeRoutesBase}/**/*.*`.replace(/\\/g, '/')
+  const foundRouteFiles = (await glob(routesGlobPattern)).filter(
+    (f) => !isPrivateFile(f)
+  )
+
+  logger.debug(
+    `Found ${foundRouteFiles.length} source files in ${activeRoutesBase}`
+  )
 
   for (const filePath of foundRouteFiles) {
     try {
@@ -29,7 +53,7 @@ export async function debugBuild() {
   }
 
   // 2. Audit Main Entry Point
-  const indexTemplatePath = path.join(routesBase, 'index.njk')
+  const indexTemplatePath = path.join(activeRoutesBase, 'index.njk')
   try {
     const templateExists = await fs
       .access(indexTemplatePath)
@@ -51,9 +75,20 @@ export async function debugBuild() {
   }
 
   // 3. Audit Generated HTML Output
-  const buildDir = buildBase()
+  const buildDir = activeBuildBase()
+
+  const buildDirExists = await fs
+    .access(buildDir)
+    .then(() => true)
+    .catch(() => false)
+
+  if (!buildDirExists) {
+    logger.warn(`Build directory missing: ${pc.red(buildDir)}`)
+    return
+  }
+
   const generatedHtmlGlob = path.join(buildDir, '**/*.html').replace(/\\/g, '/')
-  const foundHtmlFiles = await Array.fromAsync(glob(generatedHtmlGlob))
+  const foundHtmlFiles = await glob(generatedHtmlGlob)
 
   if (foundHtmlFiles.length === 0) {
     logger.warn(`No HTML output found in ${pc.yellow(buildDir)}!`)

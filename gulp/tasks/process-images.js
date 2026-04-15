@@ -1,11 +1,17 @@
 import path from 'node:path'
 import { Transform } from 'node:stream'
+import imagemin from 'gulp-imagemin'
+import gulpNewer from 'gulp-newer'
+import upng from 'gulp-upng'
+import svgo from 'imagemin-svgo'
+import sharp from 'sharp'
 import gulp from 'gulp'
 
 import * as config from '../config.js'
 import {
   attachPipelineLogging,
   getRelativePath,
+  isPrivateFile,
   streamToPromise,
 } from '../utils/helpers.js'
 import loggerLib from '../utils/logger.js'
@@ -62,7 +68,6 @@ export function detectType(buffer) {
  * @returns {Promise<string>} Data URI string
  */
 export async function getLqsPlaceholder(buffer) {
-  const { default: sharp } = await import('sharp')
   const lqsBuffer = await sharp(buffer)
     .resize(20)
     .blur(1)
@@ -81,8 +86,15 @@ export function validateImage(_expectedType) {
     objectMode: true,
     transform(file, _enc, cb) {
       if (!file.isBuffer()) return cb(null, file)
-      const actualType = detectType(file.contents)
       const fileName = path.basename(file.path)
+
+      if (file.contents.length === 0) {
+        logger.warn(`[Images] Skipping empty file: ${fileName}`)
+        file._isInvalid = true
+        return cb(null, file)
+      }
+
+      const actualType = detectType(file.contents)
 
       if (
         file.contents[0] === 0xef &&
@@ -112,7 +124,6 @@ export function validateImage(_expectedType) {
  * @returns {Promise<Buffer>} The optimized image buffer
  */
 export async function optimizeWithSharp(buffer, targetType, quality) {
-  const { default: sharp } = await import('sharp')
   const instance = sharp(buffer).rotate()
 
   switch (targetType) {
@@ -145,7 +156,6 @@ async function executeRasterTask(src, dest, targetType, options = {}) {
   const { logPrefix = 'Images', quality = 85, lqs = false } = options
   const targetDir = dest || config.imagesBuild()
   const processedFiles = []
-  const { default: gulpNewer } = await import('gulp-newer')
 
   const pipeline = gulp
     .src(src, { encoding: false })
@@ -173,6 +183,11 @@ async function executeRasterTask(src, dest, targetType, options = {}) {
               quality
             )
 
+            const savedBytes = original.length - optimized.length
+            const percentSaved = Math.round(
+              (savedBytes / original.length) * 100
+            )
+
             if (
               targetType === 'webp' ||
               targetType === 'avif' ||
@@ -183,9 +198,15 @@ async function executeRasterTask(src, dest, targetType, options = {}) {
                 path.extname(file.path),
                 `.${targetType}`
               )
+
+              if (percentSaved > 10) {
+                logger.verbose(
+                  `[${logPrefix}] ${path.basename(file.path)} optimized: -${percentSaved}% (${(savedBytes / 1024).toFixed(1)} KB saved)`
+                )
+              }
             } else {
               logger.verbose(
-                `[${logPrefix}] Keeping original ${path.basename(file.path)}`
+                `[${logPrefix}] Keeping original ${path.basename(file.path)} (optimized was larger)`
               )
             }
 
@@ -249,8 +270,6 @@ export async function optimizeJpg(src, dest, options = {}) {
 export async function optimizePng(src, dest) {
   const targetDir = dest || config.imagesBuild()
   const processedFiles = []
-  const { default: gulpNewer } = await import('gulp-newer')
-  const { default: upng } = await import('gulp-upng')
 
   const pipeline = gulp
     .src(src, { encoding: false })
@@ -291,10 +310,17 @@ export async function optimizePng(src, dest) {
  */
 export async function optimizeSvg(src, dest) {
   const targetDir = dest || config.imagesBuild()
-  const { default: imagemin } = await import('gulp-imagemin')
-  const { default: svgo } = await import('imagemin-svgo')
   const pipeline = gulp
     .src(src, { encoding: false })
+    .pipe(
+      new Transform({
+        objectMode: true,
+        transform(file, _enc, cb) {
+          if (isPrivateFile(file.path)) return cb(null, null)
+          cb(null, file)
+        },
+      })
+    )
     .pipe(validateImage('svg'))
     .pipe(
       imagemin([

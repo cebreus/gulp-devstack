@@ -1,6 +1,6 @@
-import purgecss from 'gulp-purgecss'
 import { dest, src } from 'gulp'
 
+import { isPrivateFile } from '../utils/helpers.js'
 import loggerLib from '../utils/logger.js'
 
 const logger = loggerLib.createLogger('PurgeCSS')
@@ -11,10 +11,21 @@ const logger = loggerLib.createLogger('PurgeCSS')
  * @param {string|string[]} inputCss - Path(s) to CSS files to purge
  * @param {string|string[]} inputHtml - Path(s) to HTML files for selector analysis
  * @param {string} outputDir - Destination directory
- * @returns {import('node:stream').Readable} Gulp stream
+ * @returns {Promise<import('node:stream').Readable>} Gulp stream
  */
-export function purgeCss(inputCss, inputHtml, outputDir) {
-  const contentSources = Array.isArray(inputHtml) ? inputHtml : [inputHtml]
+export async function purgeCss(inputCss, inputHtml, outputDir) {
+  if (!inputCss || !inputHtml || !outputDir) {
+    logger.warn('PurgeCSS task skipped: invalid input or output parameters.')
+    const { Readable } = await import('node:stream')
+    return Readable.from([])
+  }
+
+  const { default: purgecss } = await import('gulp-purgecss')
+  const { Transform } = await import('node:stream')
+
+  const contentSources = (
+    Array.isArray(inputHtml) ? inputHtml : [inputHtml]
+  ).filter((f) => !isPrivateFile(f))
 
   // Safelist contains selectors that should NEVER be purged,
   // typically those added dynamically by JS (Bootstrap, sliders, etc.)
@@ -42,7 +53,16 @@ export function purgeCss(inputCss, inputHtml, outputDir) {
     deep: [/^data-bs-popper/, /^tns/, /^sl/],
   }
 
-  return src(inputCss)
+  const purgePipeline = src(inputCss)
+    .pipe(
+      new Transform({
+        objectMode: true,
+        transform(file, _enc, cb) {
+          if (isPrivateFile(file.path)) return cb(null, null)
+          cb(null, file)
+        },
+      })
+    )
     .pipe(
       purgecss({
         content: contentSources,
@@ -50,12 +70,16 @@ export function purgeCss(inputCss, inputHtml, outputDir) {
       })
     )
     .pipe(dest(outputDir))
-    .on('end', () => {
-      logger.verbose('PurgeCSS operation completed successfully.')
-    })
-    .on('error', (err) => {
-      logger.error('PurgeCSS failed to process files.', err)
-    })
+
+  purgePipeline.on('end', () => {
+    logger.verbose('PurgeCSS operation completed successfully.')
+  })
+
+  purgePipeline.on('error', (err) => {
+    logger.error('PurgeCSS failed to process files.', err)
+  })
+
+  return purgePipeline
 }
 
 export default purgeCss

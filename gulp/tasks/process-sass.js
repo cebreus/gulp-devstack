@@ -4,6 +4,7 @@ import cssnano from 'cssnano'
 import { glob } from 'glob'
 import concat from 'gulp-concat'
 import prettify from 'gulp-jsbeautifier'
+import newer from 'gulp-newer'
 import postcss from 'gulp-postcss'
 import replace from 'gulp-replace'
 import gulpSass from 'gulp-sass'
@@ -14,6 +15,7 @@ import gulp from 'gulp'
 
 import * as defaultConfig from '../config.js'
 import {
+  isPrivateFile,
   streamToPromise,
   suppressOutdatedBootstrapWarnings,
 } from '../utils/helpers.js'
@@ -121,6 +123,13 @@ export function buildSassPipeline({
 
   let pipeline = gulp.src(src, { allowEmpty: true })
 
+  // Use gulp-newer for incremental builds
+  if (outputFilename) {
+    pipeline = pipeline.pipe(newer(path.join(dest, outputFilename)))
+  } else {
+    pipeline = pipeline.pipe(newer({ dest, ext: '.css' }))
+  }
+
   // Auto-prepend global configuration (@use/forward must be first)
   pipeline = pipeline.pipe(
     replace(SASS_PRELUDE_REGEX, function (match) {
@@ -161,10 +170,22 @@ export function buildSassPipeline({
         this.emit('end')
         return
       }
-      logger.error(
-        `${loggerContext} Compilation Error: ${this.file?.relative || 'File'}`,
-        error.message || error
-      )
+
+      const filePath = error.file
+        ? pc.cyan(path.relative(process.cwd(), error.file))
+        : 'unknown file'
+      const message = error.messageOriginal || error.message
+
+      logger.error(`${loggerContext} Compilation Error in ${filePath}`)
+      console.log(pc.red('--------------------------------------------------'))
+      console.log(`${pc.yellow('Error:')} ${message}`)
+      if (error.line) {
+        console.log(
+          `${pc.yellow('Location:')} line ${error.line}, column ${error.column}`
+        )
+      }
+      console.log(pc.red('--------------------------------------------------'))
+
       this.emit('end')
     })
   )
@@ -252,11 +273,12 @@ async function compileScssGroup({
 }) {
   try {
     const pattern = path.join(sourceDir, '**/*.scss').replace(/\\/g, '/')
-    const files = await glob(pattern)
+    const allFiles = await glob(pattern)
+    const files = allFiles.filter((f) => !isPrivateFile(f))
     if (files.length === 0) return
 
     return processSass(
-      pattern,
+      files,
       dest,
       outputFilename,
       defaultConfig.postcssPluginsBase(),

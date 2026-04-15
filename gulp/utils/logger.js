@@ -60,6 +60,14 @@ function composePrefix(level, subLabel = '') {
  * @private
  */
 function dispatch(level, subLabel, ...data) {
+  if (level === 'error') {
+    // Visual alert for errors: Extra spacing and terminal bell (\u0007)
+    console.log('\n' + pc.bgRed(pc.white(pc.bold(' ERROR ALERT '))).repeat(3))
+    const prefix = composePrefix(level, subLabel)
+    console.log(prefix, '\u0007', ...data)
+    console.log(pc.red('━'.repeat(50)) + '\n')
+    return
+  }
   const prefix = composePrefix(level, subLabel)
   console.log(prefix, ...data)
 }

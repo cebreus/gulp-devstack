@@ -9,6 +9,7 @@ import faviconsTask from './gulp/tasks/generate-favicons.js'
 import revisionTask from './gulp/tasks/generate-revision.js'
 import sriTask from './gulp/tasks/generate-sri.js'
 import todoTask from './gulp/tasks/generate-todo.js'
+import lintTemplates from './gulp/tasks/lint-templates.js'
 import componentsTask from './gulp/tasks/manage-components.js'
 import datasetPrepare from './gulp/tasks/process-data.js'
 import fontLoad from './gulp/tasks/process-fonts.js'
@@ -43,15 +44,11 @@ if (!BUILD_MODE) {
 }
 
 // Initialize environment variables based on BUILD_MODE with fallback hierarchy
-const envFiles = [`.env.${BUILD_MODE}`, '.env.local', '.env']
-
-for (const envFile of envFiles) {
-  if (existsSync(envFile)) {
-    // Note: Node's loadEnvFile does not overwrite already defined process.env variables,
-    // which results in the desired hierarchy priority (Shell > .env.mode > .env.local).
-    process.loadEnvFile(envFile)
-  }
-}
+// Node's loadEnvFile does not overwrite already defined process.env variables,
+// which results in the desired hierarchy priority (Shell > .env.mode > .env.local > .env).
+;[`.env.${BUILD_MODE}`, '.env.local', '.env']
+  .filter((file) => existsSync(file))
+  .forEach((file) => process.loadEnvFile(file))
 
 config.getConfig(BUILD_MODE)
 
@@ -330,20 +327,21 @@ export function html() {
 export async function images() {
   const imgConfig = config.imageOptimizationConfig()
 
-  await optimizeJpg(config.imagesJpg, config.imagesBuild(), imgConfig.jpg)
-  await optimizePng(config.imagesPng, config.imagesBuild())
-  await optimizeSvg(config.imagesSvg, config.imagesBuild())
-
-  await convertToWebp(
-    [config.imagesJpg, config.imagesPng],
-    config.imagesBuild(),
-    imgConfig.webp
-  )
-  await convertToAvif(
-    [config.imagesJpg, config.imagesPng],
-    config.imagesBuild(),
-    imgConfig.avif
-  )
+  await Promise.all([
+    optimizeJpg(config.imagesJpg, config.imagesBuild(), imgConfig.jpg),
+    optimizePng(config.imagesPng, config.imagesBuild()),
+    optimizeSvg(config.imagesSvg, config.imagesBuild()),
+    convertToWebp(
+      [config.imagesJpg, config.imagesPng],
+      config.imagesBuild(),
+      imgConfig.webp
+    ),
+    convertToAvif(
+      [config.imagesJpg, config.imagesPng],
+      config.imagesBuild(),
+      imgConfig.avif
+    ),
+  ])
 }
 
 /**
@@ -370,10 +368,10 @@ export function fonts() {
 
 /**
  * Task: Purge unused CSS
- * @returns {import('node:stream').Readable} Gulp stream
+ * @returns {Promise<import('node:stream').Readable>} Gulp stream
  */
-export function purge() {
-  return purgeCss(
+export async function purge() {
+  return await purgeCss(
     [`${config.sassBuild()}/**/*.css`, `!${config.sassBuild()}/**/*.min.css`],
     [
       `${config.srcBase}/**/*.njk`,
@@ -402,10 +400,10 @@ export function revision() {
 
 /**
  * Task: SRI Hashing
- * @returns {import('node:stream').Readable} Gulp stream
+ * @returns {Promise<import('node:stream').Readable>} Gulp stream
  */
-export function sri() {
-  return sriTask(`${config.buildBase()}/**/*.html`, config.buildBase())
+export async function sri() {
+  return await sriTask(`${config.buildBase()}/**/*.html`, config.buildBase())
 }
 
 /**
@@ -439,15 +437,22 @@ export function todo() {
 function watchFiles() {
   try {
     initializeServer()
+    // CSS uses stream injection (no page reload)
     gulp.watch(config.sassWatch, gulp.series(css, refreshServer))
-    gulp.watch(config.jsFiles, gulp.series(js, refreshServer))
-    gulp.watch(`${config.imagesBase}/**/*`, gulp.series(images, refreshServer))
+
+    // JS and Images use full page reload for stability
+    gulp.watch(config.jsFiles, gulp.series(js, reloadBrowser))
+    gulp.watch(`${config.imagesBase}/**/*`, gulp.series(images, reloadBrowser))
+
     gulp.watch(
       `${config.iconsBase}/**/*.svg`,
       gulp.series(dataset, html, reloadBrowser)
     )
     gulp
-      .watch(config.templateWatchPaths, gulp.series(dataset, html))
+      .watch(
+        config.templateWatchPaths,
+        gulp.series(lintTemplates, dataset, html)
+      )
       .on('change', reloadBrowser)
   } catch (error) {
     logger.error('Failed to start development server or watchers:', error)
@@ -457,40 +462,43 @@ function watchFiles() {
 
 const buildPipeline = gulp.series(
   clean,
-  images,
-  copy,
-  dataset,
-  favicons,
-  fonts,
-  gulp.parallel(css, js),
-  purge, // Ensure CSS is purged before HTML task inlines it
+  // 1. Generation: create all independent intermediate files
+  gulp.parallel(images, dataset, favicons, fonts),
+  // 2. Processing: depends on step 1 outputs
+  gulp.parallel(copy, js, css),
+  // 3. CSS Cleanup: must happen before HTML task if CSS is inlined
+  purge,
+  // 4. HTML generation and inlining
   html,
-  revision,
-  sri,
-  validate
+  // 5. Final transformations (strict sequence)
+  revision, // Fingerprinting changes filenames
+  sri, // SRI must calculate hashes of the final (fingerprinted) files
+  // 6. Verification and Reporting (safe to run in parallel after SRI)
+  gulp.parallel(validate, debug, todo)
 )
 
 const exportPipeline = gulp.series(
   clean,
-  copy,
-  favicons,
-  fonts,
-  dataset,
-  css,
-  js,
-  purge, // Ensure CSS is purged before HTML task inlines it
+  // 1. Generation
+  gulp.parallel(dataset, favicons, fonts),
+  // 2. Processing
+  gulp.parallel(copy, js, css),
+  // 3. Post-processing
+  purge,
   html,
   images,
-  validate
+  revision,
+  sri,
+  gulp.parallel(validate, debug, todo)
 )
 
 const servePipeline = gulp.series(
   clean,
-  images,
-  copy,
-  dataset,
-  fonts,
-  gulp.parallel(css, js),
+  // 1. Generation
+  gulp.parallel(images, dataset, fonts),
+  // 2. Processing
+  gulp.parallel(copy, js, css),
+  // 3. Serve phase
   html,
   debug,
   todo,

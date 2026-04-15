@@ -2,7 +2,7 @@ import { Transform } from 'node:stream'
 import { HtmlValidate } from 'html-validate'
 import { src } from 'gulp'
 
-import { getRelativePath } from '../utils/helpers.js'
+import { getRelativePath, isPrivateFile } from '../utils/helpers.js'
 import loggerLib from '../utils/logger.js'
 
 const logger = loggerLib.createLogger('Validate')
@@ -28,6 +28,7 @@ export function validateHtml(input) {
       new Transform({
         objectMode: true,
         transform: async function (file, _enc, cb) {
+          if (isPrivateFile(file.path)) return cb(null, null)
           if (file.isNull()) return cb(null, file)
           if (file.isStream())
             return cb(new Error('Streaming is not supported for validation.'))

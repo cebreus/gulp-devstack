@@ -1,17 +1,19 @@
 import fs from 'node:fs'
+import { readFile } from 'node:fs/promises'
 import path from 'node:path'
 import { Transform } from 'node:stream'
 import { glob } from 'glob'
 import data from 'gulp-data'
 import inject from 'gulp-inject'
 import jsbeautifier from 'gulp-jsbeautifier'
+import newer from 'gulp-newer'
 import nunjucksRender from 'gulp-nunjucks-render'
 import MarkdownIt from 'markdown-it'
 import gulp from 'gulp'
 
 import { siteDefaults } from '../../src/config/site.js'
 import * as config from '../config.js'
-import { streamToPromise } from '../utils/helpers.js'
+import { isPrivateFile, streamToPromise } from '../utils/helpers.js'
 import loggerLib from '../utils/logger.js'
 
 /**
@@ -33,6 +35,30 @@ import loggerLib from '../utils/logger.js'
 
 const logger = loggerLib.createLogger('HTML')
 const markdownParserCache = new Map()
+const cssCache = new Map()
+
+/**
+ * Pre-loads CSS files into memory cache asynchronously.
+ * Prevents blocking synchronous I/O during the render phase.
+ * @param {string[]} cssPaths - List of absolute paths to CSS files
+ */
+async function preloadCssCache(cssPaths) {
+  if (!cssPaths || cssPaths.length === 0) return
+
+  await Promise.all(
+    cssPaths.map(async (fullPath) => {
+      if (cssCache.has(fullPath)) return
+
+      try {
+        const content = await readFile(fullPath, 'utf8')
+        cssCache.set(fullPath, content)
+      } catch (err) {
+        logger.debug(`Could not preload CSS: ${fullPath} - ${err.message}`)
+        cssCache.set(fullPath, null)
+      }
+    })
+  )
+}
 
 /**
  * Strips XHTML-style self-closing slashes from HTML5 void elements only.
@@ -55,9 +81,6 @@ export function stripXhtmlSlashes(html) {
  * @returns {string} Cleaned HTML string
  */
 export function cleanHtmlComments(html) {
-  // First, protect script and style contents by temporarily replacing them or using a more precise regex.
-  // The current project regex is: /<!--(?!\s*\[if|\s*<!|\s*\])(?![\s\S]*?(?:<script|<style)[\s\S]*?<!--)[\s\S]*?-->/g
-  // It has issues with script tags. Let's use a simpler but safer approach for the task.
   return html.replace(
     /<!--(?!\s*\[if|\s*<!|\s*\])[\s\S]*?-->/g,
     (match, offset, fullText) => {
@@ -318,7 +341,7 @@ async function resolveTemplateSources(buildConfig) {
     const fileName = path.basename(filePath)
     return (
       !fileName.startsWith('layout-') &&
-      !fileName.startsWith('_') &&
+      !isPrivateFile(filePath) &&
       fileName !== 'menu.njk'
     )
   })
@@ -337,6 +360,7 @@ async function resolveTemplateSources(buildConfig) {
     return (
       baseName !== 'menu.json' &&
       !baseName.startsWith('layout-') &&
+      !isPrivateFile(filePath) &&
       !njkShadowPaths.includes(relativePath)
     )
   })
@@ -384,11 +408,11 @@ export function transformJsonToHtml(file, params) {
 }
 
 /**
- * Discovers and reads inline CSS assets for a given route.
+ * Discovers and returns inline CSS assets for a given route using cache.
  * @param {string} routeRelDir - Relative directory of the route
  * @param {string} routeBaseName - Base name of the route file (without ext)
  * @param {string} outputBase - Build output directory
- * @returns {string[]} Array of CSS content strings
+ * @returns {string[]} Array of CSS content strings from cache
  */
 function discoverInlineStyles(routeRelDir, routeBaseName, outputBase) {
   let pageAssetName = routeRelDir !== '.' ? routeRelDir : routeBaseName
@@ -403,14 +427,12 @@ function discoverInlineStyles(routeRelDir, routeBaseName, outputBase) {
   const styles = []
   for (const name of candidates) {
     const fullPath = path.join(outputBase, 'assets/css', name)
-    if (!fs.existsSync(fullPath)) continue
-    try {
-      const cssContent = fs.readFileSync(fullPath, 'utf8')
-      if (!styles.includes(cssContent)) {
-        styles.push(cssContent)
+
+    if (cssCache.has(fullPath)) {
+      const cachedContent = cssCache.get(fullPath)
+      if (cachedContent && !styles.includes(cachedContent)) {
+        styles.push(cachedContent)
       }
-    } catch {
-      // Ignore read errors
     }
   }
   return styles
@@ -465,6 +487,35 @@ export function transformNjkToHtml(file, params) {
 }
 
 /**
+ * Determines if any shared template (layout or component) has changed since the last build.
+ * This is used to bypass incremental build and force a full re-render.
+ * @param {string[]} sharedPaths - List of shared template directories
+ * @param {string} outputPath - Build output directory
+ * @returns {Promise<boolean>} True if a full rebuild is required
+ */
+async function checkSharedDependencies(sharedPaths, outputPath) {
+  if (!fs.existsSync(outputPath)) return true
+
+  const outputStat = fs.statSync(outputPath)
+  const outputMtime = outputStat.mtimeMs
+
+  for (const dir of sharedPaths) {
+    if (!fs.existsSync(dir)) continue
+
+    const files = await glob(path.join(dir, '**/*.*').replace(/\\/g, '/'))
+    for (const file of files) {
+      if (fs.statSync(file).mtimeMs > outputMtime) {
+        logger.verbose(
+          `Shared dependency changed: ${file}. Forcing full rebuild.`
+        )
+        return true
+      }
+    }
+  }
+  return false
+}
+
+/**
  * Core HTML processing engine using Nunjucks and Gulp.
  * @param {HtmlBuildParams} params - Configuration parameters
  * @returns {Promise<import('node:stream').Readable>} Gulp stream result
@@ -477,17 +528,41 @@ export async function executeHtmlBuild(params) {
     now: new Date().toISOString(),
   }
 
+  // Preload CSS cache before starting the stream to avoid sync I/O in discoverInlineStyles
+  if (params.injectCss) {
+    await preloadCssCache(params.injectCss)
+  }
+
+  // Shared dependency check: if any layout or component changed, we force re-render everything
+  const forceRebuild = await checkSharedDependencies(
+    [params.processPaths[0], params.processPaths[1]], // Templates & Components
+    params.output
+  )
+
   const nunjucksSettings = {
     path: params.processPaths,
     envOptions: { autoescape: false, trimBlocks: true, lstripBlocks: true },
   }
 
-  let htmlPipeline = gulp
-    .src(params.input)
+  let htmlPipeline = gulp.src(params.input)
+
+  // Incremental Build Logic
+  if (!forceRebuild) {
+    htmlPipeline = htmlPipeline.pipe(
+      newer({
+        dest: params.output,
+        map: (relPath) => relPath.replace(/\.(njk|json|md)$/, '.html'),
+      })
+    )
+  }
+
+  htmlPipeline = htmlPipeline
     .pipe(
       new Transform({
         objectMode: true,
         transform(file, _enc, cb) {
+          if (isPrivateFile(file.path)) return cb()
+
           const basename = path.basename(file.path)
           if (basename === 'menu.json' || basename.startsWith('layout-'))
             return cb()
@@ -537,7 +612,10 @@ export async function executeHtmlBuild(params) {
             )
               return ''
             const dateObj = new Date(date)
-            if (isNaN(dateObj.getTime())) return ''
+            if (isNaN(dateObj.getTime())) {
+              logger.warn(`Invalid date value provided to date filter: ${date}`)
+              return date
+            }
             const lang =
               locale || this.ctx.page?.lang || siteContext.meta?.lang || 'en-US'
 
@@ -549,8 +627,32 @@ export async function executeHtmlBuild(params) {
       })
     )
 
-  htmlPipeline = injectSet(htmlPipeline, params.injectCss, 'css', params)
-  htmlPipeline = injectSet(htmlPipeline, params.injectJs, 'js', params)
+  const usedAssets = new Set()
+
+  htmlPipeline = injectSet(
+    htmlPipeline,
+    params.injectCss,
+    'css',
+    params,
+    (path, _file) => {
+      const url = resolveInjectionUrl(path, params.output)
+      if (usedAssets.has(url)) return ''
+      usedAssets.add(url)
+      return `<link rel="stylesheet" href="${url}">`
+    }
+  )
+  htmlPipeline = injectSet(
+    htmlPipeline,
+    params.injectJs,
+    'js',
+    params,
+    (path) => {
+      const url = resolveInjectionUrl(path, params.output)
+      if (usedAssets.has(url)) return ''
+      usedAssets.add(url)
+      return `<script src="${url}"></script>`
+    }
+  )
   htmlPipeline = injectSet(
     htmlPipeline,
     params.injectCdnJs,

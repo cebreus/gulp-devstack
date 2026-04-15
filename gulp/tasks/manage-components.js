@@ -3,7 +3,11 @@ import path from 'node:path'
 import pc from 'picocolors'
 import prompts from 'prompts'
 
-import { getRelativePath, toKebabCase } from '../utils/helpers.js'
+import {
+  getRelativePath,
+  isPrivateFile,
+  toKebabCase,
+} from '../utils/helpers.js'
 import loggerLib from '../utils/logger.js'
 import { compileAllComponentStyles } from './process-sass.js'
 
@@ -19,16 +23,27 @@ const logger = loggerLib.createLogger('Components')
 
 export const RESERVED_COMPONENT_NAMES = [
   'con',
-  'aux',
   'prn',
+  'aux',
   'nul',
   'com1',
-  'lpt1',
-  'lpt2',
-  'lpt3',
   'com2',
   'com3',
   'com4',
+  'com5',
+  'com6',
+  'com7',
+  'com8',
+  'com9',
+  'lpt1',
+  'lpt2',
+  'lpt3',
+  'lpt4',
+  'lpt5',
+  'lpt6',
+  'lpt7',
+  'lpt8',
+  'lpt9',
 ]
 
 /**
@@ -37,7 +52,7 @@ export const RESERVED_COMPONENT_NAMES = [
  * @returns {boolean|string} True if valid, or an error message string
  */
 export function validateComponentName(name) {
-  if (!name || typeof name !== 'string') {
+  if (!name || typeof name !== 'string' || name.trim().length === 0) {
     return 'Component name is required.'
   }
 
@@ -45,16 +60,9 @@ export function validateComponentName(name) {
     return `Name '${name}' is reserved.`
   }
 
-  if (/[^a-z0-9-]/.test(name)) {
-    return 'Name can only contain lowercase letters, numbers, and dashes.'
-  }
-
-  if (/-{2,}/.test(name)) {
-    return 'Name cannot contain multiple consecutive dashes.'
-  }
-
-  if (/^-|-$/.test(name)) {
-    return 'Name cannot start or end with a dash.'
+  const kebabRegex = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
+  if (!kebabRegex.test(name)) {
+    return 'Name must be kebab-case (e.g., my-component) and cannot start/end with dashes or contain special characters.'
   }
 
   return true
@@ -110,6 +118,7 @@ function getComponentsDir(options = {}) {
  * CLI Action: Interactive or automated component creation.
  * Generates NJK, SCSS, and MD files with boilerplate.
  * @param {ComponentOptions} [options] - Creation options
+ * @param {string} [options.docsPathOverride] - Override for documentation file path
  * @returns {Promise<void>}
  */
 export async function createComponent(options = {}) {
@@ -150,6 +159,45 @@ export async function createComponent(options = {}) {
     )
   })
 
+  // 2. Automated Documentation Update
+  try {
+    const docsPath =
+      options.docsPathOverride || path.resolve('docs/COMPONENTS.md')
+    if (fs.existsSync(docsPath)) {
+      let docsContent = fs.readFileSync(docsPath, 'utf8')
+
+      // Prevent duplicates
+      if (
+        docsContent.includes(
+          `### ${componentName}\n- **Path**: \`src/lib/components/${componentName}\``
+        )
+      ) {
+        logger.debug(
+          `Component '${componentName}' already documented. Skipping update.`
+        )
+      } else {
+        const entry = `\n### ${componentName}\n- **Path**: \`src/lib/components/${componentName}\`\n- **Status**: Boilerplate\n`
+
+        // Try to append after "## Component List" or at the end
+        if (docsContent.includes('## Component List')) {
+          docsContent = docsContent.replace(
+            '## Component List',
+            `## Component List\n${entry}`
+          )
+        } else {
+          docsContent += `\n## Component List\n${entry}`
+        }
+
+        fs.writeFileSync(docsPath, docsContent, 'utf8')
+        logger.info(
+          `Updated documentation in ${pc.yellow(getRelativePath(docsPath))}`
+        )
+      }
+    }
+  } catch {
+    logger.warn('Failed to update COMPONENTS.md documentation.')
+  }
+
   logger.info(
     `Component '${componentName}' successfully created at ${pc.yellow(getRelativePath(componentDir))}`
   )
@@ -164,7 +212,11 @@ export async function removeComponent(options = {}) {
   const componentsDir = getComponentsDir(options)
   const existingComponents = fs
     .readdirSync(componentsDir)
-    .filter((f) => fs.statSync(path.join(componentsDir, f)).isDirectory())
+    .filter(
+      (f) =>
+        fs.statSync(path.join(componentsDir, f)).isDirectory() &&
+        !isPrivateFile(f)
+    )
 
   let componentToRemove = options.name
 
@@ -208,7 +260,11 @@ export async function renameComponent(options = {}) {
   const componentsDir = getComponentsDir(options)
   const existingComponents = fs
     .readdirSync(componentsDir)
-    .filter((f) => fs.statSync(path.join(componentsDir, f)).isDirectory())
+    .filter(
+      (f) =>
+        fs.statSync(path.join(componentsDir, f)).isDirectory() &&
+        !isPrivateFile(f)
+    )
 
   let sourceName = options.source
   if (!sourceName) {
@@ -265,7 +321,11 @@ export async function listComponents(options = {}) {
   const componentsDir = getComponentsDir(options)
   const components = fs
     .readdirSync(componentsDir)
-    .filter((f) => fs.statSync(path.join(componentsDir, f)).isDirectory())
+    .filter(
+      (f) =>
+        fs.statSync(path.join(componentsDir, f)).isDirectory() &&
+        !isPrivateFile(f)
+    )
 
   if (components.length === 0) {
     return logger.info('No components found in project.')
@@ -278,6 +338,99 @@ export async function listComponents(options = {}) {
     output += `${pc.green('•')} ${name} ${pc.dim(`(${fileCount} files)`)}\n`
   })
   logger.info(output)
+}
+
+/**
+ * CLI Action: Clones an existing component to a new one.
+ * @param {ComponentOptions} [options] - Clone options
+ * @returns {Promise<void>}
+ */
+export async function cloneComponent(options = {}) {
+  const componentsDir = getComponentsDir(options)
+  const existingComponents = fs
+    .readdirSync(componentsDir)
+    .filter(
+      (f) =>
+        fs.statSync(path.join(componentsDir, f)).isDirectory() &&
+        !isPrivateFile(f)
+    )
+
+  if (existingComponents.length === 0) {
+    return logger.warn('No components available to clone.')
+  }
+
+  let sourceName = options.source
+  if (!sourceName) {
+    const response = await prompts({
+      type: 'select',
+      name: 'source',
+      message: 'Select component to clone:',
+      choices: existingComponents.map((c) => ({ title: c, value: c })),
+    })
+    sourceName = response.source
+  }
+  if (!sourceName) return
+
+  let targetName = options.target
+  if (!targetName) {
+    const response = await prompts({
+      type: 'text',
+      name: 'target',
+      message: `Enter new name for clone of '${sourceName}':`,
+      validate: (v) => {
+        const name = toKebabCase(v)
+        if (name === sourceName) return 'Target must be different from source.'
+        return validateComponentName(name)
+      },
+    })
+    targetName = toKebabCase(response.target)
+  }
+
+  if (!targetName || existingComponents.includes(targetName)) {
+    return logger.error('Target component already exists.')
+  }
+
+  const sourcePath = path.join(componentsDir, sourceName)
+  const targetPath = path.join(componentsDir, targetName)
+
+  fs.mkdirSync(targetPath, { recursive: true })
+
+  fs.readdirSync(sourcePath).forEach((file) => {
+    const oldFile = path.join(sourcePath, file)
+    const newFile = path.join(targetPath, file.replace(sourceName, targetName))
+
+    let content = fs.readFileSync(oldFile, 'utf8')
+    // Smart rename: replace class names, macro names and imports
+    content = content.replace(
+      new RegExp(`c-${sourceName}`, 'g'),
+      `c-${targetName}`
+    )
+    content = content.replace(
+      new RegExp(`macro ${sourceName}`, 'g'),
+      `macro ${targetName}`
+    )
+    content = content.replace(
+      new RegExp(`import ${sourceName}`, 'g'),
+      `import ${targetName}`
+    )
+    content = content.replace(
+      new RegExp(`${sourceName}\\(`, 'g'),
+      `${targetName}(`
+    )
+
+    fs.writeFileSync(newFile, content)
+  })
+
+  // Update documentation
+  await createComponent({
+    name: targetName,
+    componentsDir,
+    docsPathOverride: options.docsPathOverride,
+  })
+
+  logger.info(
+    `Component '${sourceName}' successfully cloned to '${targetName}'.`
+  )
 }
 
 /**
@@ -294,6 +447,8 @@ export default async function manageComponents() {
   const actionHandlers = {
     add: createComponent,
     create: createComponent,
+    clone: cloneComponent,
+    cp: cloneComponent,
     rm: removeComponent,
     remove: removeComponent,
     mv: renameComponent,
@@ -312,6 +467,7 @@ export default async function manageComponents() {
     message: 'What component action do you want to perform?',
     choices: [
       { title: 'Create new', value: 'create' },
+      { title: 'Clone existing', value: 'clone' },
       { title: 'Remove existing', value: 'remove' },
       { title: 'Rename component', value: 'rename' },
       { title: 'List all', value: 'list' },

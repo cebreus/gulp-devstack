@@ -1,3 +1,4 @@
+import { Transform } from 'node:stream'
 import { createGulpEsbuild } from 'gulp-esbuild'
 import pc from 'picocolors'
 import gulp from 'gulp'
@@ -6,6 +7,7 @@ import * as defaultConfig from '../config.js'
 import {
   attachPipelineLogging,
   getRelativePath,
+  isPrivateFile,
   streamToPromise,
 } from '../utils/helpers.js'
 import loggerLib from '../utils/logger.js'
@@ -67,6 +69,15 @@ export async function processJs(filePaths, outputDir, options = {}) {
   const processedFiles = []
   const jsPipeline = gulp
     .src(filePaths)
+    .pipe(
+      new Transform({
+        objectMode: true,
+        transform(file, _enc, cb) {
+          if (isPrivateFile(file.path)) return cb(null, null)
+          cb(null, file)
+        },
+      })
+    )
     .pipe(gulpEsbuild(esbuildConfig))
     .pipe(gulp.dest(outputDir))
 

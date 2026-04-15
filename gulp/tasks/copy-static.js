@@ -6,6 +6,7 @@ import gulp from 'gulp'
 import {
   attachPipelineLogging,
   getRelativePath,
+  isPrivateFile,
   streamToPromise,
 } from '../utils/helpers.js'
 import loggerLib from '../utils/logger.js'
@@ -39,6 +40,9 @@ export async function copyStatic(src, baseDir, dest) {
       new Transform({
         objectMode: true,
         transform(file, _enc, cb) {
+          if (isPrivateFile(file.path)) {
+            return cb(null, null)
+          }
           if (file.path) {
             processedFiles.push(getRelativePath(file.path))
           }
