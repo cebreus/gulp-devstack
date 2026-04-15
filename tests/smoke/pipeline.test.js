@@ -34,7 +34,7 @@ describe('Pipeline Smoke Test', () => {
 
     // Create partial src structure
     await fs.mkdir(path.join(sandbox, 'src'), { recursive: true })
-    const srcDirs = ['scss', 'js', 'lib', 'assets', 'config']
+    const srcDirs = ['scss', 'js', 'lib', 'assets'] // Remove config from auto-symlink
     for (const dir of srcDirs) {
       await fs.symlink(
         path.join(root, 'src', dir),
@@ -42,6 +42,25 @@ describe('Pipeline Smoke Test', () => {
         'dir'
       )
     }
+
+    // Isolate config: Create real dir and only link non-mutable files
+    const sandboxConfig = path.join(sandbox, 'src/config')
+    await fs.mkdir(sandboxConfig, { recursive: true })
+    const realConfig = path.join(root, 'src/config')
+    const configFiles = await fs.readdir(realConfig)
+    for (const file of configFiles) {
+      if (file !== 'fonts.list') {
+        await fs.symlink(
+          path.join(realConfig, file),
+          path.join(sandboxConfig, file),
+          'file'
+        )
+      }
+    }
+
+    // Ensure fonts.list is a REAL file in sandbox before it is modified
+    const fontsListPath = path.join(sandboxConfig, 'fonts.list')
+    await fs.writeFile(fontsListPath, '') // Create empty one in sandbox
 
     // Setup isolated src/routes
     const sandboxRoutes = path.join(sandbox, 'src/routes')
@@ -72,13 +91,6 @@ describe('Pipeline Smoke Test', () => {
         '---\ntitle: SmokeTestHome\nlayout: layout-default.njk\n---\n# Home Content',
     }
     await writeFixtures(sandbox, fixtures)
-
-    // Ensure fonts.list is empty to avoid network requests
-    const fontsListPath = path.join(sandbox, 'src/config/fonts.list')
-    try {
-      await fs.unlink(fontsListPath)
-    } catch (e) {}
-    await fs.writeFile(fontsListPath, '')
 
     // Act
     try {

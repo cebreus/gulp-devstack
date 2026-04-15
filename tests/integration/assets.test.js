@@ -75,7 +75,10 @@ describe('Asset Pipeline Integration', () => {
     await writeFixtures(sandbox, fixtures)
 
     // Act
-    const stream = generateSri(path.join(buildBase, '**/*.html'), buildBase)
+    const stream = await generateSri(
+      path.join(buildBase, '**/*.html'),
+      buildBase
+    )
     await streamToPromise(stream)
 
     // Assert

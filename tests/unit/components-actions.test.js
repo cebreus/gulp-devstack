@@ -28,9 +28,13 @@ describe('Component Management Actions', () => {
 
   describe('createComponent', () => {
     it('should create a new component with all files', async () => {
+      const docsPath = path.join(sandbox, 'COMPONENTS.md')
+      fs.writeFileSync(docsPath, '# Components\n## Component List\n')
+
       await createComponent({
         name: 'test-button',
         componentsDir,
+        docsPathOverride: docsPath,
       })
 
       const compPath = path.join(componentsDir, 'test-button')
@@ -38,13 +42,22 @@ describe('Component Management Actions', () => {
       assert.ok(fs.existsSync(path.join(compPath, 'test-button.njk')))
       assert.ok(fs.existsSync(path.join(compPath, 'test-button.scss')))
       assert.ok(fs.existsSync(path.join(compPath, 'test-button.md')))
+
+      const docsContent = fs.readFileSync(docsPath, 'utf8')
+      assert.ok(
+        docsContent.includes('### test-button'),
+        'Docs should be updated'
+      )
     })
 
     it('should handle interactive creation via prompts', async () => {
       prompts.inject(['interactive-comp'])
+      const docsPath = path.join(sandbox, 'COMPONENTS.md')
+      fs.writeFileSync(docsPath, '# Components\n## Component List\n')
 
       await createComponent({
         componentsDir,
+        docsPathOverride: docsPath,
       })
 
       const compPath = path.join(componentsDir, 'interactive-comp')
