@@ -41,7 +41,10 @@ The engine operates in three distinct modes, each optimized for a specific stage
 # 1. Install dependencies
 pnpm install
 
-# 2. Start local development
+# 2. (Optional) Purge the showcase and init a blank boilerplate
+npm run init:template
+
+# 3. Start local development
 pnpm dev
 
 # 3. Generate production-ready site

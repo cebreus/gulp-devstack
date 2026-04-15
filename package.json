@@ -4,6 +4,7 @@
 	"description": "Basic Gulp DevStack for basic front-end development with customized Bootstrap.",
 	"scripts": {
 		"start": "npm run dev",
+		"init:template": "node scripts/init-template.js",
 		"build": "BUILD_MODE=build node ./node_modules/gulp/bin/gulp.js",
 		"build:validate:html": "BUILD_MODE=build node ./node_modules/gulp/bin/gulp.js htmlValidate",
 		"dev": "BUILD_MODE=dev node ./node_modules/gulp/bin/gulp.js dev",
