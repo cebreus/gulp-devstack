@@ -1,10 +1,15 @@
-name: Build and Deploy
+name: Deploy Pages (pnpm)
 
-on:
+'on':
   push:
     branches: ['master']
   workflow_dispatch:
-    branches: ['master', 'develop']
+    inputs:
+      skip_integration:
+        description: 'Skip integration tests (manual runs only)'
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -12,54 +17,94 @@ permissions:
   id-token: write
 
 concurrency:
-  group: 'pages'
-  cancel-in-progress: false
+  group: pages-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '22'
+  PNPM_VERSION: '10'
 
 jobs:
-  build-and-deploy:
-    strategy:
-      matrix:
-        node-version: [22.x]
+  verify-and-deploy:
+    name: Build and Deploy Pipeline
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+    outputs:
+      page_url: ${{ steps.deployment.outputs.page_url }}
 
     steps:
-      - name: Checkout 🔄
+      - name: Checkout
         uses: actions/checkout@v4
-      - name: Setup PNPM 📦
+        with:
+          fetch-depth: 1
+
+      - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 10
-      - name: Setup Node.js ${{ matrix.node-version }} 🟢
+          version: ${{ env.PNPM_VERSION }}
+          run_install: false
+
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
-          cache: 'pnpm'
-      - name: Cache dependencies 🗄️
-        uses: actions/cache@v4
-        with:
-          path: ~/.pnpm-store
-          key: ${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-
-      - name: Install dependencies ⬇️
-        run: pnpm install --prod # --ignore-scripts
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --prefer-offline
         env:
           CI: true
-      - name: Build project 🔨
-        run: pnpm build
-      - name: Inspect build output 🔍
-        run: |
-          ls -lah ./build
-          du -sh ./build
-      - name: Setup Pages ⚙️
+
+      - name: Unit tests
+        run: pnpm run test:unit
+
+      - name: Integration tests
+        if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.skip_integration) }}
+        run: pnpm run test:integration
+
+      - name: Build project
+        run: pnpm run build
+
+      - name: Smoke Tests (Output Verification)
+        run: pnpm test:smoke
+
+      - name: Validate built HTML
+        run: pnpm run build:validate:html
+
+      - name: Setup Pages
         uses: actions/configure-pages@v5
-      - name: Upload artifact 📤
+
+      - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: 'build'
-      - name: Deploy to GitHub Pages 🚀
+          path: build-prod
+
+      - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
+  e2e-tests:
+    name: E2E Tests (Post-Deploy)
+    needs: verify-and-deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: E2E tests against deployed site
+        run: node --test tests/e2e/**/*.test.js
+        env:
+          E2E_BASE_URL: ${{ needs.verify-and-deploy.outputs.page_url }}
+          E2E_RETRY_COUNT: '4'
+          E2E_RETRY_DELAY_MS: '15000'

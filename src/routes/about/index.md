@@ -1,13 +1,13 @@
 ---
 title: O projektu Gulp DevStack
 description: Informace o projektu Gulp DevStack pro moderní frontend vývoj
-menu_main:
+menuMain:
   name: 'About'
   order: 2
   show: true
 date: 2023-01-15T10:00:00
-updated_at: 2023-08-01T09:30:00
-workflow_step: publish
+updatedAt: 2023-08-01T09:30:00
+workflowStep: publish
 hero:
   title: O projektu Gulp DevStack
   description: Nástroj pro moderní frontend vývoj s optimalizací a live-reloadem
@@ -20,12 +20,12 @@ seo:
   keywords:
     gulp, devstack, frontend, vývoj, nástroje, bootstrap, sass, javascript
   robots: index,follow
-open_graph:
+openGraph:
   use: false
   type: website
   title: ''
   description: ''
-twitter_cards:
+twitterCards:
   use: false
   title: ''
   description: ''

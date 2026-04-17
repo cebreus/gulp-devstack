@@ -1,7 +1,9 @@
 import { existsSync } from 'node:fs'
+import fs from 'node:fs/promises'
+import path from 'node:path'
 import gulp from 'gulp'
 
-import * as config from './gulp/config.js'
+import { resolveConfig } from './gulp/config.js'
 import cleanTask from './gulp/tasks/clean-build.js'
 import copyStatic from './gulp/tasks/copy-static.js'
 import debugFiles from './gulp/tasks/debug-build.js'
@@ -10,8 +12,7 @@ import revisionTask from './gulp/tasks/generate-revision.js'
 import sriTask from './gulp/tasks/generate-sri.js'
 import todoTask from './gulp/tasks/generate-todo.js'
 import lintTemplates from './gulp/tasks/lint-templates.js'
-import componentsTask from './gulp/tasks/manage-components.js'
-import datasetPrepare from './gulp/tasks/process-data.js'
+import processDataTask from './gulp/tasks/process-data.js'
 import fontLoad from './gulp/tasks/process-fonts.js'
 import processHtml from './gulp/tasks/process-html.js'
 import {
@@ -22,299 +23,109 @@ import {
   optimizeSvg,
 } from './gulp/tasks/process-images.js'
 import processJs from './gulp/tasks/process-js.js'
-import compileSass, {
-  compileAllComponentStyles,
-  compileIsolatedComponentStyles,
-  compileRouteStyles,
-} from './gulp/tasks/process-sass.js'
+import { processAllSass } from './gulp/tasks/process-sass.js'
 import purgeCss from './gulp/tasks/purge-css.js'
 import {
   initializeServer,
-  refreshServer,
+  injectChanges,
   reloadBrowser,
 } from './gulp/tasks/serve-site.js'
 import { validateHtml } from './gulp/tasks/validate-html.js'
-import loggerLib from './gulp/utils/logger.js'
+import loggerLib, { cleanupDir } from './gulp/utils/index.js'
+import { siteDefaults } from './src/config/site.js'
 
 const logger = loggerLib.createLogger('Gulpfile')
 const BUILD_MODE = process.env.BUILD_MODE
 
 if (!BUILD_MODE) {
-  throw new Error('[Gulpfile] BUILD_MODE must be set.')
+  throw new Error('BUILD_MODE must be set.', {
+    cause: new Error('Pass BUILD_MODE=dev|build|export environment variable.'),
+  })
 }
 
-// Initialize environment variables based on BUILD_MODE with fallback hierarchy
-// Node's loadEnvFile does not overwrite already defined process.env variables,
-// which results in the desired hierarchy priority (Shell > .env.mode > .env.local > .env).
+// Initialize environment variables
 ;[`.env.${BUILD_MODE}`, '.env.local', '.env']
   .filter((file) => existsSync(file))
   .forEach((file) => process.loadEnvFile(file))
 
-config.getConfig(BUILD_MODE)
-
-// Initialize configuration based on BUILD_MODE
-
-/**
- * Resolves mode-specific task handler.
- * @param {object} modeMap - Handler map keyed by build mode
- * @returns {Function} Resolved mode handler
- */
-function resolveMode(modeMap) {
-  const handler = modeMap[BUILD_MODE]
-  if (!handler) {
-    throw new Error(
-      `[Gulpfile] Missing handler for BUILD_MODE '${BUILD_MODE}'.`
-    )
-  }
-
-  return handler
-}
-
-/**
- * Factory for core CSS tasks shared across modes.
- * @returns {object} Map of task functions
- */
-function buildCssCoreTasks() {
-  /**
-   * Builds core Bootstrap stylesheet.
-   * @returns {Promise<void>} Task result
-   */
-  function cssCore() {
-    return compileSass(
-      config.sassCore,
-      config.sassBuild(),
-      'bootstrap.css',
-      config.postcssPluginsBase(),
-      {
-        minify: config.minifyCss(),
-        sourceMaps: false,
-      }
-    )
-  }
-
-  /**
-   * Builds custom project stylesheet.
-   * @returns {Promise<void>} Task result
-   */
-  function cssCustom() {
-    return compileSass(
-      [config.sassCustom],
-      config.sassBuild(),
-      'custom.css',
-      config.postcssPluginsBase()
-    )
-  }
-
-  /**
-   * Builds utility stylesheet.
-   * @returns {Promise<void>} Task result
-   */
-  function cssUtils() {
-    return compileSass(
-      config.sassUtils,
-      config.sassBuild(),
-      'utils.css',
-      config.postcssPluginsBase()
-    )
-  }
-
-  return { cssCore, cssCustom, cssUtils }
-}
-
-/**
- * Builds debug-only stylesheets.
- * @returns {Promise<void>} Task result
- */
-function cssDevstack() {
-  return compileSass(
-    `${config.sassBase}/u-devstack.scss`,
-    config.sassBuild(),
-    'u-devstack.css',
-    config.postcssPluginsBase()
-  )
-}
-
-/**
- * Runs individual CSS builds for development mode.
- * @returns {Function} Parallel task execution
- */
-function runDevCss() {
-  const { cssCore, cssCustom, cssUtils } = buildCssCoreTasks()
-
-  return gulp.parallel(
-    cssCore,
-    cssCustom,
-    cssUtils,
-    cssDevstack,
-    compileAllComponentStyles,
-    compileRouteStyles
-  )
-}
-
-/**
- * Runs merged CSS build for build and export modes.
- * @returns {Promise<void>} Task result
- */
-function runBundleCss() {
-  /**
-   * Builds the merged index.css.
-   * @returns {import('node:stream').ReadWriteStream} Gulp stream
-   */
-  function bundleCss() {
-    return compileSass(
-      [
-        config.sassCore,
-        config.sassCustom,
-        config.sassUtils,
-        config.sassComponentsGlob,
-      ],
-      config.sassBuild(),
-      'index.css',
-      config.postcssPluginsBase(),
-      {
-        minify: config.minifyCss(),
-        sourceMaps: false,
-      }
-    )
-  }
-
-  return gulp.parallel(bundleCss, compileRouteStyles)
-}
-
-/**
- * Runs isolated CSS compilation for export mode (CMS handoff).
- * @returns {Promise<void>} Task result
- */
-function runExportCss() {
-  const { cssCore, cssCustom, cssUtils } = buildCssCoreTasks()
-
-  return gulp.parallel(
-    cssCore,
-    cssCustom,
-    cssUtils,
-    compileIsolatedComponentStyles,
-    compileRouteStyles
-  )
-}
-
-/**
- * Runs build-mode dataset preparation.
- * @returns {Promise<void>} Parallel task execution
- */
-function runBuildDataset() {
-  /**
-   * Prepares site metadata dataset.
-   * @returns {Promise<void>} Task result
-   */
-  function datasetSite() {
-    return datasetPrepare(config.siteConfigFile, config.tempBase)
-  }
-
-  /**
-   * Prepares page metadata dataset.
-   * @returns {Promise<void>} Task result
-   */
-  function datasetPages() {
-    return datasetPrepare(config.datasetPagesSource, config.datasetPagesBuild)
-  }
-
-  return gulp.parallel(datasetSite, datasetPages)()
-}
-
-/**
- * Runs page dataset preparation.
- * @returns {Promise<void>} Task result
- */
-function runPageDataset() {
-  return datasetPrepare(config.datasetPagesSource, config.datasetPagesBuild)
-}
+const config = resolveConfig(BUILD_MODE)
 
 /**
  * Task: Clean build and temp folders
  * @returns {Promise<string[]>} List of deleted paths
  */
 export function clean() {
-  return cleanTask([`${config.tempBase}/**/*`, config.buildBase()])
+  return cleanTask([`${config.tempBase}/**/*`, config.paths.build])
 }
 
 /**
  * Task: Copy static files
- * @param {Function} done - Gulp completion callback
- * @returns {import('node:stream').Readable} Gulp stream
+ * @returns {Promise<void>} Resolves when copy is complete
  */
-export function copy(done) {
-  /**
-   * Copies public folder static files.
-   * @returns {import('node:stream').Readable} Gulp stream
-   */
-  function publicCopy() {
-    return copyStatic(
+export async function copy() {
+  const publicCopy = () =>
+    copyStatic(
       [`${config.staticBase}/**/*`],
       config.staticBase,
-      config.buildBase()
+      config.paths.build
     )
-  }
 
-  /**
-   * Copies asset folder fonts and CSS.
-   * @returns {import('node:stream').Readable} Gulp stream
-   */
-  function assetsCopy() {
-    return copyStatic(
-      [`${config.assetsBase}/fonts/**/*`, `${config.assetsBase}/css/fonts.css`],
+  const assetsCopy = () =>
+    copyStatic(
+      [
+        `${config.assetsBase}/fonts/**/*`,
+        `${config.assetsBase}/css/fonts*.css`,
+      ],
       config.assetsBase,
-      `${config.buildBase()}/assets`
+      `${config.paths.build}/assets`
     )
-  }
 
-  return gulp.parallel(publicCopy, assetsCopy)(done)
+  try {
+    await gulp.parallel(publicCopy, assetsCopy)()
+  } catch (error) {
+    logger.error(`Copy task failed: ${error.message}`)
+    throw error
+  }
 }
 
 /**
  * Task: Compile all Sass
- * @param {Function} done - Gulp callback
- * @returns {import('node:stream').ReadWriteStream|Promise<void>} The result of the task execution.
+ * @returns {Promise<void>} Resolves when Sass is compiled
  */
-export function css(done) {
-  const taskFunction = resolveMode({
-    dev: runDevCss,
-    build: runBundleCss,
-    export: runExportCss,
-  })
-
-  return taskFunction()(done)
+export function css() {
+  return processAllSass(config, BUILD_MODE)
 }
 
 /**
  * Task: Process JavaScript
- * @returns {Promise<void>}
+ * @returns {Promise<void>} Resolves when JS is processed
  */
 export function js() {
   const params = {
-    bundle: config.concatFiles(),
-    minify: config.minifyJs(),
-    sourceMaps: config.sourceMaps(),
+    bundle: config.concatFiles,
+    minify: config.minifyJs,
+    sourceMaps: config.sourceMaps,
   }
-  return processJs(config.jsFiles, config.jsBuild(), params)
+  return processJs(config, config.jsFiles, config.paths.js, params)
 }
+
+const datasetSite = async () => {
+  const siteDataPath = path.join(config.tempBase, 'site.json')
+  await fs.mkdir(path.dirname(siteDataPath), { recursive: true })
+  await fs.writeFile(siteDataPath, JSON.stringify(siteDefaults, null, 2))
+}
+const datasetPages = () =>
+  processDataTask(config.datasetPagesSource, config.datasetPagesBuild)
 
 /**
  * Task: Prepare dataset
- * @returns {Promise<void>}
+ * @type {import('gulp').TaskFunction}
  */
-export async function dataset() {
-  const runDatasetByMode = resolveMode({
-    dev: runPageDataset,
-    build: runBuildDataset,
-    export: runPageDataset,
-  })
-
-  return runDatasetByMode()
-}
+export const dataset = gulp.parallel(datasetSite, datasetPages)
 
 /**
  * Task: Build HTML pages
- * @returns {import('node:stream').Readable} Gulp stream
+ * @returns {Promise<void>} Resolves when HTML is generated
  */
 export function html() {
   return processHtml(config)
@@ -322,23 +133,23 @@ export function html() {
 
 /**
  * Task: Optimize images
- * @returns {Promise<void>}
+ * @returns {Promise<void>} Resolves when images are optimized
  */
 export async function images() {
-  const imgConfig = config.imageOptimizationConfig()
+  const imgConfig = config.imageOptimization
 
   await Promise.all([
-    optimizeJpg(config.imagesJpg, config.imagesBuild(), imgConfig.jpg),
-    optimizePng(config.imagesPng, config.imagesBuild()),
-    optimizeSvg(config.imagesSvg, config.imagesBuild()),
+    optimizeJpg(config.imagesJpg, config.paths.images, imgConfig.jpg),
+    optimizePng(config.imagesPng, config.paths.images),
+    optimizeSvg(config.imagesSvg, config.paths.images),
     convertToWebp(
       [config.imagesJpg, config.imagesPng],
-      config.imagesBuild(),
+      config.paths.images,
       imgConfig.webp
     ),
     convertToAvif(
       [config.imagesJpg, config.imagesPng],
-      config.imagesBuild(),
+      config.paths.images,
       imgConfig.avif
     ),
   ])
@@ -346,88 +157,107 @@ export async function images() {
 
 /**
  * Task: Generate favicons
- * @returns {Promise<void>}
+ * @returns {import('node:stream').Readable} Gulp stream for favicons
  */
 export function favicons() {
   return faviconsTask(
     `${config.srcBase}/assets/icons/favicons-source.png`,
-    config.faviconBuild(),
-    config.faviconGenConfig
+    config.paths.favicons,
+    config.faviconGen
   )
 }
 
 /**
  * Task: Load fonts
- * @returns {import('node:stream').Readable} Gulp stream
+ * @returns {Promise<void>} Resolves when fonts are loaded
  */
 export function fonts() {
   return fontLoad(config.fontloadFile, config.assetsBase, {
-    config: config.fontLoadConfig(),
+    config: config.fontLoad,
+    minify: config.minifyCss,
   })
 }
 
 /**
  * Task: Purge unused CSS
- * @returns {Promise<import('node:stream').Readable>} Gulp stream
+ * @returns {Promise<void>} Resolves when CSS is purged
  */
 export async function purge() {
+  const buildBase = config.paths.build
   return await purgeCss(
-    [`${config.sassBuild()}/**/*.css`, `!${config.sassBuild()}/**/*.min.css`],
+    [`${config.paths.sass}/**/*.css`, `!${config.paths.sass}/**/*.min.css`],
     [
       `${config.srcBase}/**/*.njk`,
       `${config.srcBase}/**/*.md`,
-      `${config.buildBase()}/**/*.html`,
+      `${config.srcBase}/**/*.js`,
+      `${buildBase}/**/*.html`,
     ],
-    config.sassBuild()
+    config.paths.sass
   )
 }
 
 /**
  * Task: Asset Revisioning
- * @returns {Promise<void>}
+ * @returns {import('node:stream').Readable} Gulp stream with revved files
  */
 export function revision() {
   return revisionTask({
     inputAssets: [
-      `${config.buildBase()}/assets/css/**/*.css`,
-      `${config.buildBase()}/assets/js/**/*.js`,
+      `${config.paths.sass}/**/*.css`,
+      `${config.paths.js}/**/*.js`,
     ],
-    inputHtml: `${config.buildBase()}/**/*.html`,
-    buildBase: config.buildBase(),
+    inputHtml: `${config.paths.build}/**/*.html`,
+    buildBase: config.paths.build,
     manifestPath: `${config.tempBase}/rev-manifest.json`,
   })
 }
 
 /**
  * Task: SRI Hashing
- * @returns {Promise<import('node:stream').Readable>} Gulp stream
+ * @returns {Promise<void>} Resolves when hashes are injected
  */
 export async function sri() {
-  return await sriTask(`${config.buildBase()}/**/*.html`, config.buildBase())
+  return await sriTask(`${config.paths.build}/**/*.html`, config.paths.build)
 }
 
 /**
  * Task: HTML Validation
- * @returns {import('node:stream').Readable} Gulp stream
+ * @returns {import('node:stream').Stream} Gulp validation stream
  */
 export function validate() {
-  return validateHtml(`${config.buildBase()}/**/*.html`)
+  return validateHtml(`${config.paths.build}/**/*.html`)
 }
 
 /**
  * Task: Debug files list
- * @returns {Promise<void>}
+ * @returns {Promise<void>} Resolves when diagnostic is finished
  */
 export function debug() {
-  return debugFiles()
+  return debugFiles(config)
 }
 
 /**
  * Task: Generate TODO list
- * @returns {import('node:stream').Readable} Gulp stream
+ * @returns {Promise<void>} Resolves when TODO report is updated
  */
 export function todo() {
   return todoTask()
+}
+
+/**
+ * Explicit browser reload task for Gulp series
+ * @returns {void}
+ */
+export function reload() {
+  reloadBrowser()
+}
+
+/**
+ * Explicit browser injection task for Gulp series (e.g. CSS)
+ * @returns {import('node:stream').ReadWriteStream} BrowserSync stream
+ */
+export function inject() {
+  return injectChanges()
 }
 
 /**
@@ -436,86 +266,95 @@ export function todo() {
  */
 function watchFiles() {
   try {
-    initializeServer()
-    // CSS uses stream injection (no page reload)
-    gulp.watch(config.sassWatch, gulp.series(css, refreshServer))
+    initializeServer(config)
 
-    // JS and Images use full page reload for stability
-    gulp.watch(config.jsFiles, gulp.series(js, reloadBrowser))
-    gulp.watch(`${config.imagesBase}/**/*`, gulp.series(images, reloadBrowser))
+    // Templates & Data: Rebuild JSON and HTML, then FULL RELOAD
+    gulp.watch(
+      config.templateWatchPaths,
+      gulp.series(lintTemplates, dataset, html, reload)
+    )
 
+    // Styles: Rebuild CSS and INJECT (no full reload)
+    gulp.watch(config.sassWatch, gulp.series(css, inject))
+
+    // Scripts: Rebuild JS and FULL RELOAD (JS usually requires fresh state)
+    gulp.watch(config.jsFiles, gulp.series(js, reload))
+
+    // Assets: Just process and reload browser
+    gulp.watch(`${config.imagesBase}/**/*`, gulp.series(images, reload))
     gulp.watch(
       `${config.iconsBase}/**/*.svg`,
-      gulp.series(dataset, html, reloadBrowser)
+      gulp.series(dataset, html, reload)
     )
-    gulp
-      .watch(
-        config.templateWatchPaths,
-        gulp.series(lintTemplates, dataset, html)
-      )
-      .on('change', reloadBrowser)
   } catch (error) {
     logger.error('Failed to start development server or watchers:', error)
     throw error
   }
 }
 
+/**
+ * Final cleanup: remove non-fingerprint files
+ * @returns {Promise<void>} Resolves when cleanup is finished
+ */
+/**
+ * Final cleanup: remove non-fingerprint files
+ * @returns {Promise<void>} Resolves when cleanup is finished
+ */
+async function finalCleanup() {
+  await cleanupDir(
+    config.paths.sass,
+    /-[a-f0-9]{6,}\.(?:min\.)?css$|\.min\.css$|^fonts(?:-[a-f0-9]{6,})?\.min\.css$|^fonts\.css$/,
+    'non-fingerprint CSS',
+    logger
+  )
+  await cleanupDir(
+    config.paths.js,
+    /-[a-f0-9]{6,}\.(?:min\.)?js$|\.min\.js$|^vendor\.js$|^manifest\.js$/,
+    'non-fingerprint JS',
+    logger
+  )
+}
+
 const buildPipeline = gulp.series(
   clean,
-  // 1. Generation: create all independent intermediate files
   gulp.parallel(images, dataset, favicons, fonts),
-  // 2. Processing: depends on step 1 outputs
   gulp.parallel(copy, js, css),
-  // 3. CSS Cleanup: must happen before HTML task if CSS is inlined
-  purge,
-  // 4. HTML generation and inlining
   html,
-  // 5. Final transformations (strict sequence)
-  revision, // Fingerprinting changes filenames
-  sri, // SRI must calculate hashes of the final (fingerprinted) files
-  // 6. Verification and Reporting (safe to run in parallel after SRI)
+  purge,
+  revision,
+  sri,
+  finalCleanup,
   gulp.parallel(validate, debug, todo)
 )
 
 const exportPipeline = gulp.series(
   clean,
-  // 1. Generation
-  gulp.parallel(dataset, favicons, fonts),
-  // 2. Processing
+  gulp.parallel(images, dataset, favicons, fonts),
   gulp.parallel(copy, js, css),
-  // 3. Post-processing
-  purge,
   html,
-  images,
-  revision,
-  sri,
+  purge,
   gulp.parallel(validate, debug, todo)
 )
 
 const servePipeline = gulp.series(
   clean,
-  // 1. Generation
   gulp.parallel(images, dataset, fonts),
-  // 2. Processing
   gulp.parallel(copy, js, css),
-  // 3. Serve phase
   html,
   debug,
   todo,
   watchFiles
 )
 
-const defaultTask = resolveMode({
-  dev: servePipeline,
-  build: buildPipeline,
-  export: exportPipeline,
-})
+let defaultTask = servePipeline
+if (BUILD_MODE === 'build') defaultTask = buildPipeline
+if (BUILD_MODE === 'export') defaultTask = exportPipeline
 
 export {
-  componentsTask as components,
-  defaultTask as default,
   servePipeline as dev,
   buildPipeline as build,
   exportPipeline as export,
   validate as htmlValidate,
 }
+
+export default defaultTask

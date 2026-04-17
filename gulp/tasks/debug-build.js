@@ -3,27 +3,28 @@ import path from 'node:path'
 import { glob } from 'glob'
 import pc from 'picocolors'
 
-import { buildBase, routesBase } from '../config.js'
-import { isPrivateFile } from '../utils/helpers.js'
-import loggerLib from '../utils/logger.js'
+import loggerLib, { isPrivateFile } from '../utils/index.js'
 
-const logger = loggerLib.createLogger('Debug')
+const logger = loggerLib.createLogger('DebugBuild')
 
 /**
  * Diagnostic task for verifying the build pipeline state and file existence.
  * Scans key directories and reports potential issues with templates or generated output.
+ * @param {object} config - Configuration object
+ * @param {string} config.routesBase - Base directory for routes
+ * @param {object} config.paths - Path mapping object
+ * @param {string} config.paths.build - Root build directory
  * @param {object} [options] - Options for the diagnostic task
  * @param {string} [options.routesBaseOverride] - Override for routes base directory
- * @param {Function} [options.buildBaseOverride] - Override for build base directory getter
+ * @param {string} [options.buildBaseOverride] - Override for build base directory path
  * @returns {Promise<void>} Resolves when the diagnostic report is complete
  */
-export async function debugBuild(options = {}) {
-  const activeRoutesBase = options.routesBaseOverride || routesBase
-  const activeBuildBase = options.buildBaseOverride || buildBase
+export async function debugBuild(config, options = {}) {
+  const activeRoutesBase = options.routesBaseOverride || config.routesBase
+  const buildDir = options.buildBaseOverride || config.paths.build
 
   logger.info(`${pc.blue('---')} Build Diagnostic Report ${pc.blue('---')}`)
 
-  // Safety check for base directories
   const routesExist = await fs
     .access(activeRoutesBase)
     .then(() => true)
@@ -34,7 +35,6 @@ export async function debugBuild(options = {}) {
     return
   }
 
-  // 1. Audit Route Templates
   const routesGlobPattern = `${activeRoutesBase}/**/*.*`.replace(/\\/g, '/')
   const foundRouteFiles = (await glob(routesGlobPattern)).filter(
     (f) => !isPrivateFile(f)
@@ -52,7 +52,6 @@ export async function debugBuild(options = {}) {
     }
   }
 
-  // 2. Audit Main Entry Point
   const indexTemplatePath = path.join(activeRoutesBase, 'index.njk')
   try {
     const templateExists = await fs
@@ -71,11 +70,8 @@ export async function debugBuild(options = {}) {
       logger.warn(`Critical missing template: ${pc.bold(indexTemplatePath)}`)
     }
   } catch (error) {
-    logger.error('Failed to audit index.njk template', error)
+    logger.error(`Failed to audit index.njk template. Cause: ${error.message}`)
   }
-
-  // 3. Audit Generated HTML Output
-  const buildDir = activeBuildBase()
 
   const buildDirExists = await fs
     .access(buildDir)
@@ -91,7 +87,9 @@ export async function debugBuild(options = {}) {
   const foundHtmlFiles = await glob(generatedHtmlGlob)
 
   if (foundHtmlFiles.length === 0) {
-    logger.warn(`No HTML output found in ${pc.yellow(buildDir)}!`)
+    logger.warn(
+      `No HTML output found in ${pc.yellow(buildDir)}. Run a full build and verify route templates are discoverable.`
+    )
   } else {
     logger.debug(`Build artifact count: ${foundHtmlFiles.length} HTML files.`)
   }
@@ -108,7 +106,6 @@ export async function debugBuild(options = {}) {
     )
   }
 
-  // 4. Report Summary
   logger.list('Debug Report Summary', [
     `Patterns Scanned: ${foundRouteFiles.length}`,
     `Artifacts Found: ${foundHtmlFiles.length}`,

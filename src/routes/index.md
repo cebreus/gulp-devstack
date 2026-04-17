@@ -1,12 +1,12 @@
 ---
 title: 'Gulp DevStack'
 description: 'High-control static web workflow with predictable output and low operational overhead.'
-menu_main:
+menuMain:
   name: 'Home'
   order: 1
   show: true
 hero:
-  badge: 'Version 5 Ready!'
+  badge: 'Version {{ site.version }} Ready!'
   title:
     The predictable alternative to framework complexity.
   description:
@@ -15,23 +15,21 @@ hero:
     Built for developers who demand precision over abstraction.
   modifier: dark
   content: |-
-    <div class="d-flex flex-column flex-sm-row">
-      <a class="btn btn-primary mb-3 me-sm-3 px-4 py-2" href="/about/">See how it works</a>
-      <a class="btn c-hero__btn mb-3 px-4 py-2" href="https://github.com/cebreus/gulp-devstack" target="_blank" rel="noopener">View on GitHub</a>
-    </div>
+    <a class="btn btn-primary mb-3 me-sm-3 px-4 py-2" href="/about/">See how it works</a>
+    <a class="btn c-hero__btn mb-3 px-4 py-2" href="https://github.com/cebreus/gulp-devstack" target="_blank" rel="noopener">View on GitHub</a>
 seo:
   title: 'Gulp DevStack - Predictable Static Web Delivery'
   description:
     'A high-control static workflow focused on predictable builds, quality output, and rapid deployment.'
   robots: 'index,follow'
-open_graph:
+openGraph:
   use: true
   type: website
   title: Gulp DevStack
   description: 'Control, predictability, and fast static delivery.'
-  site_name: Gulp DevStack
+  siteName: Gulp DevStack
   image: ['/assets/images/gulp-devstack-social.jpg']
-twitter_cards:
+twitterCards:
   use: true
   type: summary_large_image
   title: Gulp DevStack

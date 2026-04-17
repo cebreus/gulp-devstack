@@ -1,71 +1,37 @@
-# Routing & Template Data
+# Page Routing & Layouts
 
-Gulp DevStack implements **filesystem-based routing** combined with a hybrid Markdown/Nunjucks data mapping strategy. This provides a clean separation between content (Markdown) and presentation (Nunjucks).
+Gulp DevStack uses a **"File-Based Routing"** system combined with a hybrid Nunjucks/Markdown data architecture. This provides strict separation between presentation logic and content.
 
 ## 1. How Routing Works
 
-Every folder and file within `src/routes/` directly maps to a public URL.
+Every file in `src/routes/` deterministically maps to a public URL. We generate "Pretty URLs" (Permalinks) by default.
 
-- `src/routes/index.md` → `/` (homepage)
-- `src/routes/about/index.md` → `/about/`
-- `src/routes/blog/post-1.md` → `/blog/post-1/`
-
-### File Types
-
-- **`.njk` files (Required)**: Serve as the primary entry point and presentation template. A routing directory *must* contain at least one `.njk` file to be rendered.
-- **`.md` files (Optional)**: Serve as content and data sources (via YAML frontmatter). Using `.md` for data isolation is ideal for future **CMS integrations** (Headless CMS can easily map to these files).
-- **`.scss` & `.js` (Optional)**: Isolated route assets. They are only loaded on their respective page, preventing global bundle bloat.
-
-## 1. Directory Structure & Precedence
-
-Gulp DevStack follows a "File-system Routing" pattern similar to modern meta-frameworks:
-
-- **`.njk` files (Required)**: These represent your routes. A file at `src/routes/about.njk` generates `/about/`.
-- **`.md` or `.json` files (Optional)**: Serve as content and data sources. Both are normalized into the `page` object in your templates.
-- **`.scss` & `.js` (Optional)**: Isolated route assets. They are only loaded on their respective page.
-
-Gulp DevStack supports an **"Override & Merge"** pattern:
-
-1. If only `index.md` exists, it is rendered using the default layout (`layout-default.njk`).
-2. If `index.njk` exists alongside `index.md`, the **`.njk` file takes precedence** as the template.
-3. However, all data from the `.md` file (frontmatter and rendered content) is **automatically injected** into the `.njk` template.
+| Source File                  | Build Output        | Final URL      |
+| :--------------------------- | :------------------ | :------------- |
+| `src/routes/index.njk`       | `/index.html`       | `/` (Homepage) |
+| `src/routes/about/index.njk` | `/about/index.html` | `/about/`      |
+| `src/routes/404.njk`         | `/404.html`         | `/404` (Error) |
 
 > \[!TIP]
-> Keep your data in `.md` files even if you use `.njk` templates. This keeps your structure "CMS-ready" and decouples content from presentation logic.
+> Use `src/routes/404.njk` instead of `404/index.njk`. Most static hosting providers (Netlify, GitHub Pages) expect a top-level `404.html` file to act as the global error catch-all.
 
-## 3. Asset Autodiscovery (Isolated Assets)
+## 2. Hybrid Pages (The Override Pattern)
 
-The pipeline automatically detects and injects assets based on the route name:
+A single route can be composed of multiple files working together. Gulp DevStack supports an **"Override & Merge"** pattern:
 
-- If you are on the `/about/` page, the build system looks for `src/routes/about/index.scss` and `src/routes/about/index.js`.
-- These assets are compiled and injected **only** into the respective page. This is the preferred way to handle page-specific styles and logic.
+1. **`.njk` (Template)**: The primary presentation logic. It defines the structure and layout.
+2. **`.md` or `.json` (Data)**: The content source.
+3. **Merge**: If both `index.njk` and `index.md` exist in the same folder, the `.njk` file takes precedence as the template, but all data from the `.md` file (YAML frontmatter and content) is **automatically injected** into the Nunjucks context.
 
-## 2. Output Path Mapping
+This pattern is essential for "Headless CMS Readiness." You can keep your UI logic in `.njk` while a CMS writes data purely to `.md` files.
 
-The build system maps source files to output paths deterministically:
+## 3. Layout Injection
 
-| Source File                  | Build Output        | Final URL     |
-| :--------------------------- | :------------------ | :------------ |
-| `src/routes/index.njk`       | `/index.html`       | `/`           |
-| `src/routes/404.njk`         | `/404.html`         | `/404`        |
-| `src/routes/404/index.njk`   | `/404/index.html`   | `/404/`       |
-| `src/routes/about/index.njk` | `/about/index.html` | `/about/`     |
-| `src/routes/docs/intro.njk`  | `/docs/intro.html`  | `/docs/intro` |
+Every page needs a layout (e.g., standard header and footer vs. a minimal error page). Layouts are stored in `src/routes/` and prefixed with `layout-` (e.g., `layout-default.njk`).
 
-> \[!WARNING]
-> While both `404.njk` and `404/index.njk` are valid, most static hosting providers (Netlify, Vercel, S3) expect a top-level **`404.html`** to act as the global error page. Stick to `src/routes/404.njk` for error pages to ensure it works as a catch-all.
+To define or change a layout, use the native Nunjucks `extends` tag at the very top of your `.njk` route file:
 
-## 3. Data Injections & Hydration
-
-## 4. Layouts & Custom System Pages
-
-- Layouts are stored in `src/routes/` with the prefix `layout-` (e.g., `layout-default.njk`).
-- To change a layout for a specific page (like a 404 page), simply extend a different layout file.
-
-**Example: Custom 404 Page**
-For system pages, you might want a minimal layout without the standard header/footer:
-
-```njk
+```jinja
 {# src/routes/404.njk #}
 {% extends "layout-minimal.njk" %}
 
@@ -76,3 +42,25 @@ For system pages, you might want a minimal layout without the standard header/fo
   </div>
 {% endblock %}
 ```
+
+## 4. Isolated Page Assets (Autodiscovery)
+
+To prevent global CSS/JS bundle bloat, you can isolate assets strictly to the pages that need them. The build pipeline automatically detects, compiles, and injects these assets based on the route structure.
+
+### File Naming Convention
+
+The system looks for assets in the same directory as your route template, matching either the **filename** or using the **index** convention:
+
+| Route Template    | Detected Style                        | Detected Script                   |
+| :---------------- | :------------------------------------ | :-------------------------------- |
+| `about/index.njk` | `about/index.scss`                    | `about/index.js`                  |
+| `blog/post.njk`   | `blog/post.scss` OR `blog/index.scss` | `blog/post.js` OR `blog/index.js` |
+
+### How it Works
+
+1. **Detection**: During the build, Gulp scans `src/routes/` for `.scss` and `.js` files.
+2. **Compilation**: These files are compiled into `build/assets/css/` and `build/assets/js/`, preserving the directory hierarchy.
+3. **Injection**: The `processHtml` task identifies matching assets and injects them **only** into the specific page's `<head>` (for CSS) and at the end of the `<body>` (for JS).
+
+> \[!NOTE]
+> This is the preferred way to handle heavy, page-specific styles (like complex animations) or interactive logic that isn't needed globally. It ensures your main bundle remains lean and performant.

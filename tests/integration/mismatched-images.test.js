@@ -1,81 +1,112 @@
-import assert from 'node:assert'
+import assert from 'node:assert/strict'
 import fs from 'node:fs/promises'
 import path from 'node:path'
-import { after, before, describe, test } from 'node:test'
+import { describe, test } from 'node:test'
 
 import { optimizeJpg, optimizePng } from '../../gulp/tasks/process-images.js'
+import { runInSandbox } from '../test-helpers.js'
 
-describe('Image Mismatch Integration Tests', () => {
-  const fixturesDir = path.resolve('tests/fixtures/images')
-  const outputDir = path.resolve('.temp/tests/mismatch')
+describe('Image Mismatch Integration Tests', function testImageMismatch() {
+  const imagesFixturesDir = path.resolve('tests/fixtures/images')
 
-  before(async () => {
-    await fs.mkdir(outputDir, { recursive: true })
-  })
+  test('should skip non-image files named as PNG', async function testSkipNonImage() {
+    await runInSandbox(
+      'mismatch-non-image',
+      async function executeNonImageTest(sandbox) {
+        const srcPath = path.join(imagesFixturesDir, 'synt-not-png.png')
+        const outputDir = path.join(sandbox, 'output')
+        await fs.mkdir(outputDir, { recursive: true })
 
-  after(async () => {
-    // Cleanup if needed
-    // await fs.rm(outputDir, { recursive: true, force: true });
-  })
+        await optimizePng(srcPath, outputDir)
 
-  test('should skip non-image files named as PNG', async () => {
-    const src = path.join(fixturesDir, 'synt-not-png.png')
+        const outputExists = await fs
+          .access(path.join(outputDir, 'synt-not-png.png'))
+          .then(function onAccessSuccess() {
+            return true
+          })
+          .catch(function onAccessError() {
+            return false
+          })
 
-    // We expect the task to complete successfully (not crash)
-    await optimizePng(src, outputDir)
-
-    // The file should NOT exist in output because it was skipped
-    const outputExists = await fs
-      .access(path.join(outputDir, 'synt-not-png.png'))
-      .then(() => true)
-      .catch(() => false)
-
-    assert.strictEqual(
-      outputExists,
-      false,
-      'Non-image file should not be in output'
+        assert.strictEqual(
+          outputExists,
+          false,
+          'Non-image file should not be in output'
+        )
+      }
     )
   })
 
-  test('should skip corrupted signature PNG files', async () => {
-    const src = path.join(fixturesDir, 'synt-corrupted-signature.png')
+  test('should skip corrupted signature PNG files', async function testSkipCorrupted() {
+    await runInSandbox(
+      'mismatch-corrupted',
+      async function executeCorruptedTest(sandbox) {
+        const srcPath = path.join(
+          imagesFixturesDir,
+          'synt-corrupted-signature.png'
+        )
+        const outputDir = path.join(sandbox, 'output')
+        await fs.mkdir(outputDir, { recursive: true })
 
-    await optimizePng(src, outputDir)
+        await optimizePng(srcPath, outputDir)
 
-    const outputExists = await fs
-      .access(path.join(outputDir, 'synt-corrupted-signature.png'))
-      .then(() => true)
-      .catch(() => false)
+        const outputExists = await fs
+          .access(path.join(outputDir, 'synt-corrupted-signature.png'))
+          .then(function onAccessSuccess() {
+            return true
+          })
+          .catch(function onAccessError() {
+            return false
+          })
 
-    assert.strictEqual(
-      outputExists,
-      false,
-      'Corrupted file should not be in output'
+        assert.strictEqual(
+          outputExists,
+          false,
+          'Corrupted file should not be in output'
+        )
+      }
     )
   })
 
-  test('should process PNG file named as JPG (mismatched extension)', async () => {
-    const src = path.join(fixturesDir, 'mismatched-extension.jpg')
+  test('should process PNG file named as JPG (mismatched extension)', async function testMismatchedExtension() {
+    await runInSandbox(
+      'mismatch-extension',
+      async function executeMismatchedTest(sandbox) {
+        const srcPath = path.join(imagesFixturesDir, 'mismatched-extension.jpg')
+        const outputDir = path.join(sandbox, 'output')
+        await fs.mkdir(outputDir, { recursive: true })
 
-    // Should NOT crash even if we use optimizeJpg on a PNG file
-    await optimizeJpg(src, outputDir)
+        await optimizeJpg(srcPath, outputDir)
 
-    const outputExists = await fs
-      .access(path.join(outputDir, 'mismatched-extension.jpg'))
-      .then(() => true)
-      .catch(() => false)
+        const outputExists = await fs
+          .access(path.join(outputDir, 'mismatched-extension.jpg'))
+          .then(function onAccessSuccess() {
+            return true
+          })
+          .catch(function onAccessError() {
+            return false
+          })
 
-    assert.strictEqual(
-      outputExists,
-      true,
-      'Mismatched file should be processed if it is a valid image'
+        assert.strictEqual(
+          outputExists,
+          true,
+          'Mismatched file should be processed if it is a valid image'
+        )
+
+        const imageBuffer = await fs.readFile(
+          path.join(outputDir, 'mismatched-extension.jpg')
+        )
+        assert.strictEqual(
+          imageBuffer[0],
+          0x89,
+          'Should still have PNG signature'
+        )
+        assert.strictEqual(
+          imageBuffer[1],
+          0x50,
+          'Should still have PNG signature'
+        )
+      }
     )
-
-    // Verify it is still a PNG by reading magic bytes
-    const buffer = await fs.readFile(
-      path.join(outputDir, 'mismatched-extension.jpg')
-    )
-    assert.strictEqual(buffer[0], 0x89, 'Should still have PNG signature')
-    assert.strictEqual(buffer[1], 0x50, 'Should still have PNG signature')
   })
 })

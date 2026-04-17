@@ -1,33 +1,70 @@
 import fs from 'node:fs'
-import os from 'node:os'
 import path from 'node:path'
+import process from 'node:process'
+import { Transform } from 'node:stream'
 
-/**
- * Creates a unique temporary directory for testing.
- * @param {string} prefix - Prefix for the temp directory name
- * @returns {Promise<string>} The absolute path to the created directory
- */
-export async function createTestSandbox(prefix = 'gulp-devstack-test-') {
-  const tempDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), prefix))
+export function createMockVinyl({ path: filePath, contents = '', base = '/' }) {
+  const parsed = path.parse(filePath)
+  return {
+    path: filePath,
+    contents: Buffer.isBuffer(contents) ? contents : Buffer.from(contents),
+    base,
+    cwd: process.cwd(),
+    basename: parsed.base,
+    stem: parsed.name,
+    extname: parsed.ext,
+    dirname: parsed.dir,
+    isNull: function isFileEmpty() {
+      return !contents
+    },
+    isStream: function isFileStream() {
+      return false
+    },
+    isBuffer: function isFileBuffer() {
+      return true
+    },
+    clone: function cloneFile() {
+      return { ...this }
+    },
+  }
+}
+
+export function createMockTransform(transformFn) {
+  return new Transform({
+    objectMode: true,
+    transform: transformFn,
+  })
+}
+
+export async function createTestSandbox(prefix = 'test-run') {
+  const rootDir = path.join(process.cwd(), 'tests/.sandboxes')
+  if (!fs.existsSync(rootDir)) {
+    await fs.promises.mkdir(rootDir, { recursive: true })
+  }
+
+  const timestamp = Date.now()
+  const random = Math.floor(Math.random() * 1000)
+  const tempDir = path.join(rootDir, `${prefix}-${timestamp}-${random}`)
+
+  await fs.promises.mkdir(tempDir, { recursive: true })
   return tempDir
 }
 
-/**
- * Removes a temporary directory and all its contents.
- * @param {string} sandboxPath - Path to the sandbox directory
- * @returns {Promise<void>}
- */
 export async function cleanupSandbox(sandboxPath) {
   if (!sandboxPath || sandboxPath === '/') return
   await fs.promises.rm(sandboxPath, { recursive: true, force: true })
 }
 
-/**
- * Creates a mock environment object for testing config/env logic.
- * @param {object} overrides - Key-value pairs to override in the mock env
- * @returns {object} The mock environment object
- */
-export function mockEnv(overrides = {}) {
+export async function runInSandbox(prefix, testFunction) {
+  const sandboxPath = await createTestSandbox(prefix)
+  try {
+    await testFunction(sandboxPath)
+  } finally {
+    await cleanupSandbox(sandboxPath)
+  }
+}
+
+export function createMockEnvironment(overrides = {}) {
   return {
     BUILD_MODE: 'dev',
     SITE_BASE_URL: 'http://localhost:3000',
@@ -35,12 +72,8 @@ export function mockEnv(overrides = {}) {
   }
 }
 
-/**
- * Helper to write fixture files to a sandbox.
- * @param {string} sandboxPath - Base sandbox path
- * @param {object} files - Map of relative paths to file contents
- * @returns {Promise<void>}
- */
+export const mockEnv = createMockEnvironment
+
 export async function writeFixtures(sandboxPath, files) {
   for (const [filePath, content] of Object.entries(files)) {
     const fullPath = path.join(sandboxPath, filePath)

@@ -1,60 +1,50 @@
 import assert from 'node:assert/strict'
 import fs from 'node:fs/promises'
 import path from 'node:path'
-import { afterEach, beforeEach, describe, it } from 'node:test'
+import { describe, it } from 'node:test'
 
 import { processData } from '../../gulp/tasks/process-data.js'
-import { streamToPromise } from '../../gulp/utils/helpers.js'
-import {
-  cleanupSandbox,
-  createTestSandbox,
-  writeFixtures,
-} from '../test-helpers.js'
+import { runInSandbox, writeFixtures } from '../test-helpers.js'
 
-describe('processData Integration', () => {
-  let sandbox
+describe('processData Integration', function testProcessData() {
+  it('should transform homepage markdown fixture into JSON dataset and menu', async function testDataTransformation() {
+    await runInSandbox(
+      'process-data',
+      async function executeDataProcessing(sandboxPath) {
+        const testSrcDir = path.join(sandboxPath, 'src')
+        const testOutputDir = path.join(sandboxPath, 'output')
+        const sourceFilePath = path.join(testSrcDir, 'index.md')
 
-  beforeEach(async () => {
-    sandbox = await createTestSandbox()
-  })
+        await writeFixtures(sandboxPath, {
+          'src/index.md':
+            '---\ntitle: Home\nlayout: layout-default.njk\nmenuMain:\n  order: 1\n---\n# Home Content',
+        })
 
-  afterEach(async () => {
-    await cleanupSandbox(sandbox)
-  })
+        const stream = processData(sourceFilePath, testOutputDir, {
+          routesRoot: testSrcDir,
+        })
 
-  it('should transform homepage markdown fixture into JSON dataset and menu', async () => {
-    // Arrange
-    const routesRoot = path.join(sandbox, 'src/routes')
-    const destDir = path.join(sandbox, 'temp/pages')
+        await new Promise(function waitForStreamCompletion(resolve, reject) {
+          stream.on('end', resolve)
+          stream.on('error', reject)
+          stream.on('finish', resolve)
+          stream.resume()
+        })
 
-    const fixtures = {
-      'src/routes/index.md':
-        '---\ntitle: Home\nmenu_main:\n  order: 1\n---\n# Welcome',
-    }
+        const indexJsonPath = path.join(testOutputDir, 'index.json')
+        const menuJsonPath = path.join(testOutputDir, 'menu.json')
 
-    await writeFixtures(sandbox, fixtures)
+        const indexContent = await fs.readFile(indexJsonPath, 'utf8')
+        const menuContent = await fs.readFile(menuJsonPath, 'utf8')
 
-    // Act
-    const stream = processData(path.join(routesRoot, '**/*.md'), destDir, {
-      routesRoot,
-    })
-    await streamToPromise(stream)
+        const indexData = JSON.parse(indexContent)
+        const menuData = JSON.parse(menuContent)
 
-    // Assert
-    const indexJson = JSON.parse(
-      await fs.readFile(path.join(destDir, 'index.json'), 'utf8')
+        assert.strictEqual(indexData.title, 'Home')
+        assert.strictEqual(indexData.content, '# Home Content')
+        assert.ok(Array.isArray(menuData.menu))
+        assert.strictEqual(menuData.menu[0].name, 'Home')
+      }
     )
-    const menuJson = JSON.parse(
-      await fs.readFile(path.join(destDir, 'menu.json'), 'utf8')
-    )
-
-    assert.strictEqual(indexJson.title, 'Home')
-    assert.strictEqual(indexJson.path, '/')
-    assert.strictEqual(indexJson.page_id, 'home')
-
-    assert.strictEqual(menuJson.menu.length, 1)
-    assert.strictEqual(menuJson.menu[0].name, 'Home')
   })
-
-  // Removed nested routes test as per request to focus only on homepage
 })

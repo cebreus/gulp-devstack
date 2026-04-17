@@ -1,25 +1,24 @@
-{% if page.open_graph.use and page.open_graph.use %}
-
-  {% if page.open_graph.type %}
-    <meta property="og:type" content="{{ page.open_graph.type }}" />
+{% if page.openGraph.use and page.openGraph.use %}
+  {% if page.openGraph.type %}
+    <meta property="og:type" content="{{ page.openGraph.type }}" />
   {% endif %}
-  {% if page.open_graph.url %}
-    <meta property="og:url" content="{{ page.open_graph.url }}" />
+  {% if page.openGraph.url %}
+    <meta property="og:url" content="{{ page.openGraph.url }}" />
   {% endif %}
-  {% if site.open_graph.app_id %}
-    <meta property="fb:app_id" content="{{ site.open_graph.app_id }}" />
+  {% if site.openGraph.appId %}
+    <meta property="fb:app_id" content="{{ site.openGraph.appId }}" />
   {% endif %}
-  {% if site.open_graph.site_name %}
-    <meta property="og:site_name" content="{{ site.open_graph.site_name | striptags }}" />
+  {% if site.openGraph.siteName %}
+    <meta property="og:site_name" content="{{ site.openGraph.siteName | striptags }}" />
   {% endif %}
-  {% if page.open_graph.title %}
-    <meta property="og:title" content="{{ page.open_graph.title | striptags }}" />
+  {% if page.openGraph.title %}
+    <meta property="og:title" content="{{ page.openGraph.title | striptags }}" />
   {% endif %}
-  {% if page.open_graph.description %}
-    <meta property="og:description" content="{{ page.open_graph.description | striptags }}" />
+  {% if page.openGraph.description %}
+    <meta property="og:description" content="{{ page.openGraph.description | striptags }}" />
   {% endif %}
-  {% if page.open_graph.image | length > 0 %}
-    {% for item in page.open_graph.image %}
+  {% if page.openGraph.image | length > 0 %}
+    {% for item in page.openGraph.image %}
       {% if loop.index <= 9 %}
         <meta property="og:image" content="{{ item }}" />
         {# <meta property="og:image:type" content="png"> #}

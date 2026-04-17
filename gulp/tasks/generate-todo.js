@@ -4,10 +4,9 @@ import { Transform } from 'node:stream'
 import todoPlugin from 'gulp-todo'
 import gulp from 'gulp'
 
-import { getRelativePath, isPrivateFile } from '../utils/helpers.js'
-import loggerLib from '../utils/logger.js'
+import loggerLib, { getRelativePath, isPrivateFile } from '../utils/index.js'
 
-const logger = loggerLib.createLogger('TODO')
+const logger = loggerLib.createLogger('GenerateTodo')
 const DEFAULT_REPORTS_DIR = './.reports'
 const DEFAULT_REPORTS_FILE = 'TODO.md'
 
@@ -28,7 +27,6 @@ export function isReportEmpty(content) {
   if (lines.length !== MARKDOWN_TABLE_HEADER.length) return false
 
   return MARKDOWN_TABLE_HEADER.every((headerLine, index) => {
-    // Basic similarity check (ignoring slight variations in header text)
     return lines[index].includes('TODO') || lines[index].includes('|')
   })
 }
@@ -36,19 +34,18 @@ export function isReportEmpty(content) {
 /**
  * Gulp Task: Scans the codebase for TODO/FIXME comments and generates a Markdown report.
  * Automatically cleans up the report file if no items are found.
- * @returns {import('node:stream').Readable} Gulp stream
+ * @returns {import('node:stream').Stream} Gulp stream
  */
 export default function generateTodo() {
   let hasActiveTodos = false
   let reportBufferFile = null
 
-  const todoStream = gulp
+  return gulp
     .src([
-      './src/**/*.{js,scss,html}',
+      './src/**/*.{js,scss,html,njk,md}',
       './gulp/**/*.js',
+      './tests/**/*.js',
       '!./node_modules/**/*',
-      '!./gulp/**/*.test.js',
-      '!./gulp/**/*.spec.js',
     ])
     .pipe(
       new Transform({
@@ -70,38 +67,48 @@ export default function generateTodo() {
             hasActiveTodos = true
             reportBufferFile = file
           }
-          cb()
+          cb(null, file)
+        },
+        async flush(cb) {
+          const reportPath = path.join(
+            DEFAULT_REPORTS_DIR,
+            DEFAULT_REPORTS_FILE
+          )
+
+          try {
+            if (hasActiveTodos && reportBufferFile) {
+              await fs.promises.mkdir(DEFAULT_REPORTS_DIR, { recursive: true })
+              await fs.promises.writeFile(
+                reportPath,
+                reportBufferFile.contents.toString()
+              )
+              logger.debug(
+                `TODO Inventory updated: ${getRelativePath(reportPath)}`
+              )
+            } else {
+              try {
+                await fs.promises.access(reportPath)
+                await fs.promises.unlink(reportPath)
+
+                const remainingFiles =
+                  await fs.promises.readdir(DEFAULT_REPORTS_DIR)
+                if (remainingFiles.length === 0) {
+                  await fs.promises.rmdir(DEFAULT_REPORTS_DIR)
+                }
+                logger.verbose('No active tasks found. TODO report removed.')
+              } catch {
+                // Report didn't exist, nothing to do
+              }
+            }
+            cb()
+          } catch (error) {
+            cb(
+              new Error(`Failed to finalize TODO report: ${error.message}`, {
+                cause: error,
+              })
+            )
+          }
         },
       })
     )
-
-  todoStream.on('end', () => {
-    const reportPath = path.join(DEFAULT_REPORTS_DIR, DEFAULT_REPORTS_FILE)
-
-    try {
-      if (hasActiveTodos && reportBufferFile) {
-        if (!fs.existsSync(DEFAULT_REPORTS_DIR)) {
-          fs.mkdirSync(DEFAULT_REPORTS_DIR, { recursive: true })
-        }
-        fs.writeFileSync(reportPath, reportBufferFile.contents.toString())
-        logger.debug(`TODO Inventory updated: ${getRelativePath(reportPath)}`)
-      } else {
-        // Clean up legacy report if no TODOs remain
-        if (fs.existsSync(reportPath)) {
-          fs.unlinkSync(reportPath)
-
-          // Remove reports directory if it becomes empty
-          const remainingFiles = fs.readdirSync(DEFAULT_REPORTS_DIR)
-          if (remainingFiles.length === 0) {
-            fs.rmdirSync(DEFAULT_REPORTS_DIR)
-          }
-          logger.verbose('No active tasks found. TODO report removed.')
-        }
-      }
-    } catch (error) {
-      logger.error('Failed to finalize TODO report.', error)
-    }
-  })
-
-  return todoStream
 }

@@ -1,11 +1,11 @@
 ---
 # blueprint: copy this to create a new page
 title: Page Title
-page_id: unique-id-for-menu # optional, defaults to filename
+pageId: unique-id-for-menu # optional, defaults to filename
 layout: layout-default.njk # mandatory, choose from src/routes/
 lang: en # optional, defaults to site config
 
-menu_main:
+menuMain:
   name: Menu Name # optional, defaults to title
   order: 10 # lower numbers appear first
   show: true # set to false to hide from menu
@@ -13,13 +13,13 @@ menu_main:
 seo:
   description: Short meta description for search engines
   robots: index, follow
-  canonical_self: https://example.com/custom-url # optional
+  canonicalSelf: https://example.com/custom-url # optional
 
-open_graph:
+openGraph:
   image: /assets/images/gulp-devstack-open-graph.png
   description: Social media description (falls back to seo.description)
   
-twitter_cards:
+twitterCards:
   use: true # set to true to enable specific twitter meta
   image: /assets/images/gulp-devstack-open-graph.png
 ---

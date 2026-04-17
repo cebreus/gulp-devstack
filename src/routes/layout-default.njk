@@ -73,7 +73,7 @@
       <!-- inject:cdn:js --><!-- endinject -->
 
       {% for script in pageScripts or [] %}
-        <script src="{{ script }}"></script>
+        <script src="{{ script }}" type="module"></script>
       {% endfor %}
     {% endblock %}
 

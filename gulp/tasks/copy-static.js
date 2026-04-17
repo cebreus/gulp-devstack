@@ -3,15 +3,14 @@ import gulpNewer from 'gulp-newer'
 import pc from 'picocolors'
 import gulp from 'gulp'
 
-import {
+import loggerLib, {
   attachPipelineLogging,
   getRelativePath,
   isPrivateFile,
   streamToPromise,
-} from '../utils/helpers.js'
-import loggerLib from '../utils/logger.js'
+} from '../utils/index.js'
 
-const logger = loggerLib.createLogger('Copy')
+const logger = loggerLib.createLogger('CopyStatic')
 
 /**
  * Copies static assets from source to destination using Gulp streams.
@@ -19,9 +18,9 @@ const logger = loggerLib.createLogger('Copy')
  * @param {string|string[]} src - Source glob pattern(s)
  * @param {string} baseDir - Base directory for resolving relative paths
  * @param {string} dest - Destination directory
- * @returns {Promise<import('node:stream').Readable>} Gulp stream result
+ * @returns {Promise<import('node:stream').Stream>} Gulp stream result
  */
-export async function copyStatic(src, baseDir, dest) {
+export function copyStatic(src, baseDir, dest) {
   logger.list(
     `Starting copy to ${pc.cyan(dest)} (base: ${pc.dim(baseDir)})`,
     Array.isArray(src) ? src : [src]

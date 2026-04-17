@@ -1,4 +1,4 @@
-import { readFileSync } from 'fs'
+import { readFileSync } from 'node:fs'
 
 const pkg = JSON.parse(readFileSync('./package.json', 'utf8'))
 
@@ -21,15 +21,15 @@ export const siteDefaults = {
     robots: 'index,follow',
     include_to_sitemap: false,
   },
-  open_graph: {
+  openGraph: {
     use: true,
     type: 'website',
-    app_id: '',
-    site_name: 'Gulp DevStack',
+    appId: '',
+    siteName: 'Gulp DevStack',
     image: ['/assets/images/gulp-devstack-open-graph.png'],
-    image_text: '𝕊𝕚𝕥𝕖 Open Graph Image Text',
+    imageText: '𝕊𝕚𝕥𝕖 Open Graph Image Text',
   },
-  twitter_cards: {
+  twitterCards: {
     use: false,
     type: 'summary_large_image',
     image: [],

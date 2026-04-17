@@ -3,206 +3,89 @@ import fs from 'node:fs/promises'
 import path from 'node:path'
 import { Transform } from 'node:stream'
 import matter from 'gray-matter'
+import nunjucks from 'nunjucks'
 import gulp from 'gulp'
 
 import { siteDefaults } from '../../src/config/site.js'
-import { isPrivateFile } from '../utils/helpers.js'
-import loggerLib from '../utils/logger.js'
+import loggerLib, {
+  buildPageData,
+  extractMenuEntry,
+  isPrivateFile,
+  resolvePageLocation,
+} from '../utils/index.js'
 
-const logger = loggerLib.createLogger('Data')
-
-/**
- * @typedef {object} PageMetadata
- * @property {string} title - Page title
- * @property {string} [page_id] - Unique page identifier
- * @property {string} [path] - Relative URL path
- * @property {object} [seo] - SEO specific metadata
- * @property {object} [open_graph] - OG social metadata
- * @property {object} [menu_main] - Main menu configuration
- */
+const logger = loggerLib.createLogger('ProcessData')
 
 /**
- * Recursively trims whitespace from all string values in an object or array.
- * @param {any} input - Target data structure
- * @returns {any} Trimmed data structure
+ * Internal: Renders a Nunjucks expression within a frontmatter string value.
+ * Throws if the expression is syntactically invalid — caller must handle.
+ * @param {string} value - The string to evaluate.
+ * @param {Record<string, unknown>} context - Data context.
+ * @returns {string} Processed string.
+ * @private
  */
-function deepTrimStrings(input) {
-  if (typeof input === 'string') return input.trim()
-  if (Array.isArray(input)) return input.map((item) => deepTrimStrings(item))
-  if (input instanceof Date) return input
-  if (input && typeof input === 'object') {
-    return Object.fromEntries(
-      Object.entries(input).map(([key, value]) => [key, deepTrimStrings(value)])
-    )
+function renderExpression(value, context) {
+  if (!value.includes('{{') && !value.includes('{%')) {
+    return value
   }
-  return input
+
+  try {
+    return nunjucks.renderString(value, context)
+  } catch (error) {
+    throw new Error(`[ProcessData] Failed to render expression: "${value}".`, {
+      cause: error,
+    })
+  }
 }
 
 /**
- * Resolves route-relative folder and final page path for a content file.
- * @param {string} filePath - Absolute path to the source file
- * @param {string} fileName - Source file name without extension
- * @param {string} [routesRoot] - Routes root directory
- * @returns {{relativeDir: string, pagePath: string}} Route location metadata
+ * Recursively resolves Nunjucks expressions within a data structure.
+ * @param {unknown} data - The data to process (string, object, or array).
+ * @param {Record<string, unknown>} context - The context for rendering.
+ * @returns {unknown} Data with resolved expressions.
  */
-export function resolvePageLocation(
-  filePath,
-  fileName,
-  routesRoot = './src/routes'
-) {
-  const absoluteRoutesRoot = path.resolve(routesRoot)
-  const absoluteFilePath = path.resolve(filePath)
-
-  const isRouteFile = absoluteFilePath.startsWith(absoluteRoutesRoot)
-  const relativeDir = isRouteFile
-    ? path
-        .relative(absoluteRoutesRoot, path.dirname(absoluteFilePath))
-        .replace(/\\/g, '/')
-    : ''
-
-  let pagePath = relativeDir !== '' ? `/${relativeDir}` : '/'
-  if (fileName !== 'index') {
-    pagePath = path.join(pagePath, fileName).replace(/\\/g, '/')
-    if (!pagePath.startsWith('/')) pagePath = `/${pagePath}`
+export function resolveDataExpressions(data, context) {
+  if (typeof data === 'string') {
+    return renderExpression(data, context)
   }
 
-  return { relativeDir, pagePath }
-}
-
-/**
- * Normalizes a URL to be absolute by prepending the base URL.
- * @param {string} url - Input URL
- * @param {string} baseUrl - Base URL to prepend
- * @returns {string} Normalized absolute URL
- */
-function normalizeToAbsoluteUrl(url, baseUrl) {
-  if (!url) return url
-  if (/^https?:\/\//.test(url)) return url
-  if (!baseUrl) return url
-  return `${baseUrl.replace(/\/$/, '')}/${url.replace(/^\//, '')}`
-}
-
-/**
- * Resolves image metadata to absolute URLs recursively.
- * @param {any} data - Metadata object
- * @param {string} baseUrl - Project base URL
- * @returns {any} Processed metadata
- */
-function resolveMetadataUrls(data, baseUrl) {
-  const IMAGE_KEYS = ['image', 'images', 'thumbnail', 'url']
-
-  if (typeof data === 'string') return normalizeToAbsoluteUrl(data, baseUrl)
-  if (Array.isArray(data))
-    return data.map((item) => resolveMetadataUrls(item, baseUrl))
-
-  if (data && typeof data === 'object') {
-    return Object.fromEntries(
-      Object.entries(data).map(([key, value]) => {
-        if (
-          IMAGE_KEYS.includes(key) &&
-          (Array.isArray(value) || typeof value === 'string')
-        ) {
-          return [key, resolveMetadataUrls(value, baseUrl)]
-        }
-        if (value && typeof value === 'object') {
-          return [key, resolveMetadataUrls(value, baseUrl)]
-        }
-        return [key, value]
-      })
-    )
+  if (Array.isArray(data)) {
+    return data.map((item) => resolveDataExpressions(item, context))
   }
+
+  if (data !== null && typeof data === 'object') {
+    const entries = Object.entries(data).map(([key, value]) => [
+      key,
+      resolveDataExpressions(value, context),
+    ])
+    return Object.fromEntries(entries)
+  }
+
   return data
 }
 
 /**
- * Applies canonical and social metadata defaults to page data.
- * @param {object} jsonData - Existing normalized page data
- * @param {string} pagePath - Calculated page path
- * @param {object} [siteConfig] - Global site configuration
- * @returns {object} Page data enriched with SEO defaults
+ * Internal: Writes page JSON artifact to disk.
+ * @param {object} params - Write parameters.
+ * @param {string} params.dest - Destination base directory.
+ * @param {string} params.routesRoot - Root of the source routes.
+ * @param {string} params.filePath - Original file path.
+ * @param {Record<string, unknown>} params.data - Data to write.
+ * @returns {Promise<string>} Relative path to the generated file.
+ * @private
  */
-export function applySeoDefaults(
-  jsonData,
-  pagePath,
-  siteConfig = siteDefaults
-) {
-  const baseNoSlash = (siteConfig.baseUrl || '').replace(/\/$/, '')
-  const pageCanonicalUrl = `${baseNoSlash}${pagePath}`
+async function writeDataArtifact({ dest, routesRoot, filePath, data }) {
+  const relativeFilePath = path.relative(routesRoot, filePath)
+  const outputFileName = relativeFilePath.replace(
+    path.extname(filePath),
+    '.json'
+  )
+  const outputFilePath = path.join(dest, outputFileName)
 
-  return {
-    ...jsonData,
-    seo: {
-      canonical_self: pageCanonicalUrl,
-      ...jsonData.seo,
-    },
-    open_graph: {
-      url: pageCanonicalUrl,
-      ...resolveMetadataUrls(jsonData.open_graph || {}, siteConfig.baseUrl),
-    },
-    twitter_cards: {
-      url: pageCanonicalUrl,
-      ...resolveMetadataUrls(jsonData.twitter_cards || {}, siteConfig.baseUrl),
-    },
-  }
-}
+  await fs.mkdir(path.dirname(outputFilePath), { recursive: true })
+  await fs.writeFile(outputFilePath, JSON.stringify(data, null, 2))
 
-/**
- * Builds normalized page payload from parsed markdown frontmatter and content.
- * @param {object} frontmatter - Parsed frontmatter fields
- * @param {string} content - Markdown content
- * @param {string} fileName - Source file name without extension
- * @param {string} pagePath - Calculated route path
- * @param {object} [options] - Task options
- * @param {string} [options.homePageId] - Optional custom page id for homepage
- * @param {object} [siteConfig] - Global site defaults
- * @returns {object} Normalized and SEO-enriched page data
- */
-export function buildPageData(
-  frontmatter,
-  content,
-  fileName,
-  pagePath,
-  options = {},
-  siteConfig = siteDefaults
-) {
-  const autoPageId =
-    pagePath === '/'
-      ? options.homePageId || 'home'
-      : path.basename(pagePath) || fileName
-
-  const jsonData = {
-    ...deepTrimStrings(frontmatter),
-    content: deepTrimStrings(content),
-    path: pagePath,
-    fileName,
-    page_id: frontmatter.page_id || autoPageId,
-  }
-
-  return applySeoDefaults(jsonData, pagePath, siteConfig)
-}
-
-/**
- * Extracts and normalizes menu data for a specific page.
- * @param {object} frontmatter - Parsed frontmatter data
- * @param {string} fileName - Current file name
- * @returns {object} Normalized menu entry
- */
-function extractMenuEntry(frontmatter, fileName) {
-  const DEFAULT_ORDER = 999
-
-  if (frontmatter.menu_main && typeof frontmatter.menu_main === 'object') {
-    return {
-      name: frontmatter.menu_main.name || frontmatter.title || fileName,
-      order: frontmatter.menu_main.order ?? DEFAULT_ORDER,
-      show: frontmatter.menu_main.show !== false,
-    }
-  }
-
-  return {
-    name: frontmatter.menu_name || frontmatter.title || fileName,
-    order: frontmatter.menu_order ?? DEFAULT_ORDER,
-    show: frontmatter.show_in_menu !== false,
-  }
+  return path.relative(process.cwd(), outputFilePath)
 }
 
 /**
@@ -211,7 +94,8 @@ function extractMenuEntry(frontmatter, fileName) {
  * @param {string|string[]} src - Source glob pattern(s)
  * @param {string} dest - Destination directory for JSON output
  * @param {object} [options] - Additional build options
- * @returns {import('node:stream').Readable} Gulp stream
+ * @param {string} [options.routesRoot] - Root directory for routes
+ * @returns {import('node:stream').Stream} Gulp stream
  */
 export function processData(src, dest, options = {}) {
   const routesRoot = options.routesRoot || './src/routes'
@@ -225,106 +109,119 @@ export function processData(src, dest, options = {}) {
   const generatedFiles = []
   const usedPageIds = new Set()
 
-  return gulp.src(src).pipe(
-    new Transform({
-      objectMode: true,
-      async transform(file, _enc, cb) {
-        try {
-          if (isPrivateFile(file.path)) {
-            logger.verbose(
-              `Skipping private content file: ${path.basename(file.path)}`
-            )
-            return cb(null, null)
-          }
+  const dataTransform = new Transform({
+    objectMode: true,
+    async transform(file, _enc, cb) {
+      if (isPrivateFile(file.path)) {
+        logger.verbose(`Skipping private content: ${path.basename(file.path)}`)
+        return cb()
+      }
 
-          const rawContent = file.contents.toString().trim()
-          const fileName = path.basename(file.path, path.extname(file.path))
+      const rawContent = file.contents.toString().trim()
+      const fileName = path.basename(file.path, path.extname(file.path))
 
-          if (!rawContent) {
-            logger.warn(`Skipping empty data file: ${path.basename(file.path)}`)
-            return cb(null, null)
-          }
+      if (!rawContent) {
+        logger.warn(`Skipping empty data file: ${path.basename(file.path)}`)
+        return cb()
+      }
 
-          const { data: frontmatter, content } = matter(rawContent)
+      try {
+        const { data: frontmatter, content } = matter(rawContent)
+        const { pagePath } = resolvePageLocation(
+          file.path,
+          fileName,
+          routesRoot
+        )
 
-          const pageLocation = resolvePageLocation(
-            file.path,
-            fileName,
-            routesRoot
+        // Resolve Nunjucks expressions within the frontmatter
+        const context = { site: { ...siteDefaults }, page: { ...frontmatter } }
+        const renderedFrontmatter = resolveDataExpressions(frontmatter, context)
+
+        const jsonData = buildPageData({
+          frontmatter: renderedFrontmatter,
+          content,
+          fileName,
+          pagePath,
+          options: { homePageId: 'home' },
+          siteConfig: siteDefaults,
+        })
+
+        if (usedPageIds.has(jsonData.pageId)) {
+          logger.warn(
+            `Duplicate pageId '${jsonData.pageId}' in ${file.path}. This may cause routing conflicts.`
           )
-
-          let jsonData = buildPageData(
-            frontmatter,
-            content,
-            fileName,
-            pageLocation.pagePath,
-            options,
-            siteDefaults
-          )
-
-          if (usedPageIds.has(jsonData.page_id)) {
-            logger.error(
-              `Duplicate page_id '${jsonData.page_id}' found in ${path.basename(file.path)}. This will cause menu conflicts.`
-            )
-          }
-          usedPageIds.add(jsonData.page_id)
-
-          if (!jsonData.title) {
-            jsonData.title =
-              fileName.charAt(0).toUpperCase() + fileName.slice(1)
-            logger.verbose(
-              `Missing title in ${path.basename(file.path)}, using fallback: ${jsonData.title}`
-            )
-          }
-
-          const outputDir = path.join(dest, pageLocation.relativeDir)
-          mkdirSync(outputDir, { recursive: true })
-
-          // Handle Menu
-          const menuEntry = extractMenuEntry(jsonData, fileName)
-          jsonData.menu_main = menuEntry
-
-          if (menuEntry.show) {
-            globalMenuItems.push({
-              name: menuEntry.name,
-              page_id: jsonData.page_id,
-              url: pageLocation.pagePath,
-              order: menuEntry.order,
-            })
-          }
-
-          const outputFilePath = path.join(outputDir, `${fileName}.json`)
-          await fs.writeFile(outputFilePath, JSON.stringify(jsonData, null, 2))
-          generatedFiles.push(path.relative(process.cwd(), outputFilePath))
-          processedCount++
-          cb(null, file)
-        } catch (error) {
-          logger.error(`Failed to process data file ${file.path}:`, error)
-          cb(error)
         }
-      },
-      async flush(cb) {
-        try {
-          globalMenuItems.sort((a, b) => a.order - b.order)
-          const menuFile = path.join(dest, 'menu.json')
-          await fs.writeFile(
-            menuFile,
-            JSON.stringify({ menu: globalMenuItems }, null, 2)
-          )
-          generatedFiles.push(path.relative(process.cwd(), menuFile))
+        usedPageIds.add(jsonData.pageId)
 
-          logger.info(
-            `Dataset processing complete. ${processedCount} entries created.`
-          )
-          logger.list('Generated artifacts', generatedFiles)
-          cb()
-        } catch (error) {
-          logger.error('Failed to write global menu.json:', error)
-          cb(error)
+        // Menu processing
+        const menuEntry = extractMenuEntry(frontmatter, fileName)
+        if (menuEntry.show) {
+          globalMenuItems.push({
+            ...menuEntry,
+            path: pagePath,
+            url: pagePath,
+            pageId: jsonData.pageId,
+          })
         }
-      },
-    })
-  )
+
+        const artifactPath = await writeDataArtifact({
+          dest,
+          routesRoot,
+          filePath: file.path,
+          data: jsonData,
+        })
+
+        processedCount += 1
+        generatedFiles.push(artifactPath)
+
+        file.contents = Buffer.from(JSON.stringify(jsonData))
+        this.push(file)
+        cb()
+      } catch (error) {
+        logger.error(`Failed to process ${file.path}. Cause: ${error.message}`)
+        cb(error)
+      }
+    },
+    async flush(cb) {
+      try {
+        globalMenuItems.sort((a, b) => a.order - b.order)
+        const menuFile = path.join(dest, 'menu.json')
+        await fs.writeFile(
+          menuFile,
+          JSON.stringify({ menu: globalMenuItems }, null, 2)
+        )
+        generatedFiles.push(path.relative(process.cwd(), menuFile))
+
+        logger.info(`Dataset complete. ${processedCount} entries created.`)
+        logger.list('Generated artifacts', generatedFiles)
+        cb()
+      } catch (error) {
+        logger.error(`Failed to write menu.json. Cause: ${error.message}`)
+        cb(error)
+      }
+    },
+  })
+
+  return gulp.src(src).pipe(dataTransform)
+}
+
+/**
+ * High-level orchestration for dataset generation based on build mode.
+ * @param {object} config - Project configuration provider
+ * @param {boolean} [fullBuild] - Whether to include site-wide metadata (true) or just pages (false)
+ * @returns {import('gulp').TaskFunction | import('node:stream').Stream} Gulp parallel task result or stream
+ */
+export function processAllData(config, fullBuild = false) {
+  const datasetPages = () =>
+    processData(config.datasetPagesSource, config.datasetPagesBuild)
+
+  if (fullBuild) {
+    const datasetSite = () =>
+      processData(config.siteConfigFile, config.tempBase)
+    return gulp.parallel(datasetSite, datasetPages)
+  }
+
+  return datasetPages
 }
 
 export default processData

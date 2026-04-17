@@ -100,12 +100,12 @@ async function generateCleanSiteConfig() {
     robots: 'index,follow',
     include_to_sitemap: true,
   },
-  open_graph: {
+  openGraph: {
     use: true,
     type: 'website',
-    site_name: 'New Project',
+    siteName: 'New Project',
   },
-  twitter_cards: {
+  twitterCards: {
     use: false,
   },
 }
@@ -154,7 +154,7 @@ async function run() {
   try {
     const pkgRaw = await fs.readFile('package.json', 'utf-8')
     pkg = JSON.parse(pkgRaw)
-  } catch (e) {
+  } catch {
     console.error(
       pc.red('✖ Error: package.json is missing or malformed. Cannot proceed.')
     )
@@ -231,7 +231,7 @@ async function run() {
       execSync(`git checkout -b ${backupBranch}`, { stdio: 'ignore' })
       execSync('git checkout -', { stdio: 'ignore' }) // Switch back
       console.log(pc.green(`✔ Backup branch created.`))
-    } catch (e) {
+    } catch {
       console.log(pc.yellow('! Git backup branch failed, continuing anyway.'))
     }
   }
@@ -363,7 +363,7 @@ async function run() {
         console.log(pc.green('✔ Updated VSCode workspace settings.'))
       }
     }
-  } catch (e) {
+  } catch {
     console.log(pc.dim('VSCode workspace update skipped or failed.'))
   }
 
@@ -389,7 +389,7 @@ async function run() {
         )
       }
     }
-  } catch (e) {
+  } catch {
     console.log(pc.dim('.env creation failed or skipped.'))
   }
 
@@ -419,7 +419,7 @@ async function run() {
         )
       )
     }
-  } catch (e) {
+  } catch {
     console.log(pc.yellow('! Failed to prune COMPONENTS.md, skipping.'))
   }
 
@@ -447,7 +447,7 @@ async function run() {
         console.log(
           pc.green('✔ Successfully committed clean boilerplate state.')
         )
-      } catch (e) {
+      } catch {
         console.log(
           pc.yellow(
             'Git commit failed (maybe no changes or nothing to commit).'

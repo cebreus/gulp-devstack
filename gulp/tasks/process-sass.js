@@ -1,49 +1,32 @@
 import path from 'node:path'
-import autoprefixer from 'autoprefixer'
-import cssnano from 'cssnano'
+import { Transform } from 'node:stream'
 import { glob } from 'glob'
-import concat from 'gulp-concat'
-import prettify from 'gulp-jsbeautifier'
-import newer from 'gulp-newer'
-import postcss from 'gulp-postcss'
-import replace from 'gulp-replace'
-import gulpSass from 'gulp-sass'
-import sourcemaps from 'gulp-sourcemaps'
 import pc from 'picocolors'
-import * as sass from 'sass'
 import gulp from 'gulp'
 
-import * as defaultConfig from '../config.js'
-import {
+import loggerLib, {
+  ensureFileIntegrity,
   isPrivateFile,
   streamToPromise,
   suppressOutdatedBootstrapWarnings,
-} from '../utils/helpers.js'
-import loggerLib from '../utils/logger.js'
+} from '../utils/index.js'
 
-const sassCompiler = gulpSass(sass)
 const logger = loggerLib.createLogger('Sass')
-
-/**
- * Matches the prelude of a SCSS file:
- * - line comments  (//)
- * - block comments (/* ... *\/)
- * - @use / @forward directives
- * Captures everything before the first real rule.
- */
+const scssDiscoveryCache = new Map()
+const SCSS_DISCOVERY_CACHE_TTL_MS = 1000
 const SASS_PRELUDE_REGEX =
   /^\s*(?:(?:\/\/[^\r\n]*|\/\*[\s\S]*?\*\/|@(?:use|forward)\s[^;]+;)\s*)*/
 
 /**
  * Builds standard SASS include paths.
- * @param {string} [extraPath] - Optional additional path to include
- * @param {object} [buildConfig] - Configuration provider
+ * @param {string|null} [extraPath] - Optional additional path to include
+ * @param {object} config - Configuration object containing sassBase
  * @returns {string[]} Resolved include paths
  */
-export function buildSassIncludePaths(extraPath, buildConfig = defaultConfig) {
+export function buildSassIncludePaths(extraPath, config) {
   return [
     path.resolve('./src'),
-    path.resolve(buildConfig.sassBase),
+    path.resolve(config.sassBase),
     path.resolve('./'),
     path.resolve('./node_modules'),
     ...(extraPath ? [path.resolve(extraPath)] : []),
@@ -52,23 +35,29 @@ export function buildSassIncludePaths(extraPath, buildConfig = defaultConfig) {
 
 /**
  * Generates options for the SASS compiler.
- * @param {object} customSassOptions - Overrides
- * @param {boolean} minify - Minification flag
- * @param {object} [buildConfig] - Configuration provider
+ * @param {object} [customSassOptions] - Overrides for sass options
+ * @param {boolean} [minify] - Whether to use compressed output
+ * @param {object} config - Configuration object
  * @returns {object} Sass compiler options
  */
 export function getSassCompilerOptions(
   customSassOptions = {},
   minify = false,
-  buildConfig = defaultConfig
+  config
 ) {
   return {
     quietDeps: true,
+    silenceDeprecations: [
+      'import',
+      'slash-div',
+      'color-functions',
+      'global-variable-shadowing',
+    ],
     outputStyle: minify ? 'compressed' : 'expanded',
     ...customSassOptions,
     includePaths: buildSassIncludePaths(
       customSassOptions.includePaths?.[0],
-      buildConfig
+      config
     ),
     logger: {
       warn: (message, options) => {
@@ -82,87 +71,159 @@ export function getSassCompilerOptions(
 }
 
 /**
- * Builds a Gulp pipeline for SASS compilation.
- * @param {object} options - Configuration options
- * @param {string|string[]} options.src - Source files to compile
- * @param {string} options.dest - Destination directory
- * @param {string|null} [options.outputFilename] - Name of the output file (if concatenating)
- * @param {import('postcss').AcceptedPlugin[]} [options.postcssPlugins] - PostCSS plugins to use
- * @param {object} [options.sassOptions] - Options for the Sass compiler
- * @param {boolean} [options.sourceMaps] - Whether to generate source maps
- * @param {boolean} [options.minify] - Whether to minify the output
- * @param {boolean} [options.beautify] - Whether to beautify the output
- * @param {string} [options.loggerContext] - Context name for logs
- * @returns {import('node:stream').ReadWriteStream} The Gulp stream to handle.
+ * Clears the in-memory SCSS discovery cache.
+ * @returns {void}
  */
-export function buildSassPipeline({
-  src,
-  dest,
-  outputFilename,
-  postcssPlugins = [],
-  sassOptions: customSassOptions = {},
-  sourceMaps = false,
-  minify = false,
-  beautify = false,
-  loggerContext = '[SASS]',
-}) {
-  const finalPostcssPlugins = postcssPlugins.length
-    ? [...postcssPlugins]
-    : [autoprefixer()]
+export function clearScssDiscoveryCache() {
+  scssDiscoveryCache.clear()
+}
 
-  if (minify) {
-    finalPostcssPlugins.push(cssnano())
+/**
+ * Discovers SCSS source files with caching.
+ * @param {string} sourceDir - Directory to scan
+ * @param {object} [options] - Discovery options
+ * @returns {Promise<string[]>} List of found files
+ */
+export async function discoverScssSources(sourceDir, options = {}) {
+  const pattern = path.join(sourceDir, '**/*.scss').replace(/\\/g, '/')
+  const ttlMs = options.ttlMs ?? SCSS_DISCOVERY_CACHE_TTL_MS
+  const now = options.now ? options.now() : Date.now()
+  const globFn = options.globFn || glob
+
+  const cached = scssDiscoveryCache.get(pattern)
+  if (cached && cached.expiresAt > now) return cached.files
+
+  const files = await globFn(pattern)
+  scssDiscoveryCache.set(pattern, { files, expiresAt: now + ttlMs })
+  return files
+}
+
+/**
+ * Resolves the SASS prelude for a file.
+ * @param {string} match - The matched prelude string
+ * @param {object} file - Vinyl file object
+ * @param {object} config - Configuration object
+ * @returns {string} The resolved prelude
+ */
+export function resolveSassPrelude(match, file, config) {
+  const content = file.contents ? file.contents.toString() : ''
+  const isComponent = file.path.includes('/components/')
+  const hasGlobals =
+    content.includes('globals') || file.path.endsWith('globals.scss')
+
+  const componentsBase = path
+    .resolve(config.sassBase, 'components.scss')
+    .replace(/\\/g, '/')
+  const globalsBase = path
+    .resolve(config.sassBase, 'globals.scss')
+    .replace(/\\/g, '/')
+
+  let prelude = match
+  if (!hasGlobals) {
+    prelude += isComponent
+      ? `@use "${globalsBase}" as *;\n`
+      : `@use "${componentsBase}" as *;\n`
   }
+  return prelude
+}
 
-  const sassCompilerOptions = getSassCompilerOptions(customSassOptions, minify)
-
-  // Log only the source if it's a simple string, otherwise represent the glob
-  const logIn = typeof src === 'string' ? src : 'Multiple files'
-  const logOut = outputFilename || 'Original names'
-  logger.verbose(`Compilation: ${logIn} -> ${logOut}`)
-
-  let pipeline = gulp.src(src, { allowEmpty: true })
-
-  // Use gulp-newer for incremental builds
-  if (outputFilename) {
-    pipeline = pipeline.pipe(newer(path.join(dest, outputFilename)))
-  } else {
-    pipeline = pipeline.pipe(newer({ dest, ext: '.css' }))
-  }
-
-  // Auto-prepend global configuration (@use/forward must be first)
-  pipeline = pipeline.pipe(
-    replace(SASS_PRELUDE_REGEX, function (match) {
-      const content = this.file.contents ? this.file.contents.toString() : ''
-      const isComponent = this.file.path.includes('/components/')
-      const isGlobals =
-        content.includes('globals') || this.file.path.endsWith('_globals.scss')
-
-      let prelude = match
-
-      const componentsBase = path
-        .resolve(defaultConfig.sassBase, '_components.scss')
-        .replace(/\\/g, '/')
-      const globalsBase = path
-        .resolve(defaultConfig.sassBase, '_globals.scss')
-        .replace(/\\/g, '/')
-
-      if (!isGlobals && !content.includes('_globals.scss')) {
-        if (isComponent) {
-          // Individual components only need globals
-          prelude += `@import "${globalsBase}";\n`
-        } else if (!content.includes('_components.scss')) {
-          // Routes/Utilities get the full library (which carries globals)
-          prelude += `@import "${componentsBase}";\n`
-        }
+/**
+ * Filters out empty files from the stream to prevent integrity failures
+ * and avoid deploying useless empty assets.
+ * @returns {import('node:stream').Transform} A transform stream
+ */
+function dropEmptyFiles() {
+  return new Transform({
+    objectMode: true,
+    transform(file, _enc, cb) {
+      if (file.contents && file.contents.length === 0) {
+        return cb(null, null)
       }
-      return prelude
+      cb(null, file)
+    },
+  })
+}
+
+/**
+ * Builds a SASS compilation pipeline.
+ * @param {object} config - Configuration object
+ * @param {object} params - Pipeline parameters
+ * @param {string|string[]} params.src - Source files
+ * @param {string} params.dest - Destination directory
+ * @param {string|null} params.outputFilename - Optional output name
+ * @param {import('postcss').AcceptedPlugin[]} [params.postcssPlugins] - PostCSS plugins
+ * @param {object} [params.sassOptions] - Custom sass options
+ * @param {boolean} [params.sourceMaps] - Source maps flag
+ * @param {boolean} [params.minify] - Minification flag
+ * @param {boolean} [params.beautify] - Beautification flag
+ * @param {string} [params.base] - Base directory for preserving hierarchy
+ * @param {boolean} [params.skipNewer] - Skip newer check flag
+ * @param {boolean} [params.skipIntegrity] - Skip integrity check flag
+ * @returns {Promise<import('node:stream').ReadWriteStream>} Gulp stream
+ */
+export async function buildSassPipeline(
+  config,
+  {
+    src,
+    dest,
+    base,
+    outputFilename,
+    postcssPlugins = [],
+    sassOptions: customSassOptions = {},
+    sourceMaps = false,
+    minify = false,
+    beautify = false,
+    skipNewer = false,
+    skipIntegrity = false,
+  }
+) {
+  const { default: autoprefixer } = await import('autoprefixer')
+  const { default: cssnano } = await import('cssnano')
+  const { default: concat } = await import('gulp-concat')
+  const { default: prettify } = await import('gulp-jsbeautifier')
+  const { default: newer } = await import('gulp-newer')
+  const { default: postcss } = await import('gulp-postcss')
+  const { default: replace } = await import('gulp-replace')
+  const { default: gulpSass } = await import('gulp-sass')
+  const { default: sourcemaps } = await import('gulp-sourcemaps')
+  const sass = await import('sass')
+
+  const sassCompiler = gulpSass(sass)
+
+  const finalPostcssPlugins = [autoprefixer(), ...postcssPlugins]
+  if (minify) finalPostcssPlugins.push(cssnano())
+
+  const sassCompilerOptions = getSassCompilerOptions(
+    customSassOptions,
+    minify,
+    config
+  )
+
+  let pipeline = gulp.src(src, { allowEmpty: true, base }).pipe(
+    new Transform({
+      objectMode: true,
+      transform(file, _enc, cb) {
+        if (isPrivateFile(file.path)) return cb(null, null)
+        cb(null, file)
+      },
     })
   )
 
-  if (sourceMaps) {
-    pipeline = pipeline.pipe(sourcemaps.init())
+  if (!skipNewer) {
+    if (outputFilename) {
+      pipeline = pipeline.pipe(newer(path.join(dest, outputFilename)))
+    } else {
+      pipeline = pipeline.pipe(newer({ dest, ext: '.css' }))
+    }
   }
+
+  pipeline = pipeline.pipe(
+    replace(SASS_PRELUDE_REGEX, function (match) {
+      return resolveSassPrelude(match, this.file, config)
+    })
+  )
+
+  if (sourceMaps) pipeline = pipeline.pipe(sourcemaps.init())
 
   pipeline = pipeline.pipe(
     sassCompiler(sassCompilerOptions).on('error', function (error) {
@@ -170,168 +231,284 @@ export function buildSassPipeline({
         this.emit('end')
         return
       }
-
-      const filePath = error.file
-        ? pc.cyan(path.relative(process.cwd(), error.file))
-        : 'unknown file'
-      const message = error.messageOriginal || error.message
-
-      logger.error(`${loggerContext} Compilation Error in ${filePath}`)
-      console.log(pc.red('--------------------------------------------------'))
-      console.log(`${pc.yellow('Error:')} ${message}`)
-      if (error.line) {
-        console.log(
-          `${pc.yellow('Location:')} line ${error.line}, column ${error.column}`
-        )
-      }
-      console.log(pc.red('--------------------------------------------------'))
-
+      logger.error(
+        `Sass compilation failed in ${error.file || 'unknown'}. Cause: ${error.message}`
+      )
       this.emit('end')
+    })
+  )
+  pipeline = pipeline.pipe(dropEmptyFiles())
+  pipeline = pipeline.pipe(
+    ensureFileIntegrity({
+      taskName: 'Sass',
+      minSize: 10,
+      skipIntegrity: skipIntegrity || config.skipIntegrity || false,
     })
   )
 
   pipeline = pipeline.pipe(postcss(finalPostcssPlugins))
+  if (outputFilename) pipeline = pipeline.pipe(concat(outputFilename))
 
-  if (outputFilename) {
-    pipeline = pipeline.pipe(concat(outputFilename))
+  if (minify) {
+    pipeline = pipeline.pipe(
+      new Transform({
+        objectMode: true,
+        transform(file, _enc, cb) {
+          if (!file.basename.includes('.min.')) {
+            file.extname = `.min${file.extname}`
+          }
+          cb(null, file)
+        },
+      })
+    )
   }
 
   if (beautify && !minify) {
     pipeline = pipeline.pipe(prettify({ indent_size: 4 }))
   }
 
-  if (sourceMaps) {
-    pipeline = pipeline.pipe(sourcemaps.write('./maps'))
-  }
+  if (sourceMaps) pipeline = pipeline.pipe(sourcemaps.write('./maps'))
 
-  pipeline = pipeline.pipe(gulp.dest(dest))
-
-  return pipeline.on('end', () => {
-    const assetName = outputFilename || 'Route/Component styles'
-    const isDebug = loggerLib.isDebugEnabled()
-
-    let reportMsg = `Saved: ${pc.yellow(assetName)}`
-
-    if (isDebug) {
-      if (outputFilename) {
-        reportMsg = `Saved: ${pc.yellow(path.join(dest, outputFilename))}`
-      } else {
-        reportMsg = `Saved: ${pc.yellow(assetName)} to ${pc.dim(dest)}`
-      }
-    }
-
-    logger.info(reportMsg)
+  return pipeline.pipe(gulp.dest(dest)).on('end', () => {
+    logger.info(
+      `Saved: ${pc.yellow(outputFilename || 'Styles')} to ${pc.dim(dest)}`
+    )
   })
 }
 
 /**
- * Promisified SASS processing for Gulp tasks.
+ * Promisified SASS processing.
+ * @param {object} config - Configuration object
  * @param {string|string[]} src - Source files
  * @param {string} dest - Destination directory
- * @param {string|null} outputFilename - Optional output filename
+ * @param {string|null} outputFilename - Optional output name
  * @param {import('postcss').AcceptedPlugin[]} [postcssPlugins] - PostCSS plugins
  * @param {object} [options] - Additional options
  * @returns {Promise<void>}
  */
 export async function processSass(
+  config,
   src,
   dest,
   outputFilename,
   postcssPlugins = [],
   options = {}
 ) {
-  const pipeline = buildSassPipeline({
+  const pipeline = await buildSassPipeline(config, {
     src,
     dest,
+    base: options.base,
     outputFilename,
     postcssPlugins,
     sassOptions: options.sassOptions || {},
-    sourceMaps: options.sourceMaps ?? defaultConfig.sourceMaps(),
-    minify: options.minify ?? defaultConfig.minifyCss(),
-    beautify: options.beautify ?? defaultConfig.formatCode(),
-    loggerContext: options.loggerContext || '[SASS]',
+    sourceMaps: options.sourceMaps ?? config.sourceMaps,
+    minify: options.minify ?? config.minifyCss,
+    beautify: options.beautify ?? config.formatCode,
+    skipNewer: options.skipNewer || false,
+    skipIntegrity: options.skipIntegrity || false,
   })
   return streamToPromise(pipeline)
 }
 
 /**
- * Compiles SCSS files matching a pattern into the target directory.
- * @param {object} options - Compilation options
- * @param {string} options.sourceDir - Directory to scan for .scss files
- * @param {string} options.dest - Output directory
- * @param {string|null} [options.outputFilename] - Output filename (null = keep originals)
- * @param {string} [options.loggerContext] - Log prefix
- * @param {object} [options.options] - Additional processSass options
+ * Compiles a group of SCSS files.
+ * @param {object} config - Configuration object
+ * @param {object} params - Group parameters
+ * @param {string} params.sourceDir - Source directory
+ * @param {string} params.dest - Destination directory
+ * @param {string|null} [params.outputFilename] - Optional output name
+ * @param {string} [params.loggerContext] - Log context
+ * @param {import('postcss').AcceptedPlugin[]} [params.postcssPlugins] - PostCSS plugins
+ * @param {object} [params.options] - Additional options
  * @returns {Promise<void>}
  */
-async function compileScssGroup({
-  sourceDir,
-  dest,
-  outputFilename = null,
-  loggerContext = '[SCSS]',
-  options = {},
-}) {
+async function compileScssGroup(
+  config,
+  {
+    sourceDir,
+    dest,
+    outputFilename = null,
+    loggerContext = 'SCSS Group',
+    postcssPlugins = [],
+    options = {},
+  }
+) {
   try {
-    const pattern = path.join(sourceDir, '**/*.scss').replace(/\\/g, '/')
-    const allFiles = await glob(pattern)
-    const files = allFiles.filter((f) => !isPrivateFile(f))
-    if (files.length === 0) return
+    const sourceEntries = await discoverScssSources(sourceDir)
+    if (sourceEntries.length === 0) return
 
     return processSass(
-      files,
+      config,
+      sourceEntries,
       dest,
       outputFilename,
-      defaultConfig.postcssPluginsBase(),
+      postcssPlugins,
       {
         ...options,
+        base: sourceDir,
         loggerContext,
         sassOptions: {
-          includePaths: buildSassIncludePaths(sourceDir),
+          includePaths: buildSassIncludePaths(sourceDir, config),
           ...(options.sassOptions || {}),
         },
       }
     )
   } catch (error) {
-    logger.error(`${loggerContext} Failure:`, error)
+    logger.error(
+      `Failed to compile SCSS group (${loggerContext}): ${error.message}`
+    )
+    throw error
   }
 }
 
 /**
  * Compiles all component styles.
+ * @param {object} config - Configuration object
+ * @param {import('postcss').AcceptedPlugin[]} [postcssPlugins] - PostCSS plugins
+ * @param {object} [options] - Additional options
  * @returns {Promise<void>}
  */
-export function compileAllComponentStyles() {
-  return compileScssGroup({
-    sourceDir: defaultConfig.componentsPath,
-    dest: defaultConfig.sassBuild(),
+export function compileAllComponentStyles(
+  config,
+  postcssPlugins = [],
+  options = {}
+) {
+  return compileScssGroup(config, {
+    sourceDir: config.componentsPath,
+    dest: config.paths.sass,
     outputFilename: 'components.css',
-    loggerContext: '[Components]',
+    loggerContext: 'Components',
+    postcssPlugins,
+    options,
   })
 }
 
 /**
- * Compiles all route-specific SCSS files.
+ * Compiles route-specific styles.
+ * @param {object} config - Configuration object
+ * @param {import('postcss').AcceptedPlugin[]} [postcssPlugins] - PostCSS plugins
  * @returns {Promise<void>}
  */
-export function compileRouteStyles() {
-  return compileScssGroup({
-    sourceDir: defaultConfig.routesBase,
-    dest: defaultConfig.sassBuild(),
-    loggerContext: '[Routes]',
+export function compileRouteStyles(config, postcssPlugins = []) {
+  return compileScssGroup(config, {
+    sourceDir: config.routesBase,
+    dest: config.paths.sass,
+    loggerContext: 'Routes',
+    postcssPlugins,
   })
 }
 
 /**
- * Compiles component styles natively, producing isolated CSS files mirroring the source directory structure.
- * Ideal for transparent CMS handoffs (export mode).
+ * Compiles isolated component styles for export.
+ * @param {object} config - Configuration object
+ * @param {import('postcss').AcceptedPlugin[]} [postcssPlugins] - PostCSS plugins
  * @returns {Promise<void>}
  */
-export function compileIsolatedComponentStyles() {
-  return compileScssGroup({
-    sourceDir: defaultConfig.componentsPath,
-    dest: `${defaultConfig.sassBuild()}/components`,
-    loggerContext: '[Components Isolated]',
+export function compileIsolatedComponentStyles(config, postcssPlugins = []) {
+  return compileScssGroup(config, {
+    sourceDir: config.componentsPath,
+    dest: `${config.paths.sass}/components`,
+    loggerContext: 'Components Isolated',
+    postcssPlugins,
   })
+}
+
+/**
+ * Returns core PostCSS plugins.
+ * @returns {Promise<import('postcss').AcceptedPlugin[]>} List of plugins
+ */
+export async function getCorePostcssPlugins() {
+  const { default: autoprefixer } = await import('autoprefixer')
+  return [autoprefixer()]
+}
+
+/**
+ * Orchestrates SASS processing based on build mode.
+ * @param {object} config - Configuration object
+ * @param {string} config.sassCore - Path to core SASS file
+ * @param {string} config.sassCustom - Path to custom SASS file
+ * @param {string} config.sassUtils - Path to utility SASS file
+ * @param {string} config.sassComponentsGlob - Glob for component SASS files
+ * @param {string} config.sassBase - Base directory for SASS
+ * @param {string} config.componentsPath - Path to components
+ * @param {string} config.routesBase - Path to routes
+ * @param {boolean} config.minifyCss - Global minify flag
+ * @param {boolean} config.sourceMaps - Global sourcemaps flag
+ * @param {boolean} [config.formatCode] - Global beautify flag
+ * @param {object} config.paths - Path mapping
+ * @param {string} config.paths.sass - Destination for compiled CSS
+ * @param {'dev'|'build'|'export'} mode - Build mode
+ * @returns {Promise<void>}
+ */
+export async function processAllSass(config, mode) {
+  const corePostcssPlugins = await getCorePostcssPlugins()
+
+  try {
+    if (mode === 'build') {
+      const bundleCss = () =>
+        processSass(
+          config,
+          [
+            config.sassCore,
+            config.sassCustom,
+            config.sassUtils,
+            config.sassComponentsGlob,
+          ],
+          config.paths.sass,
+          'main.css',
+          corePostcssPlugins,
+          { minify: config.minifyCss, sourceMaps: false }
+        )
+
+      await gulp.parallel(bundleCss, () =>
+        compileRouteStyles(config, corePostcssPlugins)
+      )()
+      return
+    }
+
+    const cssCoreBundle = () =>
+      processSass(
+        config,
+        [config.sassCore, config.sassCustom, config.sassUtils],
+        config.paths.sass,
+        null,
+        corePostcssPlugins,
+        { skipNewer: mode === 'dev' }
+      )
+
+    if (mode === 'dev') {
+      const cssDevstack = () =>
+        processSass(
+          config,
+          `${config.sassBase}/u-devstack.scss`,
+          config.paths.sass,
+          'u-devstack.css',
+          corePostcssPlugins,
+          { skipNewer: true }
+        )
+      await gulp.parallel(
+        cssCoreBundle,
+        () => compileRouteStyles(config, corePostcssPlugins),
+        cssDevstack,
+        () =>
+          compileAllComponentStyles(config, corePostcssPlugins, {
+            skipNewer: true,
+          })
+      )()
+      return
+    }
+
+    if (mode === 'export') {
+      await gulp.parallel(
+        cssCoreBundle,
+        () => compileRouteStyles(config, corePostcssPlugins),
+        () => compileIsolatedComponentStyles(config, corePostcssPlugins)
+      )()
+    }
+  } catch (error) {
+    logger.error(`Failed to process Sass in ${mode} mode: ${error.message}`)
+    throw error
+  }
 }
 
 export default processSass

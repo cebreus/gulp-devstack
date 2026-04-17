@@ -2,96 +2,98 @@ import assert from 'node:assert/strict'
 import { existsSync } from 'node:fs'
 import fs from 'node:fs/promises'
 import path from 'node:path'
-import { afterEach, beforeEach, describe, it } from 'node:test'
+import { describe, it } from 'node:test'
 
 import images from '../../gulp/tasks/process-images.js'
-import { cleanupSandbox, createTestSandbox } from '../test-helpers.js'
+import { runInSandbox } from '../test-helpers.js'
 
-/**
- * Image fixtures in Base64
- */
-const FIXTURES = {
+const IMAGE_FIXTURES = {
   png: 'iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAYAAABw4pVUAAAALElEQVR42u3BAQEAAACAkP6v7ggKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA8GcYKAEAAS99S7YAAAAASUVORK5CYII=',
-  jpg: '/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAKAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAj/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFAEBAAAAAAAAAAAAAAAAAAAAAP/EABQRAQAAAAAAAAAAAAAAAAAAAAD/2gAMAwEAAhEDEQA/AJUAB//Z',
+  jpg: '/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAKAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAj/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFAEBAAAAAAAAAAAAAAAAAAAAAP/EABQRAQAAAAAAAAAAAAAAAAAAAAD/2gAVAWMAH//Z',
   svg: 'PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iYmxhY2siLz48L3N2Zz4=',
 }
 
-describe('Image Pipeline Final Integration', () => {
-  let sandbox
+async function writeImageToSandbox(sandbox, fileName, base64) {
+  const filePath = path.join(sandbox, 'src', fileName)
+  await fs.mkdir(path.dirname(filePath), { recursive: true })
+  await fs.writeFile(filePath, Buffer.from(base64, 'base64'))
+  return filePath
+}
 
-  beforeEach(async () => {
-    sandbox = await createTestSandbox()
+describe('Image Pipeline Final Integration', function testImagePipeline() {
+  it('should handle JPG task without crashing even if sharp fails', async function testJpgProcessing() {
+    await runInSandbox('images-jpg', async function executeJpgTest(sandbox) {
+      const srcPath = await writeImageToSandbox(
+        sandbox,
+        'test.jpg',
+        IMAGE_FIXTURES.jpg
+      )
+      const destDir = path.join(sandbox, 'build')
+
+      await images.jpg(srcPath, destDir)
+
+      const optimizedPath = path.join(destDir, 'test.jpg')
+      assert.ok(
+        existsSync(optimizedPath),
+        'JPG should exist in build even if not optimized'
+      )
+    })
   })
 
-  afterEach(async () => {
-    await cleanupSandbox(sandbox)
+  it('should handle PNG task without crashing even if UPNG fails', async function testPngProcessing() {
+    await runInSandbox('images-png', async function executePngTest(sandbox) {
+      const pngFixtureSource = path.resolve(
+        'tests/fixtures/images/synt-metadata-heavy.png'
+      )
+      const pngContent = await fs.readFile(pngFixtureSource)
+      const srcPath = path.join(sandbox, 'src/test.png')
+      await fs.mkdir(path.dirname(srcPath), { recursive: true })
+      await fs.writeFile(srcPath, pngContent)
+
+      const destDir = path.join(sandbox, 'build')
+
+      await images.png(srcPath, destDir)
+
+      const optimizedPath = path.join(destDir, 'test.png')
+      assert.ok(existsSync(optimizedPath), 'PNG should exist in build')
+    })
   })
 
-  async function writeImage(fileName, base64) {
-    const filePath = path.join(sandbox, 'src', fileName)
-    await fs.mkdir(path.dirname(filePath), { recursive: true })
-    await fs.writeFile(filePath, Buffer.from(base64, 'base64'))
-    return filePath
-  }
+  it('should handle WebP task without crashing even if sharp fails', async function testWebpProcessing() {
+    await runInSandbox('images-webp', async function executeWebpTest(sandbox) {
+      const pngFixtureSource = path.resolve(
+        'tests/fixtures/images/synt-metadata-heavy.png'
+      )
+      const pngContent = await fs.readFile(pngFixtureSource)
+      const srcPath = path.join(sandbox, 'src/convert.png')
+      await fs.mkdir(path.dirname(srcPath), { recursive: true })
+      await fs.writeFile(srcPath, pngContent)
+      const destDir = path.join(sandbox, 'build')
 
-  it('should handle JPG task without crashing even if sharp fails', async () => {
-    const src = await writeImage('test.jpg', FIXTURES.jpg)
-    const dest = path.join(sandbox, 'build')
+      await images.webp(srcPath, destDir)
 
-    await images.jpg(src, dest)
-
-    const optimizedPath = path.join(dest, 'test.jpg')
-    assert.ok(
-      existsSync(optimizedPath),
-      'JPG should exist in build even if not optimized'
-    )
+      const outPath = path.join(destDir, 'convert.png')
+      assert.ok(
+        existsSync(outPath) || existsSync(path.join(destDir, 'convert.webp')),
+        'File should exist'
+      )
+    })
   })
 
-  it('should handle PNG task without crashing even if UPNG fails', async () => {
-    const pngFixture = path.resolve(
-      'tests/fixtures/images/synt-metadata-heavy.png'
-    )
-    const content = await fs.readFile(pngFixture)
-    const src = path.join(sandbox, 'src/test.png')
-    await fs.mkdir(path.dirname(src), { recursive: true })
-    await fs.writeFile(src, content)
+  it('should optimize SVG and clean content', async function testSvgProcessing() {
+    await runInSandbox('images-svg', async function executeSvgTest(sandbox) {
+      const srcPath = await writeImageToSandbox(
+        sandbox,
+        'test.svg',
+        IMAGE_FIXTURES.svg
+      )
+      const destDir = path.join(sandbox, 'build')
 
-    const dest = path.join(sandbox, 'build')
+      await images.svg(srcPath, destDir)
 
-    await images.png(src, dest)
-
-    const optimizedPath = path.join(dest, 'test.png')
-    assert.ok(existsSync(optimizedPath), 'PNG should exist in build')
-  })
-
-  it('should handle WebP task without crashing even if sharp fails', async () => {
-    const pngFixture = path.resolve(
-      'tests/fixtures/images/synt-metadata-heavy.png'
-    )
-    const content = await fs.readFile(pngFixture)
-    const src = path.join(sandbox, 'src/convert.png')
-    await fs.mkdir(path.dirname(src), { recursive: true })
-    await fs.writeFile(src, content)
-    const dest = path.join(sandbox, 'build')
-
-    await images.webp(src, dest)
-
-    const outPath = path.join(dest, 'convert.png')
-    // WebP task creates convert.png (original) if it's smaller, or just skips if sharp fails
-    assert.ok(
-      existsSync(outPath) || existsSync(path.join(dest, 'convert.webp')),
-      'File should exist'
-    )
-  })
-
-  it('should optimize SVG and clean content', async () => {
-    const src = await writeImage('test.svg', FIXTURES.svg)
-    const dest = path.join(sandbox, 'build')
-
-    await images.svg(src, dest)
-
-    const optimizedPath = path.join(dest, 'test.svg')
-    const content = await fs.readFile(optimizedPath, 'utf8')
-    assert.ok(content.startsWith('<svg'), 'Valid SVG header')
+      const optimizedPath = path.join(destDir, 'test.svg')
+      const optimizedContent = await fs.readFile(optimizedPath, 'utf8')
+      assert.ok(optimizedContent.startsWith('<svg'), 'Valid SVG header')
+    })
   })
 })

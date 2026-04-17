@@ -1,0 +1,6 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+# Final gate before push: lint + full test suite
+# Ensures code quality and all tests pass locally before push
+pnpm lint:ci && pnpm test && (pnpm sanity:a11y || true)

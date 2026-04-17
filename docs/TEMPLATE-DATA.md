@@ -1,95 +1,64 @@
-# Template Data Reference
+# Template Data & Frontmatter
 
-This document outlines the data hierarchy and naming conventions for Nunjucks templates in Gulp DevStack.
+Gulp DevStack uses a **"JSON-First"** data pipeline. Markdown content and YAML frontmatter are processed, enriched, and converted into structured JSON artifacts before being injected into your Nunjucks templates.
 
-## 1. Global Data (`site`)
+## 1. The Data Pipeline
 
-Global data is defined in `src/config/site.js`. It contains site-wide configuration, SEO defaults, and versioning info.
+The build system handles data in the following deterministic sequence (see `gulp/tasks/process-data.js`):
 
-| Field              | Example Value         | Description               |
-| :----------------- | :-------------------- | :------------------------ |
-| `site.title`       | `"Gulp DevStack"`     | Main site name.           |
-| `site.description` | `"..."`               | Default SEO description.  |
-| `site.meta`        | `{ lang: "en", ... }` | Base HTML meta settings.  |
-| `site.baseUrl`     | `"https://..."`       | Site URL (from `.env`).   |
-| `site.author`      | `"..."`               | Author name for metadata. |
-| `site.version`     | `"5.0.0"`             | Current project version.  |
+1. **Extract**: Reads the Markdown content and YAML Frontmatter.
+2. **Process (Dynamic Injection)**: Nunjucks expressions *inside* the Frontmatter are evaluated.
+3. **Enrich**: SEO defaults (OpenGraph, Twitter Cards, `pageId`) are automatically generated and merged.
+4. **Artifact Generation**: The final compiled dataset is saved as a JSON file in `build-dev/data/`.
+5. **Template Hydration**: The JSON artifact is passed into the Nunjucks template under the `page` object.
 
-### Accessing Site Data
+## 2. Global Site Config (`site`)
 
-```njk
-<title>{{ site.title }} - {{ page.title }}</title>
+Global data is defined in `src/config/site.js` and is available in **every template** via the `site` object. This configuration acts as the single source of truth for the project.
+
+- **Environment Variables**: `site.js` automatically consumes `.env` variables (e.g., `SITE_BASE_URL` becomes `site.baseUrl`).
+- **Usage**: `{{ site.title }}`, `{{ site.author }}`, `{{ site.version }}`.
+
+## 3. Page Metadata (`page`)
+
+Each Markdown file starts with a YAML Frontmatter block. This defines the "Contract" for the template.
+
+```markdown
+---
+title: Welcome to DevStack
+hero:
+  badge: "v4.5.0"
+  text: "Modern Gulp 5 Stack"
+---
 ```
 
----
+In your Nunjucks template (`.njk`), you access this data via the `page` object:
 
-## 2. Page-Level Data (`page`)
-
-Page-level data is extracted from the **YAML Frontmatter** of the `.md` or `.json` file corresponding to the current route.
-
-> \[!TIP]
-> **Data Normalization**: Both **Markdown (`.md`)** and **JSON (`.json`)** files are supported as content sources. The build system normalizes them into a unified structure, meaning you access the data in your Nunjucks templates identically (via the `page` object) regardless of the source format. Use MD for content-heavy pages and JSON for purely structured data.
-
-> \[!NOTE]
-> **CMS Readiness**: This "schema-less" approach is designed for future **CMS implementations**. You can feed your templates any data structure from an external headless CMS by matching the keys, effectively decoupling content from presentation.
-
-| Field              | Source        | Description                             |
-| :----------------- | :------------ | :-------------------------------------- |
-| `page.title`       | `title`       | Title defined in frontmatter.           |
-| `page.description` | `description` | Description for SEO.                    |
-| `page.hero`        | `hero`        | Hero section data (badge, title, etc.). |
-| `page.seo`         | `seo`         | SEO overrides (robots, title, etc.).    |
-| `page.content`     | Markdown Body | The rendered HTML content of the page.  |
-
-### Accessing Page Data
-
-```njk
-<meta name="description" content="{{ page.description or site.description }}">
-```
-
----
-
-## 3. Direct Access
-
-In addition to the `page` object, all top-level frontmatter keys are directly available as global variables in the template for convenience.
-
-```njk
-{# Both are valid and identical #}
+```jinja
 <h1>{{ page.title }}</h1>
-<h1>{{ title }}</h1>
+<p>{{ page.hero.text }}</p>
 ```
 
+## 4. Dynamic Data Injection
+
+Because the pipeline resolves Nunjucks expressions *during* the data processing phase, you can use the `site` object directly inside your Markdown YAML frontmatter!
+
+```markdown
 ---
-
-## 4. Nunjucks Filters
-
-Gulp DevStack includes custom filters to handle data transformations. For standard filters, see the [Nunjucks Documentation](https://mozilla.github.io/nunjucks/templating.html#builtin-filters).
-
-| Filter | Usage                                    | Description                                |
-| :----- | :--------------------------------------- | :----------------------------------------- |
-| `md`   | `{{ data \| md \| safe }}`               | Renders a string as Markdown (Custom).     |
-| `date` | `{{ now \| date({ year: 'numeric' }) }}` | Intl.DateTimeFormat wrapper (Custom).      |
-| `dump` | `{{ page \| dump(2) }}`                  | Pretty-prints objects for debugging.       |
-| `safe` | `{{ content \| safe }}`                  | Marks a string as safe HTML (no escaping). |
-
-### Example: Rendering Content
-
-```njk
-<div class="page-content">
-  {{ page.content | md | safe }}
-</div>
-```
-
+title: "Release Notes"
+badge: "Version {{ site.version }}"
 ---
-
-## 5. Environment Variables
-
-Environment-specific data is accessible via `.env` files and injected into the `site` object via `src/config/site.js`.
-
-### Example
-
-If you have `SITE_BASE_URL=https://my-site.com` in your `.env` file, it will be mapped to:
-
-```njk
-<link rel="canonical" href="{{ site.baseUrl }}{{ page.url }}">
 ```
+
+*This is incredibly powerful for automated releases where the version number updates programmatically.*
+
+## 5. Custom Nunjucks Filters
+
+DevStack extends Nunjucks with custom filters to handle data transformations effortlessly:
+
+| Filter | Usage                                    | Description                                           |
+| :----- | :--------------------------------------- | :---------------------------------------------------- |
+| `md`   | `{{ data \| md \| safe }}`               | Renders a raw string as parsed HTML Markdown.         |
+| `date` | `{{ now \| date({ year: 'numeric' }) }}` | A native wrapper for `Intl.DateTimeFormat`.           |
+| `dump` | `{{ page \| dump(2) }}`                  | Pretty-prints JSON objects (essential for debugging). |
+| `safe` | `{{ content \| safe }}`                  | Native filter to render HTML without escaping it.     |

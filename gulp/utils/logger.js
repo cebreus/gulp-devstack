@@ -1,12 +1,6 @@
 import pc from 'picocolors'
 
-/**
- * @typedef {object} LogLevelConfig
- * @property {string} char - Visual indicator character
- * @property {Function} color - Color function from picocolors
- */
-
-/** @type {{[key: string]: LogLevelConfig}} */
+/** @type {{[key: string]: {char: string, color: function(string): string}}} */
 const LOG_CONFIG = {
   error: { char: '█', color: pc.red },
   warn: { char: '█', color: pc.yellow },
@@ -40,12 +34,13 @@ function composePrefix(level, subLabel = '') {
   const levelConfig = LOG_CONFIG[level] || LOG_CONFIG.info
   const uppercaseLabel = level.toUpperCase()
 
-  // Create consistent padding for bars
-  const barLength = Math.max(0, 7 - uppercaseLabel.length)
+  const levelTag = `[${uppercaseLabel}]`
+  // Create consistent padding for tags
+  const barLength = Math.max(0, 9 - levelTag.length)
   const separatorBars = levelConfig.char.repeat(barLength)
 
   const basePrefix = levelConfig.color(
-    `${levelConfig.char} ${uppercaseLabel} ${separatorBars}`
+    `${levelConfig.char} ${levelTag} ${separatorBars}`
   )
   const categoryIndicator = subLabel ? ` ${pc.bold(`[${subLabel}]`)}` : ''
 
@@ -56,19 +51,15 @@ function composePrefix(level, subLabel = '') {
  * Internal: Dispatches log messages to the console.
  * @param {string} level - Log level
  * @param {string} subLabel - Category label
- * @param {...any} data - Content to log
+ * @param {...unknown} data - Content to log
  * @private
  */
 function dispatch(level, subLabel, ...data) {
+  const prefix = composePrefix(level, subLabel)
   if (level === 'error') {
-    // Visual alert for errors: Extra spacing and terminal bell (\u0007)
-    console.log('\n' + pc.bgRed(pc.white(pc.bold(' ERROR ALERT '))).repeat(3))
-    const prefix = composePrefix(level, subLabel)
-    console.log(prefix, '\u0007', ...data)
-    console.log(pc.red('━'.repeat(50)) + '\n')
+    console.error(prefix, ...data)
     return
   }
-  const prefix = composePrefix(level, subLabel)
   console.log(prefix, ...data)
 }
 
@@ -96,7 +87,7 @@ export function isVerboseEnabled() {
 
 /**
  * System-wide logging utilities.
- * @param {...any} args - Content to log
+ * @param {...unknown} args - Content to log
  * @returns {void}
  */
 export function error(...args) {
@@ -105,7 +96,7 @@ export function error(...args) {
 
 /**
  * Logs a warning message.
- * @param {...any} args - Content to log
+ * @param {...unknown} args - Content to log
  * @returns {void}
  */
 export function warn(...args) {
@@ -114,7 +105,7 @@ export function warn(...args) {
 
 /**
  * Logs an informational message.
- * @param {...any} args - Content to log
+ * @param {...unknown} args - Content to log
  * @returns {void}
  */
 export function info(...args) {
@@ -123,7 +114,7 @@ export function info(...args) {
 
 /**
  * Logs a debug message when debug mode is enabled.
- * @param {...any} args - Content to log
+ * @param {...unknown} args - Content to log
  * @returns {void}
  */
 export function debug(...args) {
@@ -133,7 +124,7 @@ export function debug(...args) {
 
 /**
  * Logs a verbose message when ultra-verbose mode is enabled.
- * @param {...any} args - Content to log
+ * @param {...unknown} args - Content to log
  * @returns {void}
  */
 export function verbose(...args) {
@@ -144,7 +135,14 @@ export function verbose(...args) {
 /**
  * Creates an isolated logger instance for a specific project submodule.
  * @param {string} categoryName - Name of the submodule (e.g. 'Sass', 'Images')
- * @returns {object} Logger interface
+ * @returns {{
+ *   error: function(...unknown): void,
+ *   warn: function(...unknown): void,
+ *   info: function(...unknown): void,
+ *   debug: function(...unknown): void,
+ *   verbose: function(...unknown): void,
+ *   list: function(string, string[]): void
+ * }} Logger interface
  */
 export function createLogger(categoryName) {
   return {

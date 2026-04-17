@@ -1,16 +1,16 @@
+import path from 'node:path'
 import { dest, src } from 'gulp'
 
-import { isPrivateFile } from '../utils/helpers.js'
-import loggerLib from '../utils/logger.js'
+import loggerLib, { isPrivateFile, streamToPromise } from '../utils/index.js'
 
-const logger = loggerLib.createLogger('SRI')
+const logger = loggerLib.createLogger('GenerateSri')
 
 /**
  * Gulp Task: Injects Subresource Integrity (SRI) hashes into HTML files.
  * Provides security by ensuring that fetched resources have not been tampered with.
  * @param {string|string[]} input - Glob pattern(s) for HTML files
  * @param {string} outputDir - Destination directory
- * @returns {Promise<import('node:stream').Readable>} Gulp stream
+ * @returns {Promise<import('node:stream').Stream>} Gulp stream
  */
 export async function generateSri(input, outputDir) {
   if (!input || !outputDir) {
@@ -35,6 +35,8 @@ export async function generateSri(input, outputDir) {
     )
     .pipe(
       sri({
+        selector: 'script[src], link[rel="stylesheet"]',
+        root: path.resolve(outputDir),
         onError: (err) => {
           logger.warn(
             `SRI error for a file: ${err.message}. Skipping specific tag.`
@@ -42,6 +44,7 @@ export async function generateSri(input, outputDir) {
         },
       })
     )
+
     .pipe(
       htmlmin({
         collapseWhitespace: true,
@@ -50,15 +53,13 @@ export async function generateSri(input, outputDir) {
     )
     .pipe(dest(outputDir))
 
-  sriPipeline.on('end', () => {
+  try {
+    await streamToPromise(sriPipeline)
     logger.verbose(`Integrity hashes successfully injected into: ${outputDir}`)
-  })
-
-  sriPipeline.on('error', (err) => {
-    logger.error('Failed to generate SRI hashes.', err)
-  })
-
-  return sriPipeline
+  } catch (error) {
+    logger.error(`Failed to generate SRI hashes. Cause: ${error.message}`)
+    throw error
+  }
 }
 
 export default generateSri

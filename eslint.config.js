@@ -5,61 +5,61 @@ import globals from 'globals'
 const compat = new FlatCompat()
 
 export default [
-  prettier,
-  ...compat.config({
-    plugins: ['jsdoc', 'regexp'],
-    extends: ['plugin:jsdoc/recommended', 'plugin:regexp/recommended'],
-  }),
-
-  // Node.js files (root, gulp, config files)
   {
-    files: [
-      'gulpfile*.js',
-      'gulp/**/*.js',
-      '*.config.js',
-      '.eslintrc.js',
-      'babel.config.js',
-    ],
+    ignores: ['node_modules/', 'build*/', '.temp/', 'dist/', 'static/'],
+  },
+  prettier,
+
+  // 1. Plugins recommended settings (Scoped to exclude tests)
+  ...compat
+    .config({
+      plugins: ['jsdoc', 'regexp'],
+      extends: ['plugin:jsdoc/recommended', 'plugin:regexp/recommended'],
+    })
+    .map((config) => ({
+      ...config,
+      ignores: ['tests/**/*.js'],
+    })),
+
+  // 2. Base Configuration (Global)
+  {
+    files: ['**/*.js'],
     languageOptions: {
       ecmaVersion: 2024,
       sourceType: 'module',
-      globals: {
-        ...globals.node,
-        ...globals.es2024,
-      },
+      globals: { ...globals.node, ...globals.es2024 },
     },
-    plugins: {},
     rules: {
-      'jsdoc/require-jsdoc': 'warn',
       'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
       'no-console': 'off',
     },
   },
 
-  // Browser files (src directory)
+  // 3. JSDoc Strict Enforcement (Non-test files)
   {
-    files: ['src/**/*.js'],
-    languageOptions: {
-      ecmaVersion: 2024,
-      sourceType: 'module',
-      globals: {
-        ...globals.browser,
-        ...globals.es2024,
-      },
-    },
+    files: ['**/*.js'],
+    ignores: ['tests/**/*.js'],
     rules: {
       'jsdoc/require-jsdoc': 'warn',
-      'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
-      'no-console': 'warn',
+      'jsdoc/check-param-names': 'error',
+      'jsdoc/require-param': 'error',
+      'jsdoc/require-param-type': 'error',
+      'jsdoc/require-returns': 'error',
+      'jsdoc/require-returns-type': 'error',
+      'jsdoc/check-types': 'error',
     },
   },
 
-  // Test files
+  // 4. Environment Specific Overrides
   {
-    files: ['**/*.test.js'],
+    files: ['src/**/*.js'],
+    languageOptions: { globals: globals.browser },
+    rules: { 'no-console': 'warn' },
+  },
+  {
+    files: ['tests/**/*.js'],
     languageOptions: {
       globals: {
-        ...globals.node,
         describe: 'readonly',
         it: 'readonly',
         before: 'readonly',
@@ -68,13 +68,5 @@ export default [
         afterEach: 'readonly',
       },
     },
-    rules: {
-      'jsdoc/require-jsdoc': 'off',
-      'no-console': 'off',
-    },
-  },
-
-  {
-    ignores: ['node_modules/', 'build*/', '.temp/', 'dist/', 'static/'],
   },
 ]

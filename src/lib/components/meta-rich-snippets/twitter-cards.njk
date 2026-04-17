@@ -1,28 +1,25 @@
-{% if page.twitter_cards and page.twitter_cards.use %}
-
-  {% if page.twitter_cards.type %}
-    <meta name="twitter:card" content="{{ page.twitter_cards.type }}" />
+{% if page.twitterCards and page.twitterCards.use %}
+  {% if page.twitterCards.type %}
+    <meta name="twitter:card" content="{{ page.twitterCards.type }}" />
   {% endif %}
-  {% if page.twitter_cards.url %}
-    <meta name="twitter:url" content="{{ page.twitter_cards.url }}" />
+  {% if page.twitterCards.url %}
+    <meta name="twitter:url" content="{{ page.twitterCards.url }}" />
   {% endif %}
-  {% if page.twitter_cards.title %}
-    <meta name="twitter:title" content="{{ page.twitter_cards.title | striptags }}" />
+  {% if page.twitterCards.title %}
+    <meta name="twitter:title" content="{{ page.twitterCards.title | striptags }}" />
   {% endif %}
-  {% if page.twitter_cards.description %}
-    <meta name="twitter:description" content="{{ page.twitter_cards.description | striptags }}" />
+  {% if page.twitterCards.description %}
+    <meta name="twitter:description" content="{{ page.twitterCards.description | striptags }}" />
   {% endif %}
-  {% if page.twitter_cards.site %}
-    <meta name="twitter:site" content="{{ page.twitter_cards.site }}" />
+  {% if page.twitterCards.site %}
+    <meta name="twitter:site" content="{{ page.twitterCards.site }}" />
   {% endif %}
-  {% if page.twitter_cards.creator %}
-    <meta name="twitter:creator" content="{{ page.twitter_cards.creator }}" />
+  {% if page.twitterCards.creator %}
+    <meta name="twitter:creator" content="{{ page.twitterCards.creator }}" />
   {% endif %}
-  {% if page.twitter_cards.image and page.twitter_cards.image | length > 0 %}
-    {% for item in page.twitter_cards.image %}
-      {% if loop.index <= 9 %}
-        <meta name="twitter:image" content="{{ item }}" />
-      {% endif %}
+  {% if page.twitterCards.image and page.twitterCards.image | length > 0 %}
+    {% for item in page.twitterCards.image %}
+      <meta name="twitter:image" content="{{ item }}" />
     {% endfor %}
   {% endif %}
 {% endif %}

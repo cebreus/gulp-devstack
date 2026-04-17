@@ -2,11 +2,10 @@ import { exec } from 'node:child_process'
 import { promisify } from 'node:util'
 import { glob } from 'glob'
 
-import { isPrivateFile } from '../utils/helpers.js'
-import loggerLib from '../utils/logger.js'
+import loggerLib, { isPrivateFile } from '../utils/index.js'
 
 const execAsync = promisify(exec)
-const logger = loggerLib.createLogger('Lint:NJK')
+const logger = loggerLib.createLogger('LintTemplates')
 
 /**
  * Task: Lints Nunjucks templates using njklint.
@@ -24,16 +23,14 @@ export default async function lintTemplates() {
       return
     }
 
-    // Join files into a single command, but handle potential OS command length limits
-    // For a typical project, passing them as arguments is fine.
     await execAsync(`npx njklint ${filesToLint.join(' ')}`)
-    // Silent on success
   } catch (error) {
-    // njklint output is in error.stdout or error.stderr
     if (error.stdout) {
       console.log(error.stdout)
     }
-    logger.error('Nunjucks linting failed. Please fix the errors above.')
+    logger.error(
+      `Nunjucks linting failed. Review output above and run \`npx njklint src/**/*.{njk,md}\` locally to inspect details. Cause: ${error.message}`
+    )
     // We don't throw here to prevent Gulp watch from crashing
   }
 }

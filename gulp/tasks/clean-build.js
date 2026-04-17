@@ -1,7 +1,6 @@
 import { deleteAsync } from 'del'
 
-import { getRelativePath, handleEmptyPaths } from '../utils/helpers.js'
-import loggerLib from '../utils/logger.js'
+import loggerLib, { getRelativePath, handleEmptyPaths } from '../utils/index.js'
 
 const logger = loggerLib.createLogger('Clean')
 
@@ -30,7 +29,7 @@ export async function cleanBuild(paths) {
 
     return deletedPaths
   } catch (error) {
-    logger.error('Cleanup failure:', error)
+    logger.error(`Cleanup failure. Cause: ${error.message}`)
     throw new Error(`Deletion failed: ${error.message}`, { cause: error })
   }
 }

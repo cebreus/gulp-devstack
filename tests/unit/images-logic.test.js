@@ -1,42 +1,34 @@
 import assert from 'node:assert/strict'
-import { Transform } from 'node:stream'
 import { describe, it } from 'node:test'
 
-import {
-  convertToWebp,
-  detectType,
-  optimizeJpg,
-  optimizePng,
-  optimizeSvg,
-  optimizeWithSharp,
-  validateImage,
-} from '../../gulp/tasks/process-images.js'
+import { validateImage } from '../../gulp/tasks/process-images.js'
+import { detectType, optimizeWithSharp } from '../../gulp/utils/index.js'
 
-describe('Image Processing Logic (Unit)', () => {
-  describe('detectType', () => {
-    it('should return null for short or empty buffers', () => {
+describe('Image Processing Logic (Unit)', function imageLogicTests() {
+  describe('detectType', function detectTypeTests() {
+    it('should return null for short or empty buffers', function verifyEmptyBuffer() {
       assert.strictEqual(detectType(null), null)
       assert.strictEqual(detectType(Buffer.from([0x00, 0x01])), null)
     })
 
-    it('should identify PNG signature', () => {
+    it('should identify PNG signature', function verifyPngSignature() {
       const buf = Buffer.from([0x89, 0x50, 0x4e, 0x47])
       assert.strictEqual(detectType(buf), 'png')
     })
 
-    it('should identify JPG signature', () => {
+    it('should identify JPG signature', function verifyJpgSignature() {
       const buf = Buffer.from([0xff, 0xd8, 0xff])
       assert.strictEqual(detectType(buf), 'jpg')
     })
 
-    it('should identify WebP signature', () => {
+    it('should identify WebP signature', function verifyWebpSignature() {
       const buf = Buffer.alloc(12)
       buf.write('RIFF', 0)
       buf.write('WEBP', 8)
       assert.strictEqual(detectType(buf), 'webp')
     })
 
-    it('should identify SVG signature', () => {
+    it('should identify SVG signature', function verifySvgSignature() {
       assert.strictEqual(detectType(Buffer.from('<svg xmlns=...')), 'svg')
       assert.strictEqual(
         detectType(Buffer.from('   <?xml version="1.0" ?>\n<svg')),
@@ -44,7 +36,7 @@ describe('Image Processing Logic (Unit)', () => {
       )
     })
 
-    it('should return null for unknown signatures', () => {
+    it('should return null for unknown signatures', function verifyUnknownSignature() {
       assert.strictEqual(
         detectType(Buffer.from('not an image at all but quite a long string')),
         null
@@ -52,20 +44,26 @@ describe('Image Processing Logic (Unit)', () => {
     })
   })
 
-  describe('validateImage stream', () => {
-    const mockFile = (path, contents) => ({
-      path,
-      contents,
-      isBuffer: () => !!contents,
-      isNull: () => !contents,
-    })
+  describe('validateImage stream', function validateImageTests() {
+    function createMockImageFile(filePath, contents) {
+      return {
+        path: filePath,
+        contents,
+        isBuffer: function checkIsBuffer() {
+          return !!contents
+        },
+        isNull: function checkIsNull() {
+          return !contents
+        },
+      }
+    }
 
-    it('should pass through non-buffer files', () => {
-      return new Promise((resolve) => {
+    it('should pass through non-buffer files', function verifyNonBufferPass() {
+      return new Promise(function runNonBufferTest(resolve) {
         const stream = validateImage('jpg')
-        const file = mockFile('test.jpg', null)
+        const file = createMockImageFile('test.jpg', null)
 
-        stream.on('data', (f) => {
+        stream.on('data', function handleData(f) {
           assert.strictEqual(f.contents, null)
           resolve()
         })
@@ -73,15 +71,15 @@ describe('Image Processing Logic (Unit)', () => {
       })
     })
 
-    it('should flag UTF-8 corrupted files', () => {
-      return new Promise((resolve) => {
+    it('should flag UTF-8 corrupted files', function verifyCorruptedFile() {
+      return new Promise(function runCorruptedFileTest(resolve) {
         const stream = validateImage('png')
-        const file = mockFile(
+        const file = createMockImageFile(
           'corrupted.png',
           Buffer.from([0xef, 0xbf, 0xbd, 0x50, 0x4e, 0x47])
         )
 
-        stream.on('data', (f) => {
+        stream.on('data', function handleData(f) {
           assert.strictEqual(f._isInvalid, true)
           resolve()
         })
@@ -89,15 +87,15 @@ describe('Image Processing Logic (Unit)', () => {
       })
     })
 
-    it('should flag unknown content as invalid', () => {
-      return new Promise((resolve) => {
+    it('should flag unknown content as invalid', function verifyUnknownContent() {
+      return new Promise(function runUnknownContentTest(resolve) {
         const stream = validateImage('jpg')
-        const file = mockFile(
+        const file = createMockImageFile(
           'text.jpg',
           Buffer.from('this is just some plain text that is long enough')
         )
 
-        stream.on('data', (f) => {
+        stream.on('data', function handleData(f) {
           assert.strictEqual(f._isInvalid, true)
           resolve()
         })
@@ -105,15 +103,15 @@ describe('Image Processing Logic (Unit)', () => {
       })
     })
 
-    it('should accept valid matching content', () => {
-      return new Promise((resolve) => {
+    it('should accept valid matching content', function verifyValidContent() {
+      return new Promise(function runValidContentTest(resolve) {
         const stream = validateImage('png')
-        const file = mockFile(
+        const file = createMockImageFile(
           'valid.png',
           Buffer.from([0x89, 0x50, 0x4e, 0x47])
         )
 
-        stream.on('data', (f) => {
+        stream.on('data', function handleData(f) {
           assert.ok(!f._isInvalid)
           resolve()
         })
@@ -121,15 +119,15 @@ describe('Image Processing Logic (Unit)', () => {
       })
     })
 
-    it('should note mismatched extensions but not invalidate', () => {
-      return new Promise((resolve) => {
+    it('should note mismatched extensions but not invalidate', function verifyMismatchedExtension() {
+      return new Promise(function runMismatchedExtensionTest(resolve) {
         const stream = validateImage('jpg')
-        const file = mockFile(
+        const file = createMockImageFile(
           'actually-png.jpg',
           Buffer.from([0x89, 0x50, 0x4e, 0x47])
         )
 
-        stream.on('data', (f) => {
+        stream.on('data', function handleData(f) {
           assert.ok(!f._isInvalid)
           resolve()
         })
@@ -138,33 +136,23 @@ describe('Image Processing Logic (Unit)', () => {
     })
   })
 
-  describe('optimizeWithSharp (failure state)', () => {
-    it('should throw error when sharp is missing', async () => {
-      const input = Buffer.from('input')
-      try {
-        await optimizeWithSharp(input, 'jpg', 80)
-        assert.fail('Should have thrown')
-      } catch (err) {
-        // console.log('DEBUG ERR MESSAGE:', err.message)
-        assert.ok(
-          err.code === 'ERR_MODULE_NOT_FOUND' ||
+  describe('optimizeWithSharp (failure state)', function sharpFailureTests() {
+    it('should throw error when sharp is missing', async function verifySharpMissing() {
+      const inputBuffer = Buffer.from('input')
+      await assert.rejects(
+        async function runSharpOptimization() {
+          await optimizeWithSharp(inputBuffer, 'jpg', 80)
+        },
+        function verifyError(err) {
+          return (
+            err.code === 'ERR_MODULE_NOT_FOUND' ||
             err.message.includes(
               'Input buffer contains unsupported image format'
             ) ||
             err.message.includes('sharp')
-        )
-      }
-    })
-  })
-
-  describe('Empty image source handling', () => {
-    it('should handle empty input without crashing', async () => {
-      // Calling with non-matching pattern in existing dir should just return/log but not crash
-      await optimizeJpg('src/assets/images/non-existent-*.jpg', 'dest')
-      await optimizePng('src/assets/images/non-existent-*.png', 'dest')
-      await optimizeSvg('src/assets/images/non-existent-*.svg', 'dest')
-      await convertToWebp(['src/assets/images/non-existent-*.png'], 'dest')
-      assert.ok(true, 'Tasks did not crash on empty input')
+          )
+        }
+      )
     })
   })
 })

@@ -1,0 +1,17 @@
+[
+	{
+		"path": "build-prod/assets/css/*.min.css",
+		"limit": "250 kB",
+		"webpack": false
+	},
+	{
+		"path": "build-prod/assets/js/*.min.js",
+		"limit": "300 kB",
+		"webpack": false
+	},
+	{
+		"path": "build-prod/assets/images/**/*.{png,jpg,jpeg,webp,avif}",
+		"limit": "1 MB",
+		"webpack": false
+	}
+]

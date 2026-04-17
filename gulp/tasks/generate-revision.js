@@ -1,27 +1,24 @@
-import fs from 'node:fs'
-import rev from 'gulp-rev'
-import revDeleteOriginal from 'gulp-rev-delete-original'
-import revRewrite from 'gulp-rev-rewrite'
-import { dest, src } from 'gulp'
+import fs from 'node:fs/promises'
+import gulp from 'gulp'
 
-import { isPrivateFile, streamToPromise } from '../utils/helpers.js'
-import loggerLib from '../utils/logger.js'
+import loggerLib, {
+  attachPipelineLogging,
+  getRelativePath,
+  isPrivateFile,
+  streamToPromise,
+} from '../utils/index.js'
 
-/**
- * @typedef {object} RevisionOptions
- * @property {string|string[]} inputAssets - Glob patterns for assets to be versioned
- * @property {string|string[]} inputHtml - Glob patterns for HTML files to update references in
- * @property {string} buildBase - Absolute or relative path to the build root
- * @property {string} manifestPath - Path where the rev-manifest.json should be stored
- * @property {boolean} [verbose=false] - Whether to enable detailed logging
- */
-
-const logger = loggerLib.createLogger('Revision')
+const logger = loggerLib.createLogger('GenerateRevision')
 
 /**
  * Gulp Task: Implements asset revisioning (fingerprinting).
  * Appends content hashes to filenames and updates all references in HTML archives.
- * @param {RevisionOptions} options - Configuration for the revision process
+ * @param {object} options - Configuration for the revision process
+ * @param {string|string[]} options.inputAssets - Glob patterns for assets to be versioned
+ * @param {string|string[]} options.inputHtml - Glob patterns for HTML files to update references in
+ * @param {string} options.buildBase - Absolute or relative path to the build root
+ * @param {string} options.manifestPath - Path where the rev-manifest.json should be stored
+ * @param {boolean} [options.verbose] - Whether to enable detailed logging
  * @returns {Promise<void>} Resolves when all assets are versioned and HTML updated
  */
 export async function generateRevision(options) {
@@ -29,10 +26,17 @@ export async function generateRevision(options) {
 
   try {
     const { Transform } = await import('node:stream')
+    const { default: rev } = await import('gulp-rev')
+    const { default: revDeleteOriginal } =
+      await import('gulp-rev-delete-original')
+    const { default: revRewrite } = await import('gulp-rev-rewrite')
 
-    // Phase 1: Create fingerprints and manifest
+    const trackedAssets = []
+    const trackedHtml = []
+
     logger.debug('Generating asset fingerprints and manifest...')
-    const assetPipeline = src(inputAssets, { base: buildBase })
+    const assetPipeline = gulp
+      .src(inputAssets, { base: buildBase })
       .pipe(
         new Transform({
           objectMode: true,
@@ -44,17 +48,30 @@ export async function generateRevision(options) {
       )
       .pipe(rev())
       .pipe(revDeleteOriginal())
-      .pipe(dest(buildBase))
+      .pipe(gulp.dest(buildBase))
       .pipe(rev.manifest(manifestPath))
-      .pipe(dest('.'))
+      .pipe(gulp.dest('.'))
+
+    assetPipeline.on('data', (file) => {
+      if (file.path) trackedAssets.push(getRelativePath(file.path))
+    })
+
+    attachPipelineLogging({
+      stream: assetPipeline,
+      loggerInstance: logger,
+      trackedFiles: trackedAssets,
+      successLabel: 'Revisioned assets',
+      emptyMessage: 'No assets were revisioned.',
+      errorMessage: 'Asset revision pipeline failed!',
+    })
 
     await streamToPromise(assetPipeline)
 
-    // Phase 2: Rewrite references within HTML files
     logger.debug(`Rewriting HTML references using manifest: ${manifestPath}`)
-    const manifestBuffer = fs.readFileSync(manifestPath)
+    const manifestBuffer = await fs.readFile(manifestPath)
 
-    const htmlPipeline = src(inputHtml, { base: buildBase })
+    const htmlPipeline = gulp
+      .src(inputHtml, { base: buildBase })
       .pipe(
         new Transform({
           objectMode: true,
@@ -65,14 +82,28 @@ export async function generateRevision(options) {
         })
       )
       .pipe(revRewrite({ manifest: manifestBuffer }))
-      .pipe(dest(buildBase))
+      .pipe(gulp.dest(buildBase))
+
+    htmlPipeline.on('data', (file) => {
+      if (file.path) trackedHtml.push(getRelativePath(file.path))
+    })
+
+    attachPipelineLogging({
+      stream: htmlPipeline,
+      loggerInstance: logger,
+      trackedFiles: trackedHtml,
+      successLabel: 'HTML references updated',
+      emptyMessage: 'No HTML files were updated with revision hashes.',
+      errorMessage: 'HTML revision rewrite failed!',
+    })
 
     await streamToPromise(htmlPipeline)
 
     logger.verbose('Asset fingerprinting and HTML reference updates finished.')
   } catch (error) {
-    logger.error('Critical failure during asset revisioning.', error)
-    throw error
+    throw new Error('Critical failure during asset revisioning.', {
+      cause: error,
+    })
   }
 }
 

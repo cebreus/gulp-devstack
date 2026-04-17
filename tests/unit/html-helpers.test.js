@@ -1,70 +1,38 @@
 import assert from 'node:assert/strict'
-import fs from 'node:fs'
-import os from 'node:os'
 import path from 'node:path'
-import { after, before, describe, it } from 'node:test'
+import { describe, it } from 'node:test'
 
 import {
-  ensureBuildDirs,
   resolveTransformKey,
   transformJsonToHtml,
-} from '../../gulp/tasks/process-html.js'
+} from '../../gulp/utils/index.js'
 
-describe('HTML Helpers (Unit)', () => {
-  describe('resolveTransformKey', () => {
-    it('should map css -> transformCss', () => {
+describe('HTML Helpers (Unit)', function htmlHelperTests() {
+  describe('resolveTransformKey', function transformKeyTests() {
+    it('should map css -> transformCss', function verifyCssMapping() {
       assert.strictEqual(resolveTransformKey('css'), 'transformCss')
     })
 
-    it('should map js -> transformJs', () => {
+    it('should map js -> transformJs', function verifyJsMapping() {
       assert.strictEqual(resolveTransformKey('js'), 'transformJs')
     })
 
-    it('should map cdn-js -> transformCdnJs', () => {
+    it('should map cdn-js -> transformCdnJs', function verifyCdnJsMapping() {
       assert.strictEqual(resolveTransformKey('cdn-js'), 'transformCdnJs')
     })
 
-    it('should return null for unknown tags', () => {
+    it('should return null for unknown tags', function verifyUnknownTagMapping() {
       assert.strictEqual(resolveTransformKey('unknown'), null)
     })
   })
 
-  describe('ensureBuildDirs', () => {
-    let tempDir
-
-    before(() => {
-      tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'test-dirs-'))
-    })
-
-    after(() => {
-      if (fs.existsSync(tempDir)) {
-        fs.rmSync(tempDir, { recursive: true, force: true })
-      }
-    })
-
-    it('should create non-existent directories recursively', () => {
-      const target = path.join(tempDir, 'deep/nested/path')
-      ensureBuildDirs([target])
-
-      const exists = fs.existsSync(target)
-      assert.ok(exists, 'Directory should be created')
-    })
-
-    it('should not throw if directories already exist', () => {
-      const target = path.join(tempDir, 'existing')
-      fs.mkdirSync(target)
-
-      assert.doesNotThrow(() => ensureBuildDirs([target]))
-    })
-  })
-
-  describe('transformJsonToHtml', () => {
+  describe('transformJsonToHtml', function jsonToHtmlTests() {
     const mockParams = {
       dataSource: '/tmp/src',
       output: '/tmp/dest',
     }
 
-    it('should correctly transform file path and content', () => {
+    it('should correctly transform file path and content', function verifyJsonTransformation() {
       const fileContent = JSON.stringify({
         title: 'Test Page',
         content: '# Hello',
@@ -73,18 +41,55 @@ describe('HTML Helpers (Unit)', () => {
         path: path.resolve(mockParams.dataSource, 'test.json'),
         base: path.resolve(mockParams.dataSource),
         contents: Buffer.from(fileContent),
-        isBuffer: () => true,
-        isNull: () => false,
+        isBuffer: function isBuffer() {
+          return true
+        },
+        isNull: function isNull() {
+          return false
+        },
       }
 
       const result = transformJsonToHtml(mockFile, mockParams)
 
-      // Check path transformation (.json -> .html)
       assert.ok(result.path.endsWith('test.html'))
-      // Check content transformation (Markdown template)
       assert.ok(result.contents.toString().includes('layout-default.njk'))
-      // Check data parsing
       assert.strictEqual(result.data.title, 'Test Page')
+    })
+
+    it('should throw descriptive error for invalid JSON payload', function verifyInvalidJsonError() {
+      const mockFile = {
+        path: path.resolve(mockParams.dataSource, 'broken.json'),
+        base: path.resolve(mockParams.dataSource),
+        contents: Buffer.from('{"title":"Broken",'),
+        isBuffer: function isBuffer() {
+          return true
+        },
+        isNull: function isNull() {
+          return false
+        },
+      }
+
+      assert.throws(function runBrokenJson() {
+        transformJsonToHtml(mockFile, mockParams)
+      }, /Failed to parse JSON/)
+    })
+
+    it('should throw descriptive error when parsed payload is not an object', function verifyNonObjectJsonError() {
+      const mockFile = {
+        path: path.resolve(mockParams.dataSource, 'scalar.json'),
+        base: path.resolve(mockParams.dataSource),
+        contents: Buffer.from('"not-an-object"'),
+        isBuffer: function isBuffer() {
+          return true
+        },
+        isNull: function isNull() {
+          return false
+        },
+      }
+
+      assert.throws(function runScalarJson() {
+        transformJsonToHtml(mockFile, mockParams)
+      }, /Parsed JSON must be an object/)
     })
   })
 })

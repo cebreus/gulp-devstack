@@ -8,9 +8,9 @@
         {% for item in site.menu %}
           <li class="nav-item">
             <a
-              class="nav-link px-2{{ ' active' if page.page_id === item.page_id else '' }}"
+              class="nav-link px-2{{ ' active' if page.pageId === item.pageId else '' }}"
               href="{{ item.url }}"
-              {% if page.page_id === item.page_id %}aria-current="page"{% endif %}
+              {% if page.pageId === item.pageId %}aria-current="page"{% endif %}
               >{{ item.name }}</a
             >
           </li>

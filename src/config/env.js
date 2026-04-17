@@ -1,4 +1,4 @@
-import { getEnv } from '../../gulp/utils/env.js'
+import { getEnv } from '../../gulp/utils/index.js'
 
 /**
  * Shared environment configuration for the project.
