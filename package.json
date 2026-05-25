@@ -26,8 +26,7 @@
 		"release": "node scripts/release.js",
 		"todo": "cross-env BUILD_MODE=dev node ./node_modules/gulp/bin/gulp.js -f gulpfile.js todo",
 		"todo:show": "npx leasot -x -r markdown -A '.txt,coffeeParser' './**/*.{js,html,njk,scss,txt,md,yml}' -i './node_modules/**/*'",
-		"husky-init": "rimraf .husky && husky init && echo npx lint-staged > .husky/pre-commit && echo npx commitlint --edit > .husky/commit-msg",
-		"prepare": "husky",
+		"prepare": "lefthook install",
 		"debug": "cross-env DEBUG=true NODE_ENV=development gulp dev",
 		"debug:meta": "cross-env DEBUG_META=true NODE_ENV=development gulp dev",
 		"test": "node --test --test-concurrency=1 tests/unit/**/*.test.js tests/integration/**/*.test.js",
@@ -43,7 +42,8 @@
 		"serve:build": "npx serve build-prod",
 		"verify:pipeline": "run-s lint test build test:smoke export test:prod test:export test:visual sanity:budget",
 		"sanity:budget": "size-limit",
-		"component": "plop"
+		"component": "plop",
+		"lint-staged": "lint-staged"
 	},
 	"type": "module",
 	"repository": {
@@ -65,23 +65,6 @@
 	],
 	"engines": {
 		"node": ">=22"
-	},
-	"lint-staged": {
-		"*.js": [
-			"eslint --fix"
-		],
-		"*.scss": [
-			"stylelint --fix --allow-empty-input"
-		],
-		"*.md": [
-			"remark --output --quiet --frail"
-		],
-		"*.njk": [
-			"njklint --fix"
-		],
-		"*.{css,scss,js,json,njk}": [
-			"prettier --write"
-		]
 	},
 	"dependencies": {
 		"bootstrap": "5.3.8"
@@ -133,8 +116,8 @@
 		"gulp-todo": "^7.1.1",
 		"gulp-upng": "^1.0.3",
 		"html-validate": "^10.13.0",
-		"husky": "^9.1.7",
 		"imagemin-svgo": "^12.0.0",
+		"lefthook": "^2.1.8",
 		"linkinator": "^7.6.1",
 		"lint-staged": "^16.4.0",
 		"markdown-it": "^14.1.1",

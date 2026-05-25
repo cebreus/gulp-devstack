@@ -35,7 +35,7 @@ Whether you are building a simple landing page or a complex static site with a H
 - **Templates**: Nunjucks & Markdown
 - **Image optimization and conversion**: SVGO (SVG), Sharp (AVIF, JPEG, WebP), uPNG (PNG)
 - **Generators**: Favicons (cross-platform manifests & icons), Google Webfonts
-- **Quality Assurance**: ESLint, Stylelint, Remark (Markdown), Nunjucklinter, Prettier, Husky, Commitlint, Size-limit
+- **Quality Assurance**: ESLint, Stylelint, Remark (Markdown), Nunjucklinter, Prettier, Lefthook, Commitlint, Size-limit
 - **Testing**: Native `node:test`, Playwright, axe-core, HTML-Validate, Linkinator
 - **Dev Server**: BrowserSync (Hot-reloading)
 
@@ -55,7 +55,7 @@ Gulp DevStack solves common frontend headaches right out of the box, providing a
   - **Favicon Generator**: Create all necessary app icons and manifests automatically.
   - **TODO Generator**: Extracts inline TODOs into a unified list.
 - **Code Quality & Tooling**:
-  - **Husky & Commitlint**: Pre-commit hooks ensure conventional commits and code formatting.
+  - **Lefthook & Commitlint**: Git hooks ensure conventional commits and code formatting.
   - **Size-limit**: Built-in bundle budget checks to prevent performance regressions.
   - **Optional Source Maps**: Easily debug your code during development.
   - **Automated Releases**: Versioning, changelog generation, and tagging via `release-it`.

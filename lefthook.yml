@@ -1,0 +1,84 @@
+# Lefthook configuration
+# https://github.com/evilmartians/lefthook
+
+pre-commit:
+  commands:
+    lint-staged:
+      run: npx lint-staged
+
+commit-msg:
+  commands:
+    fix-blank-line:
+      run: |
+        node -e "
+        const fs = require('fs');
+        const content = fs.readFileSync('{1}', 'utf8');
+        const lines = content.split('\n');
+        if (lines.length > 1 && lines[0].trim() && lines[1].trim()) {
+          lines.splice(1, 0, '');
+          fs.writeFileSync('{1}', lines.join('\n'));
+        }
+        "
+    remark:
+      run: npx remark "{1}" --output --silent
+    commitlint:
+      run: npx commitlint --edit "{1}"
+
+pre-push:
+  commands:
+    checks:
+      run: pnpm lint && pnpm test
+
+prepare-commit-msg:
+  commands:
+    fold-lines:
+      run: |
+        node -e "
+        const fs = require('fs');
+        const filePath = '{1}';
+        const MAX_WIDTH = 100;
+
+        const content = fs.readFileSync(filePath, 'utf8');
+        const lines = content.split('\n');
+
+        function wrapLine(line, maxWidth) {
+          if (line.length <= maxWidth) {
+            return [line];
+          }
+
+          const words = line.split(' ');
+          const wrapped = [];
+          let current = '';
+
+          for (const word of words) {
+            const next = current ? current + ' ' + word : word;
+            if (next.length <= maxWidth) {
+              current = next;
+            } else {
+              if (current) {
+                wrapped.push(current);
+              }
+
+              if (word.length > maxWidth) {
+                let rest = word;
+                while (rest.length > maxWidth) {
+                  wrapped.push(rest.slice(0, maxWidth));
+                  rest = rest.slice(maxWidth);
+                }
+                current = rest;
+              } else {
+                current = word;
+              }
+            }
+          }
+
+          if (current) {
+            wrapped.push(current);
+          }
+
+          return wrapped;
+        }
+
+        const wrappedLines = lines.flatMap((line) => wrapLine(line, MAX_WIDTH));
+        fs.writeFileSync(filePath, wrappedLines.join('\n'));
+        "
