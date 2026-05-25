@@ -214,10 +214,11 @@ export function attachPipelineLogging({
   emptyMessage,
   errorMessage,
 }) {
+  const MAX_TRACKED_LOGS = 100
   const format =
     typeof formatFilePath === 'function' ? formatFilePath : (v) => v
 
-  const cleanup = () => {
+  const cleanup = function removeListeners() {
     // We don't destroy on success as Gulp might need the stream for next pipe,
     // but we remove listeners to avoid leaks.
     stream.removeAllListeners('end')
@@ -225,17 +226,24 @@ export function attachPipelineLogging({
     stream.removeAllListeners('data')
   }
 
-  stream.on('end', () => {
+  stream.on('end', function onStreamEnd() {
     if (trackedFiles.length > 0) {
+      const displayCount = Math.min(trackedFiles.length, MAX_TRACKED_LOGS)
+      const list = trackedFiles.slice(0, displayCount).map(format)
+
+      if (trackedFiles.length > MAX_TRACKED_LOGS) {
+        list.push(`... and ${trackedFiles.length - MAX_TRACKED_LOGS} more`)
+      }
+
       loggerInstance.info(`${successLabel} [${trackedFiles.length} files]`)
-      loggerInstance.list(successLabel, trackedFiles.map(format))
+      loggerInstance.list(successLabel, list)
     } else {
       loggerInstance.debug(emptyMessage)
     }
     cleanup()
   })
 
-  stream.on('error', (err) => {
+  stream.on('error', function onStreamError(err) {
     loggerInstance.error(`${errorMessage} Cause: ${err.message}`)
     if (typeof stream.destroy === 'function') {
       stream.destroy()

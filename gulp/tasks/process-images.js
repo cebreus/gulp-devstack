@@ -82,7 +82,7 @@ async function executeRasterTask(src, dest, targetType, options = {}) {
           if (file._isInvalid) return cb(null, null)
 
           try {
-            const original = Buffer.from(file.contents)
+            const original = file.contents
 
             if (lqs) {
               const placeholder = await getLqsPlaceholder(original)
