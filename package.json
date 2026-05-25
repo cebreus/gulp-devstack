@@ -78,7 +78,7 @@
 		"*.njk": [
 			"njklint --fix"
 		],
-		"*.{css,scss,md,js,json,njk}": [
+		"*.{css,scss,js,json,njk}": [
 			"prettier --write"
 		]
 	},

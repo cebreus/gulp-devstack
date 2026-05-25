@@ -42,13 +42,6 @@ const config = {
         useTabs: true,
       },
     },
-    {
-      files: '*.md',
-      options: {
-        printWidth: 80,
-        proseWrap: 'always',
-      },
-    },
   ],
 }
 
