@@ -78,3 +78,5 @@ results
 
 coverage
 testApp
+tests/.sandboxes
+graphify-out/

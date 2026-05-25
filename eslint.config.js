@@ -6,7 +6,14 @@ const compat = new FlatCompat()
 
 export default [
   {
-    ignores: ['node_modules/', 'build*/', '.temp/', 'dist/', 'static/'],
+    ignores: [
+      'node_modules/',
+      'build*/',
+      '.temp/',
+      'dist/',
+      'static/',
+      'tests/.sandboxes/',
+    ],
   },
   prettier,
 

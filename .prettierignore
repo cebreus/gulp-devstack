@@ -13,6 +13,7 @@ node_modules
 ssl
 static
 temp
+tests/.sandboxes
 
 ############################
 # Files
