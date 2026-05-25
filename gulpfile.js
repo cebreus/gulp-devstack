@@ -31,7 +31,10 @@ import {
   reloadBrowser,
 } from './gulp/tasks/serve-site.js'
 import { validateHtml } from './gulp/tasks/validate-html.js'
-import loggerLib, { cleanupDir } from './gulp/utils/index.js'
+import loggerLib, {
+  cleanupDir,
+  getSiteDataArtifactPath,
+} from './gulp/utils/index.js'
 import { siteDefaults } from './src/config/site.js'
 
 const logger = loggerLib.createLogger('Gulpfile')
@@ -43,7 +46,7 @@ if (!BUILD_MODE) {
   })
 }
 
-// Initialize environment variables
+// Initialize environment variables from .env files
 ;[`.env.${BUILD_MODE}`, '.env.local', '.env']
   .filter((file) => existsSync(file))
   .forEach((file) => process.loadEnvFile(file))
@@ -63,15 +66,24 @@ export function clean() {
  * @returns {Promise<void>} Resolves when copy is complete
  */
 export async function copy() {
-  const publicCopy = () =>
-    copyStatic(
+  /**
+   * Copies public static assets
+   * @returns {import('node:stream').Readable} Gulp stream
+   */
+  function copyPublicAssets() {
+    return copyStatic(
       [`${config.staticBase}/**/*`],
       config.staticBase,
       config.paths.build
     )
+  }
 
-  const assetsCopy = () =>
-    copyStatic(
+  /**
+   * Copies fonts and associated CSS
+   * @returns {import('node:stream').Readable} Gulp stream
+   */
+  function copyFonts() {
+    return copyStatic(
       [
         `${config.assetsBase}/fonts/**/*`,
         `${config.assetsBase}/css/fonts*.css`,
@@ -79,9 +91,10 @@ export async function copy() {
       config.assetsBase,
       `${config.paths.build}/assets`
     )
+  }
 
   try {
-    await gulp.parallel(publicCopy, assetsCopy)()
+    await gulp.parallel(copyPublicAssets, copyFonts)()
   } catch (error) {
     logger.error(`Copy task failed: ${error.message}`)
     throw error
@@ -109,19 +122,26 @@ export function js() {
   return processJs(config, config.jsFiles, config.paths.js, params)
 }
 
-const datasetSite = async () => {
-  const siteDataPath = path.join(config.tempBase, 'site.json')
+/** Generates site-wide metadata JSON */
+async function generateSiteMetadata() {
+  const siteDataPath = getSiteDataArtifactPath(config.tempBase)
   await fs.mkdir(path.dirname(siteDataPath), { recursive: true })
   await fs.writeFile(siteDataPath, JSON.stringify(siteDefaults, null, 2))
 }
-const datasetPages = () =>
-  processDataTask(config.datasetPagesSource, config.datasetPagesBuild)
+
+/**
+ * Processes page-level markdown data
+ * @returns {import('node:stream').Readable} Gulp stream
+ */
+function processPageData() {
+  return processDataTask(config.datasetPagesSource, config.datasetPagesBuild)
+}
 
 /**
  * Task: Prepare dataset
  * @type {import('gulp').TaskFunction}
  */
-export const dataset = gulp.parallel(datasetSite, datasetPages)
+export const dataset = gulp.parallel(generateSiteMetadata, processPageData)
 
 /**
  * Task: Build HTML pages
@@ -138,21 +158,25 @@ export function html() {
 export async function images() {
   const imgConfig = config.imageOptimization
 
-  await Promise.all([
+  const tasks = [
     optimizeJpg(config.imagesJpg, config.paths.images, imgConfig.jpg),
     optimizePng(config.imagesPng, config.paths.images),
     optimizeSvg(config.imagesSvg, config.paths.images),
-    convertToWebp(
-      [config.imagesJpg, config.imagesPng],
-      config.paths.images,
-      imgConfig.webp
-    ),
-    convertToAvif(
-      [config.imagesJpg, config.imagesPng],
-      config.paths.images,
-      imgConfig.avif
-    ),
-  ])
+    config.optimizeImages &&
+      convertToWebp(
+        [config.imagesJpg, config.imagesPng],
+        config.paths.images,
+        imgConfig.webp
+      ),
+    config.optimizeImages &&
+      convertToAvif(
+        [config.imagesJpg, config.imagesPng],
+        config.paths.images,
+        imgConfig.avif
+      ),
+  ].filter(Boolean)
+
+  await Promise.all(tasks)
 }
 
 /**
@@ -262,11 +286,11 @@ export function inject() {
 
 /**
  * Watcher: Monitor files for changes
- * @returns {void}
+ * @returns {Promise<void>} Resolves after the dev server and watchers are initialized
  */
-function watchFiles() {
+async function watchFiles() {
   try {
-    initializeServer(config)
+    await initializeServer(config)
 
     // Templates & Data: Rebuild JSON and HTML, then FULL RELOAD
     gulp.watch(
@@ -292,10 +316,6 @@ function watchFiles() {
   }
 }
 
-/**
- * Final cleanup: remove non-fingerprint files
- * @returns {Promise<void>} Resolves when cleanup is finished
- */
 /**
  * Final cleanup: remove non-fingerprint files
  * @returns {Promise<void>} Resolves when cleanup is finished

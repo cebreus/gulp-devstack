@@ -1,4 +1,3 @@
-import { mkdirSync } from 'node:fs'
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import { Transform } from 'node:stream'
@@ -8,8 +7,12 @@ import gulp from 'gulp'
 
 import { siteDefaults } from '../../src/config/site.js'
 import loggerLib, {
+  buildMenuData,
   buildPageData,
+  buildRouteExpressionContext,
   extractMenuEntry,
+  getMenuDataArtifactPath,
+  getPageDataArtifactPath,
   isPrivateFile,
   resolvePageLocation,
 } from '../utils/index.js'
@@ -75,12 +78,11 @@ export function resolveDataExpressions(data, context) {
  * @private
  */
 async function writeDataArtifact({ dest, routesRoot, filePath, data }) {
-  const relativeFilePath = path.relative(routesRoot, filePath)
-  const outputFileName = relativeFilePath.replace(
-    path.extname(filePath),
-    '.json'
-  )
-  const outputFilePath = path.join(dest, outputFileName)
+  const outputFilePath = getPageDataArtifactPath({
+    artifactsBase: dest,
+    routesBase: routesRoot,
+    filePath,
+  })
 
   await fs.mkdir(path.dirname(outputFilePath), { recursive: true })
   await fs.writeFile(outputFilePath, JSON.stringify(data, null, 2))
@@ -102,7 +104,6 @@ export function processData(src, dest, options = {}) {
   logger.debug(
     `Processing dataset from ${src} to ${dest} (routesRoot: ${routesRoot})`
   )
-  mkdirSync(dest, { recursive: true })
 
   let processedCount = 0
   const globalMenuItems = []
@@ -111,6 +112,14 @@ export function processData(src, dest, options = {}) {
 
   const dataTransform = new Transform({
     objectMode: true,
+    async construct(cb) {
+      try {
+        await fs.mkdir(dest, { recursive: true })
+        cb()
+      } catch (err) {
+        cb(err)
+      }
+    },
     async transform(file, _enc, cb) {
       if (isPrivateFile(file.path)) {
         logger.verbose(`Skipping private content: ${path.basename(file.path)}`)
@@ -134,8 +143,14 @@ export function processData(src, dest, options = {}) {
         )
 
         // Resolve Nunjucks expressions within the frontmatter
-        const context = { site: { ...siteDefaults }, page: { ...frontmatter } }
-        const renderedFrontmatter = resolveDataExpressions(frontmatter, context)
+        const expressionContext = buildRouteExpressionContext({
+          frontmatter,
+          siteConfig: siteDefaults,
+        })
+        const renderedFrontmatter = resolveDataExpressions(
+          frontmatter,
+          expressionContext
+        )
 
         const jsonData = buildPageData({
           frontmatter: renderedFrontmatter,
@@ -184,12 +199,9 @@ export function processData(src, dest, options = {}) {
     },
     async flush(cb) {
       try {
-        globalMenuItems.sort((a, b) => a.order - b.order)
-        const menuFile = path.join(dest, 'menu.json')
-        await fs.writeFile(
-          menuFile,
-          JSON.stringify({ menu: globalMenuItems }, null, 2)
-        )
+        const menuFile = getMenuDataArtifactPath(dest)
+        const menuData = buildMenuData(globalMenuItems)
+        await fs.writeFile(menuFile, JSON.stringify(menuData, null, 2))
         generatedFiles.push(path.relative(process.cwd(), menuFile))
 
         logger.info(`Dataset complete. ${processedCount} entries created.`)

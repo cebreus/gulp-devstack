@@ -5,7 +5,9 @@ import { describe, it } from 'node:test'
 import { resolveDataExpressions } from '../../gulp/tasks/process-data.js'
 import {
   applySeoDefaults,
+  buildMenuData,
   buildPageData,
+  buildRouteExpressionContext,
   resolvePageLocation,
 } from '../../gulp/utils/index.js'
 
@@ -56,6 +58,20 @@ describe('Process Data Pure Logic', function processDataLogicTests() {
       const input = '{{ site.invalid.path }}'
       assert.doesNotThrow(function runInvalidExpression() {
         resolveDataExpressions(input, context)
+      })
+    })
+  })
+
+  describe('buildRouteExpressionContext', function routeExpressionContextTests() {
+    it('should expose site and page objects for frontmatter rendering', function verifyExpressionContextShape() {
+      const result = buildRouteExpressionContext({
+        frontmatter: { title: 'Home' },
+        siteConfig: { version: '4.5.0' },
+      })
+
+      assert.deepStrictEqual(result, {
+        site: { version: '4.5.0' },
+        page: { title: 'Home' },
       })
     })
   })
@@ -131,6 +147,22 @@ describe('Process Data Pure Logic', function processDataLogicTests() {
         pagePath: '/',
       })
       assert.strictEqual(result.pageId, 'home')
+    })
+  })
+
+  describe('buildMenuData', function menuDataTests() {
+    it('should sort menu entries by order', function verifyMenuSorting() {
+      const result = buildMenuData([
+        { name: 'Second', order: 2 },
+        { name: 'First', order: 1 },
+      ])
+
+      assert.deepStrictEqual(result, {
+        menu: [
+          { name: 'First', order: 1 },
+          { name: 'Second', order: 2 },
+        ],
+      })
     })
   })
 })

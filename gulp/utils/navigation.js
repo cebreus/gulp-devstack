@@ -3,6 +3,10 @@ import path from 'node:path'
 
 import { siteDefaults } from '../../src/config/site.js'
 
+const ROUTE_DATA_ARTIFACTS_DIRNAME = 'pages'
+const SITE_DATA_ARTIFACT_FILENAME = 'site.json'
+const MENU_DATA_ARTIFACT_FILENAME = 'menu.json'
+
 /**
  * Builds URL path used for injected CSS/JS tags.
  * @param {string} filepath - Asset file path
@@ -46,6 +50,54 @@ export function calculateOutputPath({
     path.resolve(inputPath)
   )
   return path.resolve(outDir, relativePath.replace(extFrom, extTo))
+}
+
+/**
+ * Returns the directory that stores route data artifacts.
+ * @param {string} tempBase - Temporary build directory
+ * @returns {string} Route data artifacts directory
+ */
+export function getRouteDataArtifactsDir(tempBase) {
+  return path.join(tempBase, ROUTE_DATA_ARTIFACTS_DIRNAME)
+}
+
+/**
+ * Returns the path to the site metadata artifact.
+ * @param {string} tempBase - Temporary build directory
+ * @returns {string} Site data artifact path
+ */
+export function getSiteDataArtifactPath(tempBase) {
+  return path.join(tempBase, SITE_DATA_ARTIFACT_FILENAME)
+}
+
+/**
+ * Returns the path to the route menu artifact.
+ * @param {string} artifactsBase - Route data artifacts directory
+ * @returns {string} Menu artifact path
+ */
+export function getMenuDataArtifactPath(artifactsBase) {
+  return path.join(artifactsBase, MENU_DATA_ARTIFACT_FILENAME)
+}
+
+/**
+ * Returns the path to a route page data artifact.
+ * @param {object} root0 - Artifact parameters
+ * @param {string} root0.artifactsBase - Route data artifacts directory
+ * @param {string} root0.routesBase - Routes source directory
+ * @param {string} root0.filePath - Route file path
+ * @returns {string} Page data artifact path
+ */
+export function getPageDataArtifactPath({
+  artifactsBase,
+  routesBase,
+  filePath,
+}) {
+  const relativeFilePath = path.relative(routesBase, filePath)
+  const outputFileName = relativeFilePath.replace(
+    path.extname(filePath),
+    '.json'
+  )
+  return path.join(artifactsBase, outputFileName)
 }
 
 /**
@@ -137,6 +189,23 @@ function normalizeToAbsoluteUrl(url, baseUrl) {
 }
 
 /**
+ * Builds the context used to resolve frontmatter expressions.
+ * @param {object} root0 - Context parameters
+ * @param {Record<string, unknown>} [root0.frontmatter] - Page frontmatter
+ * @param {Record<string, unknown>} [root0.siteConfig] - Site metadata
+ * @returns {{ site: Record<string, unknown>, page: Record<string, unknown> }} Expression context
+ */
+export function buildRouteExpressionContext({
+  frontmatter = {},
+  siteConfig = siteDefaults,
+}) {
+  return {
+    site: { ...siteConfig },
+    page: { ...frontmatter },
+  }
+}
+
+/**
  * Resolves image metadata to absolute URLs recursively.
  * @param {unknown} data - Metadata object or array
  * @param {string} baseUrl - Project base URL
@@ -202,6 +271,31 @@ export function applySeoDefaults(
 }
 
 /**
+ * Builds the global route context shared by all pages.
+ * @param {object} root0 - Global context parts
+ * @param {Record<string, unknown>} [root0.siteData] - Site artifact payload
+ * @param {Record<string, unknown>} [root0.menuData] - Menu artifact payload
+ * @returns {Record<string, unknown>} Global route context
+ */
+export function buildGlobalContext({ siteData = {}, menuData = {} } = {}) {
+  return {
+    ...siteData,
+    ...menuData,
+  }
+}
+
+/**
+ * Builds the menu artifact payload from route menu entries.
+ * @param {object[]} menuEntries - Raw menu entries
+ * @returns {{ menu: object[] }} Menu artifact payload
+ */
+export function buildMenuData(menuEntries) {
+  return {
+    menu: [...menuEntries].sort((a, b) => a.order - b.order),
+  }
+}
+
+/**
  * Builds normalized page payload from parsed markdown frontmatter and content.
  * @param {object} root0 - Processing parameters.
  * @param {Record<string, unknown>} root0.frontmatter - Parsed frontmatter fields.
@@ -240,15 +334,50 @@ export function buildPageData({
 }
 
 /**
+ * Builds the final Nunjucks context for a route template.
+ * @param {object} root0 - Template context parts
+ * @param {Record<string, unknown>} [root0.pageData] - Page data artifact
+ * @param {Record<string, unknown>} [root0.globalContext] - Shared site and menu context
+ * @param {object} root0.config - Build configuration
+ * @param {string[]} [root0.pageStyles] - Route styles to inject
+ * @param {string[]} [root0.pageScripts] - Route scripts to inject
+ * @param {(filePath: string) => boolean} [root0.isPrivate] - Private path predicate
+ * @returns {Record<string, unknown>} Final template context
+ */
+export function buildTemplateContext({
+  pageData = {},
+  globalContext = {},
+  config,
+  pageStyles = [],
+  pageScripts = [],
+  isPrivate,
+}) {
+  const context = {
+    ...pageData,
+    page: pageData,
+    site: globalContext,
+    config,
+    pageStyles,
+    pageScripts,
+  }
+
+  if (typeof isPrivate === 'function') {
+    context.isPrivate = isPrivate
+  }
+
+  return context
+}
+
+/**
  * Processes a single JSON file for HTML rendering.
  * @param {import('vinyl')} file - Gulp file object
  * @param {object} params - Configuration parameters
  * @param {string} params.dataSource - Source data directory
  * @param {string} params.output - Output directory
- * @returns {import('vinyl')} Updated file object
+ * @returns {Promise<import('vinyl')>} Updated file object
  * @throws {Error} If file contents cannot be parsed as JSON or is not an object
  */
-export function transformJsonToHtml(file, params) {
+export async function transformJsonToHtml(file, params) {
   let pageData
   try {
     pageData = JSON.parse(file.contents.toString('utf8'))
@@ -278,44 +407,125 @@ export function transformJsonToHtml(file, params) {
   file.contents = Buffer.from(
     '{% extends "layout-default.njk" %}{% block content %}{{ page.content | md | safe }}{% endblock %}'
   )
+
+  const discoveredStyles = await discoverRouteStyles(
+    routeRelDir,
+    routeBaseName,
+    params.output
+  )
+
   file.data = {
     ...pageData,
     pageStyles: [
       ...(Array.isArray(pageData.pageStyles) ? pageData.pageStyles : []),
-      ...discoverRouteStyles(routeRelDir, routeBaseName, params.output),
+      ...discoveredStyles,
     ],
   }
   return file
 }
 
 /**
- * Discovers and returns URL paths for route-specific CSS assets.
+ * Internal cache for discovered assets to avoid redundant FS lookups.
+ * @type {Map<string, Set<string>>}
+ * @private
+ */
+const ASSET_MANIFEST_CACHE = new Map()
+
+/**
+ * Discovers and returns URL paths for route-specific assets (CSS or JS).
+ * Uses an asynchronous manifest-based approach to avoid event loop blockage.
  * @param {string} routeRelDir - Relative directory of the route
  * @param {string} routeBaseName - Base name of the route file
  * @param {string} outputBase - Build output directory
- * @returns {string[]} Discovered styles
+ * @param {object} [options] - Discovery options
+ * @param {string} [options.subDir] - Asset subdirectory (e.g., 'css', 'js')
+ * @param {string[]} [options.extensions] - Allowed extensions (e.g., ['.css', '.min.css'])
+ * @returns {Promise<string[]>} Discovered asset URLs
  */
-export function discoverRouteStyles(routeRelDir, routeBaseName, outputBase) {
+export async function discoverRouteAssets(
+  routeRelDir,
+  routeBaseName,
+  outputBase,
+  { subDir = 'css', extensions = ['.css'] } = {}
+) {
+  const assetDir = path.resolve(outputBase, 'assets', subDir)
+
+  // Initialize or retrieve cache for this build run
+  if (!ASSET_MANIFEST_CACHE.has(assetDir)) {
+    try {
+      const entries = await fs.promises.readdir(assetDir, { recursive: true })
+      ASSET_MANIFEST_CACHE.set(
+        assetDir,
+        new Set(entries.map((e) => e.replace(/\\/g, '/')))
+      )
+    } catch {
+      // If directory doesn't exist yet, we can't find anything
+      return []
+    }
+  }
+
+  const manifest = ASSET_MANIFEST_CACHE.get(assetDir)
   let pageAssetName = routeRelDir !== '.' ? routeRelDir : routeBaseName
   if (pageAssetName === 'index') pageAssetName = 'home'
+
   const candidates =
     routeRelDir !== '.'
       ? [
-          `${routeRelDir}/${routeBaseName}.css`,
-          `${pageAssetName}.css`,
-          `${pageAssetName}/index.css`,
+          ...extensions.map((ext) => `${routeRelDir}/${routeBaseName}${ext}`),
+          ...extensions.map((ext) => `${pageAssetName}${ext}`),
+          ...extensions.map((ext) => `${pageAssetName}/index${ext}`),
         ]
-      : [`${routeBaseName}.css`, `${pageAssetName}/index.css`]
+      : [
+          ...extensions.map((ext) => `${routeBaseName}${ext}`),
+          ...extensions.map((ext) => `${pageAssetName}/index${ext}`),
+        ]
 
-  const styles = []
+  const discovered = []
   for (const name of candidates) {
-    const fullPath = path.resolve(outputBase, 'assets/css', name)
-    if (fs.existsSync(fullPath)) {
+    const normalizedName = name.replace(/\\/g, '/')
+    if (manifest.has(normalizedName)) {
+      const fullPath = path.resolve(assetDir, normalizedName)
       const url = resolveInjectionUrl(fullPath, outputBase)
-      if (!styles.includes(url)) styles.push(url)
+      if (!discovered.includes(url)) discovered.push(url)
     }
   }
-  return styles
+  return discovered
+}
+
+/**
+ * Discovers and returns URL paths for route-specific CSS assets (Legacy Alias).
+ * @param {string} routeRelDir - Relative directory of the route
+ * @param {string} routeBaseName - Base name of the route file
+ * @param {string} outputBase - Build output directory
+ * @returns {Promise<string[]>} Discovered styles
+ */
+export async function discoverRouteStyles(
+  routeRelDir,
+  routeBaseName,
+  outputBase
+) {
+  return discoverRouteAssets(routeRelDir, routeBaseName, outputBase, {
+    subDir: 'css',
+    extensions: ['.css', '.min.css'],
+  })
+}
+
+/**
+ * Discovers and returns URL paths for route-specific JS assets.
+ * @param {string} routeRelDir - Relative directory of the route
+ * @param {string} routeBaseName - Base name of the route file
+ * @param {string} outputBase - Build output directory
+ * @returns {Promise<string[]>} Discovered scripts
+ */
+export async function discoverRouteScripts(
+  routeRelDir,
+  routeBaseName,
+  outputBase
+) {
+  return discoverRouteAssets(routeRelDir, routeBaseName, outputBase, {
+    subDir: 'js',
+    extensions: ['.js'],
+  })
 }
 
 /**

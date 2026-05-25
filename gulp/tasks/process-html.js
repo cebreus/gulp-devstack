@@ -1,13 +1,22 @@
-import fs from 'node:fs'
+import { existsSync } from 'node:fs'
+import fs from 'node:fs/promises'
 import path from 'node:path'
 import { globSync } from 'glob'
 import gulp from 'gulp'
 
 import loggerLib, {
   attachPipelineLogging,
+  buildGlobalContext,
+  buildTemplateContext,
   cleanHtmlComments,
+  discoverRouteScripts,
+  discoverRouteStyles,
   ensureFileIntegrity,
+  getMenuDataArtifactPath,
+  getPageDataArtifactPath,
   getRelativePath,
+  getRouteDataArtifactsDir,
+  getSiteDataArtifactPath,
   isPrivateFile,
   resolveInjectionUrl,
   streamToPromise,
@@ -15,26 +24,60 @@ import loggerLib, {
 } from '../utils/index.js'
 
 const logger = loggerLib.createLogger('ProcessHtml')
+const DEFAULT_DATE_LOCALE = 'en'
+const DEFAULT_DATE_TIMEZONE = 'UTC'
 
 /**
- * Loads page-specific JSON data.
- * @param {import('vinyl')} file - The current Nunjucks template file
- * @param {object} config - Project configuration
- * @returns {object} Page data object
+ * Formats a date value for Nunjucks templates.
+ * @param {string|Date|null|undefined} input - Date-like input value.
+ * @param {string|Intl.DateTimeFormatOptions} [format] - Output format token or Intl options.
+ * @returns {string|number} Formatted date value.
+ * @private
  */
-function loadPageData(file, config) {
-  const relativePath = path.relative(config.routesBase, file.path)
-  const dataPath = path.join(
-    config.tempBase,
-    'pages',
-    relativePath.replace('.njk', '.json')
-  )
+function formatTemplateDate(input, format) {
+  const date = input === 'now' || !input ? new Date() : new Date(input)
 
-  if (!fs.existsSync(dataPath)) return {}
+  if (isNaN(date.getTime())) {
+    return new Date().getFullYear()
+  }
+
+  if (format === 'YYYY') {
+    return date.getUTCFullYear()
+  }
+
+  if (format && typeof format === 'object') {
+    return new Intl.DateTimeFormat(DEFAULT_DATE_LOCALE, {
+      timeZone: DEFAULT_DATE_TIMEZONE,
+      ...format,
+    }).format(date)
+  }
+
+  return date.toISOString()
+}
+
+/**
+ * Internal: Loads page-specific JSON data from the temporary directory.
+ * @param {import('vinyl')} file - The current Nunjucks template file.
+ * @param {object} config - Project configuration.
+ * @returns {Promise<object>} Page data object.
+ * @private
+ */
+async function loadPageJson(file, config) {
+  const artifactsBase = getRouteDataArtifactsDir(config.tempBase)
+  const dataPath = getPageDataArtifactPath({
+    artifactsBase,
+    routesBase: config.routesBase,
+    filePath: file.path,
+  })
 
   try {
-    return JSON.parse(fs.readFileSync(dataPath, 'utf8'))
+    const content = await fs.readFile(dataPath, 'utf8')
+    return JSON.parse(content)
   } catch (error) {
+    if (error.code === 'ENOENT') {
+      logger.debug(`No page data found for: ${file.path}`)
+      return {}
+    }
     const errorMsg = `Failed to parse page data: ${file.path}`
     logger.error(`${errorMsg}. Cause: ${error.message}`)
     throw new Error(`[ProcessHtml] ${errorMsg}`, { cause: error })
@@ -42,81 +85,39 @@ function loadPageData(file, config) {
 }
 
 /**
- * Loads global site data (site metadata and navigation menu).
- * @param {object} config - Project configuration
- * @returns {object} Combined site data object
+ * Internal: Loads and merges global site metadata and navigation menu.
+ * @param {object} config - Project configuration.
+ * @returns {Promise<object>} Combined site context object.
+ * @private
  */
-function loadSiteData(config) {
-  const siteDataPath = path.join(config.tempBase, 'site.json')
-  const menuDataPath = path.join(config.tempBase, 'pages', 'menu.json')
+async function loadGlobalContext(config) {
+  const artifactsBase = getRouteDataArtifactsDir(config.tempBase)
+  const siteDataPath = getSiteDataArtifactPath(config.tempBase)
+  const menuDataPath = getMenuDataArtifactPath(artifactsBase)
   let siteData = {}
+  let menuData = {}
 
-  if (fs.existsSync(siteDataPath)) {
-    try {
-      siteData = JSON.parse(fs.readFileSync(siteDataPath, 'utf8'))
-    } catch (error) {
-      logger.error(`Failed to parse site.json. Cause: ${error.message}`)
+  try {
+    if (existsSync(siteDataPath)) {
+      const content = await fs.readFile(siteDataPath, 'utf8')
+      siteData = JSON.parse(content)
     }
+    if (existsSync(menuDataPath)) {
+      const content = await fs.readFile(menuDataPath, 'utf8')
+      menuData = JSON.parse(content)
+    }
+  } catch (error) {
+    logger.error(`Failed to load global context. Cause: ${error.message}`)
   }
 
-  if (fs.existsSync(menuDataPath)) {
-    try {
-      const menuData = JSON.parse(fs.readFileSync(menuDataPath, 'utf8'))
-      siteData = { ...siteData, ...menuData }
-    } catch (error) {
-      logger.error(`Failed to parse menu.json. Cause: ${error.message}`)
-    }
-  }
-
-  return siteData
+  return buildGlobalContext({ siteData, menuData })
 }
 
 /**
- * Discovers CSS and JS assets specifically named for the current route.
- * @param {import('vinyl')} file - Current template file
- * @param {object} config - Project configuration
- * @returns {{ styles: string[], scripts: string[] }} Discovered asset URLs
- */
-function discoverRouteAssets(file, config) {
-  const relativePath = path.relative(config.routesBase, file.path)
-  const pageRelativeDir = path.dirname(relativePath)
-  const pageBasename = path.basename(relativePath, '.njk')
-
-  const styles = []
-  const scripts = []
-
-  const possibleStyles = [
-    `${pageBasename}.css`,
-    `${pageBasename}.min.css`,
-    'index.css',
-    'index.min.css',
-  ]
-  const possibleScripts = [`${pageBasename}.js`, 'index.js']
-
-  for (const name of possibleStyles) {
-    const p = path.join(config.paths.build, 'assets/css', pageRelativeDir, name)
-    if (fs.existsSync(p)) {
-      styles.push(resolveInjectionUrl(p, config.paths.build))
-      break
-    }
-  }
-
-  for (const name of possibleScripts) {
-    const p = path.join(config.paths.build, 'assets/js', pageRelativeDir, name)
-    if (fs.existsSync(p)) {
-      scripts.push(resolveInjectionUrl(p, config.paths.build))
-      break
-    }
-  }
-
-  return { styles, scripts }
-}
-
-/**
- * Assigns a numerical priority weight to an asset for injection sorting.
- * Lower numbers appear earlier in the HTML.
- * @param {string} filepath - The path to the asset
- * @returns {number} Priority weight
+ * Internal: Assigns a numerical priority weight to an asset for injection sorting.
+ * @param {string} filepath - The path to the asset.
+ * @returns {number} Priority weight.
+ * @private
  */
 function getAssetWeight(filepath) {
   const name = path.basename(filepath).toLowerCase()
@@ -127,20 +128,20 @@ function getAssetWeight(filepath) {
     custom: 30,
     main: 40,
     utils: 50,
-    'u-devstack': 100, // Debugger layer - MUST BE ABSOLUTELY LAST
+    'u-devstack': 100, // Debugger layer must be last
   }
 
   for (const [key, weight] of Object.entries(weights)) {
     if (name.includes(key)) return weight
   }
 
-  return 100 // Default for unknown assets
+  return 100
 }
 
 /**
- * Gulp Task: Renders Nunjucks templates into HTML.
- * @param {object} config - Project configuration provider
- * @returns {Promise<void>} Resolves when HTML generation is complete
+ * Gulp Task: Renders Nunjucks templates into HTML with injected assets.
+ * @param {object} config - Project configuration provider.
+ * @returns {Promise<void>} Resolves when HTML generation is complete.
  */
 export async function processHtml(config) {
   const { default: data } = await import('gulp-data')
@@ -162,6 +163,8 @@ export async function processHtml(config) {
     config.iconsBase,
   ]
 
+  // Pre-load shared context and assets once per task run
+  const globalContext = await loadGlobalContext(config)
   const assetPaths = config.globalInjectAssets
     .flatMap((pattern) =>
       globSync(path.join(config.paths.build, pattern), { posix: true })
@@ -176,22 +179,37 @@ export async function processHtml(config) {
 
   const processedFiles = []
 
-  const htmlPipeline = gulp
+  let htmlPipeline = gulp
     .src(routesPattern, { allowEmpty: true })
     .pipe(
-      data((file) => {
-        const pageData = loadPageData(file, config)
-        const siteData = loadSiteData(config)
-        const routeAssets = discoverRouteAssets(file, config)
+      data(async (file) => {
+        const relativePath = path.relative(config.routesBase, file.path)
+        const pageRelativeDir = path.dirname(relativePath)
+        const pageBasename = path.basename(relativePath, '.njk')
+
+        const [pageData, styles, scripts] = await Promise.all([
+          loadPageJson(file, config),
+          discoverRouteStyles(
+            pageRelativeDir,
+            pageBasename,
+            config.paths.build
+          ),
+          discoverRouteScripts(
+            pageRelativeDir,
+            pageBasename,
+            config.paths.build
+          ),
+        ])
 
         return {
-          ...pageData,
-          page: pageData,
-          site: siteData,
-          config,
-          isPrivate: (p) => isPrivateFile(p),
-          pageStyles: routeAssets.styles,
-          pageScripts: routeAssets.scripts,
+          ...buildTemplateContext({
+            pageData,
+            globalContext,
+            config,
+            pageStyles: styles,
+            pageScripts: scripts,
+            isPrivate: (p) => isPrivateFile(p),
+          }),
         }
       })
     )
@@ -217,23 +235,19 @@ export async function processHtml(config) {
             return md.renderInline(str)
           })
 
-          env.addFilter('date', (str, format) => {
-            const date = str === 'now' || !str ? new Date() : new Date(str)
-            if (isNaN(date.getTime())) return new Date().getFullYear()
-            return format === 'YYYY' ? date.getFullYear() : date.toISOString()
-          })
+          env.addFilter('date', formatTemplateDate)
         },
       })
     )
     .pipe(
       inject(globalAssets, {
         transform: (filepath) => {
-          const cleanPath = resolveInjectionUrl(filepath, config.paths.build)
+          const cleanUrl = resolveInjectionUrl(filepath, config.paths.build)
           if (filepath.endsWith('.css')) {
-            return `<link rel="stylesheet" href="${cleanPath}">`
+            return `<link rel="stylesheet" href="${cleanUrl}">`
           }
           if (filepath.endsWith('.js')) {
-            return `<script src="${cleanPath}" type="module"></script>`
+            return `<script src="${cleanUrl}" type="module"></script>`
           }
           return filepath
         },
@@ -254,12 +268,17 @@ export async function processHtml(config) {
       })
     )
     .pipe(ensureFileIntegrity({ taskName: 'Html', minSize: 50 }))
-    .pipe(beautify(config.htmlBeautify))
+
+  if (config.formatCode) {
+    htmlPipeline = htmlPipeline.pipe(beautify(config.htmlBeautify))
+  }
+
+  htmlPipeline = htmlPipeline
     .pipe(
       new Transform({
         objectMode: true,
         transform(file, _enc, cb) {
-          if (file && file.path) {
+          if (file?.path) {
             processedFiles.push(getRelativePath(file.path))
           }
           cb(null, file)
