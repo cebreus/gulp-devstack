@@ -1,5 +1,5 @@
 @use 'sass:map';
-@import '../scss/globals';
+@use '../scss/route-abstracts' as *;
 
 // Bento Grid Utilities
 .u-bento-grid {

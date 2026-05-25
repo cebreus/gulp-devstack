@@ -1,4 +1,5 @@
 @use 'sass:map';
+@use '../../scss/route-abstracts' as *;
 
 .c-about {
   &__section {
