@@ -16,6 +16,12 @@
     {% endif %}
 
     {% block styles %}
+      <!-- inject:css --><!-- endinject -->
+
+      {% for style in pageStyles or [] %}
+        <link rel="stylesheet" href="{{ style }}" />
+      {% endfor %}
+
       {% for inlineStyle in pageInlineStyles or [] %}
         {{ '<style>' | safe }}
         {{ inlineStyle | safe }}

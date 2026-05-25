@@ -14,6 +14,12 @@ export const sassCore = `${sassBase}/bootstrap.scss`
 export const sassCustom = `${sassBase}/custom.scss`
 export const sassUtils = `${sassBase}/utils.scss`
 export const sassComponentsGlob = `${srcBase}/lib/components/**/*.scss`
+export const sassHeader = `${componentsPath}/header/header.scss`
+export const sassHero = `${componentsPath}/hero/hero.scss`
+export const bootstrapCssSource =
+  './node_modules/bootstrap/dist/css/bootstrap.css'
+export const bootstrapCssMin =
+  './node_modules/bootstrap/dist/css/bootstrap.min.css'
 
 // --- Shared Assets Defaults ---
 const imageOptimizationBase = {
@@ -93,6 +99,9 @@ const MODES = {
  *   sassCustom: string,
  *   sassUtils: string,
  *   sassComponentsGlob: string,
+ *   sassHero: string,
+ *   bootstrapCssSource: string,
+ *   bootstrapCssMin: string,
  *   sassWatch: string[],
  *   jsFiles: string,
  *   imagesJpg: string,
@@ -166,6 +175,10 @@ export function resolveConfig(mode) {
     sassCustom,
     sassUtils,
     sassComponentsGlob,
+    sassHeader,
+    sassHero,
+    bootstrapCssSource,
+    bootstrapCssMin,
     sassWatch: [
       `${sassBase}/**/*.scss`,
       `${componentsPath}/**/*.scss`,
@@ -199,10 +212,9 @@ export function resolveConfig(mode) {
     globalInjectAssets: [
       'assets/css/fonts*.css',
       'assets/css/bootstrap*.css',
-      'assets/css/components*.css',
-      'assets/css/u-devstack*.css',
-      'assets/css/utils*.css',
       'assets/css/custom*.css',
+      'assets/css/header*.css',
+      'assets/css/hero*.css',
       'assets/js/bootstrap*.js',
       'assets/js/custom*.js',
       'assets/js/main*.js',

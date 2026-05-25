@@ -1,23 +1,56 @@
-@import 'globals';
-@import 'utils';
-
-// @import './variables-dark';
-// @import '../../node_modules/bootstrap/scss/maps';
-// @import '../../node_modules/bootstrap/scss/mixins';
-// @import '../../node_modules/bootstrap/scss/utilities';
-
-// @import './bootstrap.scss';
-// Component imports are handled automatically by the Gulp task
-// @use './temp/assets/css/fonts';
-
-// Component imports are handled automatically by the Gulp task
-// We don't need explicit imports here anymore
-
-// Bootstrap overrides
-$deep-blue-bg: #0a1d39;
+/*
+  Global project token registry.
+  Keep all Bootstrap custom property overrides here so developers edit one place.
+*/
 
 :root {
+  /* Brand */
+  --bs-primary: #0d6efd;
+  --bs-secondary: #6c757d;
+  --bs-success: #198754;
+  --bs-info: #0dcaf0;
+  --bs-warning: #ffc107;
+  --bs-danger: #dc3545;
+
+  /* Surface and text */
+  --bs-body-bg: #fff;
+  --bs-body-color: #212529;
+  --bs-tertiary-bg: #f8f9fa;
+  --bs-border-color: #dee2e6;
+  --bs-link-color: #0d6efd;
+  --bs-link-hover-color: #0a58ca;
+
+  /* Typography */
+  --bs-body-font-size: 1rem;
+  --bs-body-line-height: 1.5;
+  --bs-body-font-weight: 400;
+
+  /* Spacing scale (Bootstrap-compatible) */
+  --bs-spacer-0: 0;
+  --bs-spacer-1: 0.25rem;
+  --bs-spacer-2: 0.5rem;
+  --bs-spacer-3: 1rem;
+  --bs-spacer-4: 1.5rem;
+  --bs-spacer-5: 3rem;
+
+  /* Radius and shadows */
+  --bs-border-radius: 0.5rem;
+  --bs-border-radius-sm: 0.375rem;
+  --bs-border-radius-lg: 0.75rem;
+  --bs-box-shadow-sm: 0 0.125rem 0.25rem rgb(0 0 0 / 7.5%);
+  --bs-box-shadow: 0 0.5rem 1rem rgb(0 0 0 / 15%);
+
+  /* Project specific */
   --deep-blue-bg: #0a1d39;
+}
+
+[data-bs-theme='dark'] {
+  --bs-body-bg: #0f172a;
+  --bs-body-color: #e2e8f0;
+  --bs-tertiary-bg: #1e293b;
+  --bs-border-color: #334155;
+  --bs-link-color: #7dd3fc;
+  --bs-link-hover-color: #bae6fd;
 }
 
 body {

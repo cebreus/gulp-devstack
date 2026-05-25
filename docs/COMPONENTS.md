@@ -29,9 +29,11 @@ This generates a dedicated folder `src/lib/components/[name]/` containing:
 
 ### SCSS Integration
 
-Component styles are **imported automatically**. The Gulp build pipeline dynamically scans `src/lib/components/**/*.scss` and bundles all component styles directly into the final `main.css`.
+Component styles are emitted through the build pipeline, but not all into one catch-all bundle.
 
-You **never** need to manually register your component SCSS files in global manifests. Just create the `.scss` file inside your component folder, and Gulp handles the rest.
+- Global shared styles live in dedicated assets such as `bootstrap.css`, `custom.css`, `header.css`, and `hero.css`.
+- Route-local styles under `src/routes/` are compiled to matching route assets and injected only where needed.
+- If a component needs a shared global stylesheet, register that explicitly in the Sass build plan instead of assuming everything lands in one `main.css`.
 
 ### Nunjucks Integration
 

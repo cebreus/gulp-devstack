@@ -14,8 +14,8 @@ import loggerLib, {
 const logger = loggerLib.createLogger('Sass')
 const scssDiscoveryCache = new Map()
 const SCSS_DISCOVERY_CACHE_TTL_MS = 1000
-const SASS_PRELUDE_REGEX =
-  /^\s*(?:(?:\/\/[^\r\n]*|\/\*[\s\S]*?\*\/|@(?:use|forward)\s[^;]+;)\s*)*/
+const SHOULD_FAIL_ON_SASS_ERROR = process.env.GULP_FAIL_ON_SASS_ERROR === 'true'
+let hasSassCompilationErrors = false
 
 /**
  * Builds standard SASS include paths.
@@ -99,35 +99,6 @@ export async function discoverScssSources(sourceDir, options = {}) {
 }
 
 /**
- * Resolves the SASS prelude for a file.
- * @param {string} match - The matched prelude string
- * @param {object} file - Vinyl file object
- * @param {object} config - Configuration object
- * @returns {string} The resolved prelude
- */
-export function resolveSassPrelude(match, file, config) {
-  const content = file.contents ? file.contents.toString() : ''
-  const isComponent = file.path.includes('/components/')
-  const hasGlobals =
-    content.includes('globals') || file.path.endsWith('globals.scss')
-
-  const componentsBase = path
-    .resolve(config.sassBase, 'components.scss')
-    .replace(/\\/g, '/')
-  const globalsBase = path
-    .resolve(config.sassBase, 'globals.scss')
-    .replace(/\\/g, '/')
-
-  let prelude = match
-  if (!hasGlobals) {
-    prelude += isComponent
-      ? `@use "${globalsBase}" as *;\n`
-      : `@use "${componentsBase}" as *;\n`
-  }
-  return prelude
-}
-
-/**
  * Filters out empty files from the stream to prevent integrity failures
  * and avoid deploying useless empty assets.
  * @returns {import('node:stream').Transform} A transform stream
@@ -183,7 +154,6 @@ export async function buildSassPipeline(
   const { default: prettify } = await import('gulp-jsbeautifier')
   const { default: newer } = await import('gulp-newer')
   const { default: postcss } = await import('gulp-postcss')
-  const { default: replace } = await import('gulp-replace')
   const { default: gulpSass } = await import('gulp-sass')
   const { default: sourcemaps } = await import('gulp-sourcemaps')
   const sass = await import('sass')
@@ -217,12 +187,6 @@ export async function buildSassPipeline(
     }
   }
 
-  pipeline = pipeline.pipe(
-    replace(SASS_PRELUDE_REGEX, function (match) {
-      return resolveSassPrelude(match, this.file, config)
-    })
-  )
-
   if (sourceMaps) pipeline = pipeline.pipe(sourcemaps.init())
 
   pipeline = pipeline.pipe(
@@ -231,9 +195,9 @@ export async function buildSassPipeline(
         this.emit('end')
         return
       }
-      logger.error(
-        `Sass compilation failed in ${error.file || 'unknown'}. Cause: ${error.message}`
-      )
+      const message = `Sass compilation failed in ${error.file || 'unknown'}. Cause: ${error.message}`
+      logger.error(message)
+      hasSassCompilationErrors = true
       this.emit('end')
     })
   )
@@ -362,28 +326,6 @@ async function compileScssGroup(
 }
 
 /**
- * Compiles all component styles.
- * @param {object} config - Configuration object
- * @param {import('postcss').AcceptedPlugin[]} [postcssPlugins] - PostCSS plugins
- * @param {object} [options] - Additional options
- * @returns {Promise<void>}
- */
-export function compileAllComponentStyles(
-  config,
-  postcssPlugins = [],
-  options = {}
-) {
-  return compileScssGroup(config, {
-    sourceDir: config.componentsPath,
-    dest: config.paths.sass,
-    outputFilename: 'components.css',
-    loggerContext: 'Components',
-    postcssPlugins,
-    options,
-  })
-}
-
-/**
  * Compiles route-specific styles.
  * @param {object} config - Configuration object
  * @param {import('postcss').AcceptedPlugin[]} [postcssPlugins] - PostCSS plugins
@@ -394,21 +336,6 @@ export function compileRouteStyles(config, postcssPlugins = []) {
     sourceDir: config.routesBase,
     dest: config.paths.sass,
     loggerContext: 'Routes',
-    postcssPlugins,
-  })
-}
-
-/**
- * Compiles isolated component styles for export.
- * @param {object} config - Configuration object
- * @param {import('postcss').AcceptedPlugin[]} [postcssPlugins] - PostCSS plugins
- * @returns {Promise<void>}
- */
-export function compileIsolatedComponentStyles(config, postcssPlugins = []) {
-  return compileScssGroup(config, {
-    sourceDir: config.componentsPath,
-    dest: `${config.paths.sass}/components`,
-    loggerContext: 'Components Isolated',
     postcssPlugins,
   })
 }
@@ -425,16 +352,14 @@ export async function getCorePostcssPlugins() {
 /**
  * Orchestrates SASS processing based on build mode.
  * @param {object} config - Configuration object
- * @param {string} config.sassCore - Path to core SASS file
  * @param {string} config.sassCustom - Path to custom SASS file
- * @param {string} config.sassUtils - Path to utility SASS file
- * @param {string} config.sassComponentsGlob - Glob for component SASS files
- * @param {string} config.sassBase - Base directory for SASS
- * @param {string} config.componentsPath - Path to components
+ * @param {string} config.sassHeader - Path to header SASS file
+ * @param {string} config.sassHero - Path to hero SASS file
+ * @param {string} config.bootstrapCssSource - Bootstrap CSS source path
+ * @param {string} config.bootstrapCssMin - Minified Bootstrap CSS source path
  * @param {string} config.routesBase - Path to routes
  * @param {boolean} config.minifyCss - Global minify flag
  * @param {boolean} config.sourceMaps - Global sourcemaps flag
- * @param {boolean} [config.formatCode] - Global beautify flag
  * @param {object} config.paths - Path mapping
  * @param {string} config.paths.sass - Destination for compiled CSS
  * @param {'dev'|'build'|'export'} mode - Build mode
@@ -442,68 +367,100 @@ export async function getCorePostcssPlugins() {
  */
 export async function processAllSass(config, mode) {
   const corePostcssPlugins = await getCorePostcssPlugins()
+  hasSassCompilationErrors = false
+
+  const bootstrapSource =
+    mode === 'build' ? config.bootstrapCssMin : config.bootstrapCssSource
+
+  /**
+   * Copies the prebuilt Bootstrap layer selected for the current mode.
+   * @returns {Promise<import('node:stream').Stream>} Completed stream
+   */
+  function copyBootstrapCss() {
+    const stream = gulp
+      .src(bootstrapSource, { allowEmpty: false })
+      .pipe(gulp.dest(config.paths.sass))
+    return streamToPromise(stream)
+  }
+
+  /**
+   * Compiles project-wide custom tokens and utility overrides.
+   * @returns {Promise<void>}
+   */
+  function bundleCustomStyles() {
+    return processSass(
+      config,
+      config.sassCustom,
+      config.paths.sass,
+      'custom.css',
+      corePostcssPlugins,
+      {
+        sourceMaps: mode === 'dev' ? config.sourceMaps : false,
+        minify: mode === 'build' ? config.minifyCss : false,
+        skipNewer: mode === 'dev',
+      }
+    )
+  }
+
+  /**
+   * Compiles the hero component into a dedicated global bundle.
+   * @returns {Promise<void>}
+   */
+  function bundleHeroStyles() {
+    return processSass(
+      config,
+      config.sassHero,
+      config.paths.sass,
+      'hero.css',
+      corePostcssPlugins,
+      {
+        sourceMaps: mode === 'dev' ? config.sourceMaps : false,
+        minify: mode === 'build' ? config.minifyCss : false,
+        skipNewer: mode === 'dev',
+      }
+    )
+  }
+
+  /**
+   * Compiles the header component into a dedicated global bundle.
+   * @returns {Promise<void>}
+   */
+  function bundleHeaderStyles() {
+    return processSass(
+      config,
+      config.sassHeader,
+      config.paths.sass,
+      'header.css',
+      corePostcssPlugins,
+      {
+        sourceMaps: mode === 'dev' ? config.sourceMaps : false,
+        minify: mode === 'build' ? config.minifyCss : false,
+        skipNewer: mode === 'dev',
+      }
+    )
+  }
+
+  /**
+   * Compiles page-local route styles while preserving route hierarchy.
+   * @returns {Promise<void>}
+   */
+  function bundleRouteStyles() {
+    return compileRouteStyles(config, corePostcssPlugins)
+  }
 
   try {
-    if (mode === 'build') {
-      const bundleCss = () =>
-        processSass(
-          config,
-          [
-            config.sassCore,
-            config.sassCustom,
-            config.sassUtils,
-            config.sassComponentsGlob,
-          ],
-          config.paths.sass,
-          'main.css',
-          corePostcssPlugins,
-          { minify: config.minifyCss, sourceMaps: false }
-        )
+    await gulp.parallel(
+      copyBootstrapCss,
+      bundleCustomStyles,
+      bundleHeaderStyles,
+      bundleHeroStyles,
+      bundleRouteStyles
+    )()
 
-      await gulp.parallel(bundleCss, () =>
-        compileRouteStyles(config, corePostcssPlugins)
-      )()
-      return
-    }
-
-    const cssCoreBundle = () =>
-      processSass(
-        config,
-        [config.sassCore, config.sassCustom, config.sassUtils],
-        config.paths.sass,
-        null,
-        corePostcssPlugins,
-        { skipNewer: mode === 'dev' }
+    if (SHOULD_FAIL_ON_SASS_ERROR && hasSassCompilationErrors) {
+      throw new Error(
+        'Sass compilation failed. Enable logs to inspect root causes.'
       )
-
-    if (mode === 'dev') {
-      const cssDevstack = () =>
-        processSass(
-          config,
-          `${config.sassBase}/u-devstack.scss`,
-          config.paths.sass,
-          'u-devstack.css',
-          corePostcssPlugins,
-          { skipNewer: true }
-        )
-      await gulp.parallel(
-        cssCoreBundle,
-        () => compileRouteStyles(config, corePostcssPlugins),
-        cssDevstack,
-        () =>
-          compileAllComponentStyles(config, corePostcssPlugins, {
-            skipNewer: true,
-          })
-      )()
-      return
-    }
-
-    if (mode === 'export') {
-      await gulp.parallel(
-        cssCoreBundle,
-        () => compileRouteStyles(config, corePostcssPlugins),
-        () => compileIsolatedComponentStyles(config, corePostcssPlugins)
-      )()
     }
   } catch (error) {
     logger.error(`Failed to process Sass in ${mode} mode: ${error.message}`)
