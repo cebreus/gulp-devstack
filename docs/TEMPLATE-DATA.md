@@ -9,8 +9,20 @@ The build system handles data in the following deterministic sequence (see `gulp
 1. **Extract**: Reads the Markdown content and YAML Frontmatter.
 2. **Process (Dynamic Injection)**: Nunjucks expressions *inside* the Frontmatter are evaluated.
 3. **Enrich**: SEO defaults (OpenGraph, Twitter Cards, `pageId`) are automatically generated and merged.
-4. **Artifact Generation**: The final compiled dataset is saved as a JSON file in `build-dev/data/`.
+4. **Artifact Generation**: The final compiled dataset is saved as JSON artifacts in `.temp/pages/`, with shared site metadata in `.temp/site.json`.
 5. **Template Hydration**: The JSON artifact is passed into the Nunjucks template under the `page` object.
+
+## 1.1 Pipeline Scope
+
+The data-processing logic is shared by all three pipelines:
+
+| Pipeline | Data Artifacts       | Purpose                                     |
+| :------- | :------------------- | :------------------------------------------ |
+| `dev`    | `.temp/pages/*.json` | Feeds local HTML rendering and live reload  |
+| `build`  | `.temp/pages/*.json` | Feeds production HTML before revision + SRI |
+| `export` | `.temp/pages/*.json` | Feeds clean handoff HTML without hashing    |
+
+The `.temp/` directory is an internal build artifact workspace, not a deploy target.
 
 ## 2. Global Site Config (`site`)
 

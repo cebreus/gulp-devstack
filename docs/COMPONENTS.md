@@ -31,7 +31,7 @@ This generates a dedicated folder `src/lib/components/[name]/` containing:
 
 Component styles are emitted through the build pipeline, but not all into one catch-all bundle.
 
-- Global shared styles live in dedicated assets such as `bootstrap.css`, `custom.css`, `header.css`, and `hero.css`.
+- Global shared styles live in dedicated assets such as `bootstrap.css`, `custom.css`, and `components.css`.
 - Route-local styles under `src/routes/` are compiled to matching route assets and injected only where needed.
 - If a component needs a shared global stylesheet, register that explicitly in the Sass build plan instead of assuming everything lands in one `main.css`.
 
