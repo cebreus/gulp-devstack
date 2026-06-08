@@ -1,30 +1,17 @@
 import fs from 'node:fs/promises'
+import { pathToFileURL } from 'node:url'
 import pc from 'picocolors'
 import prompts from 'prompts'
 
-import {
-  generateClean404,
-  generateCleanIndex,
-  generateCleanJs,
-  generateCleanLayout,
-  generateCleanScss,
-  generateCleanSiteConfig,
-} from './init-template-content.js'
-import {
-  commitCleanState,
-  createGitBackupBranch,
-  ensureEnvFile,
-  logCompletion,
-  pruneComponentsDocumentation,
-  purgeShowcaseFiles,
-  updateWorkspaceSettings,
-} from './init-template-ops.js'
+import buildFilesToReset from './init-template-files.js'
+import initTemplateOps from './init-template-ops.js'
+import { mutatePackageObject } from './init-template-package.js'
 
 const DEFAULT_PROJECT_NAME = 'my-new-project'
 const DEFAULT_SITE_URL = 'https://example.com'
-const DEFAULT_VERSION = '1.0.0'
 const WORKSPACE_PATH = 'gulp-dev-stack.code-workspace'
 const COMPONENTS_DOC_PATH = 'docs/COMPONENTS.md'
+const GEMINI_PATH = 'GEMINI.md'
 
 async function pathExists(targetPath) {
   try {
@@ -99,28 +86,6 @@ function toSafePackageName(projectName) {
   )
 }
 
-async function buildFilesToReset({ rawProjectName, author, siteUrl }) {
-  return [
-    {
-      path: 'src/routes/layout-default.njk',
-      content: await generateCleanLayout(),
-    },
-    { path: 'src/routes/index.njk', content: await generateCleanIndex() },
-    { path: 'src/routes/404.njk', content: await generateClean404() },
-    { path: 'src/scss/custom.scss', content: await generateCleanScss() },
-    { path: 'src/js/main.js', content: await generateCleanJs() },
-    { path: 'src/js/custom.js', content: '' },
-    {
-      path: 'src/config/site.js',
-      content: await generateCleanSiteConfig({
-        projectName: rawProjectName,
-        author,
-        siteUrl,
-      }),
-    },
-  ]
-}
-
 async function resetCoreFiles(isDryRun, filesToReset) {
   for (const file of filesToReset) {
     if (isDryRun) {
@@ -138,28 +103,10 @@ async function resetCoreFiles(isDryRun, filesToReset) {
   )
 }
 
-function mutatePackageObject(pkg, options) {
-  const { safePkgName, rawProjectName, author, license } = options
-
-  pkg.name = safePkgName
-  pkg.version = DEFAULT_VERSION
-  pkg.description = `A new project: ${rawProjectName}`
-  pkg.author = author
-
-  if (license) {
-    pkg.license = license
-  } else {
-    delete pkg.license
-  }
-
-  delete pkg.homepage
-  delete pkg.repository
-  delete pkg.bugs
-
-  if (pkg.scripts && pkg.scripts['init:template']) {
-    delete pkg.scripts['init:template']
-  }
+function shouldCreateBackupBranch(args) {
+  return args.includes('--backup-branch')
 }
+
 async function updatePackageMetadata(isDryRun, pkg, options) {
   try {
     mutatePackageObject(pkg, options)
@@ -198,6 +145,18 @@ function resolveInitializationOptions(response) {
 
 async function applyInitializationChanges(options) {
   const {
+    commitCleanState,
+    createGitBackupBranch,
+    ensureEnvFile,
+    logCompletion,
+    pruneComponentsDocumentation,
+    pruneGeminiInstructions,
+    purgeProjectSymlinks,
+    purgeShowcaseFiles,
+    runPostInitScripts,
+    updateWorkspaceSettings,
+  } = initTemplateOps
+  const {
     isDryRun,
     isGitRepo,
     pkg,
@@ -207,11 +166,15 @@ async function applyInitializationChanges(options) {
     author,
     license,
     siteUrl,
+    shouldBackupBranch,
   } = options
 
-  await createGitBackupBranch(isDryRun, isGitRepo)
+  if (shouldBackupBranch) {
+    await createGitBackupBranch(isDryRun, isGitRepo)
+  }
   console.log(pc.cyan('\nStarting Deep Scaffold Purge...'))
   await purgeShowcaseFiles(isDryRun)
+  await purgeProjectSymlinks(isDryRun)
   await resetCoreFiles(isDryRun, filesToReset)
   await updatePackageMetadata(isDryRun, pkg, {
     safePkgName,
@@ -221,13 +184,16 @@ async function applyInitializationChanges(options) {
   })
   await updateWorkspaceSettings(isDryRun, WORKSPACE_PATH, pathExists)
   await ensureEnvFile(isDryRun, siteUrl, pathExists)
+  await pruneGeminiInstructions(isDryRun, GEMINI_PATH, pathExists)
   await pruneComponentsDocumentation(isDryRun, COMPONENTS_DOC_PATH)
   await commitCleanState(isDryRun, isGitRepo)
+  await runPostInitScripts(isDryRun)
   logCompletion(isDryRun, rawProjectName)
 }
 
 async function run() {
   const isDryRun = process.argv.includes('--dry-run')
+  const shouldBackupBranch = shouldCreateBackupBranch(process.argv.slice(2))
   if (isDryRun) {
     console.log(
       pc.yellow('! Running in DRY RUN mode. No files will be changed.\n')
@@ -245,7 +211,7 @@ async function run() {
   const { rawProjectName, author, license, siteUrl, safePkgName } =
     resolveInitializationOptions(response)
   const isGitRepo = await pathExists('.git')
-  const filesToReset = await buildFilesToReset({
+  const filesToReset = buildFilesToReset({
     rawProjectName,
     author,
     siteUrl,
@@ -261,9 +227,15 @@ async function run() {
     author,
     license,
     siteUrl,
+    shouldBackupBranch,
   })
 }
 
-run().catch((error) => {
-  console.error(error)
-})
+if (
+  process.argv[1] &&
+  import.meta.url === pathToFileURL(process.argv[1]).href
+) {
+  run().catch((error) => {
+    console.error(error)
+  })
+}

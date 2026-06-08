@@ -17,6 +17,10 @@ import * as navigationAssetsModule from '../../gulp/utils/navigation-assets.js'
 import * as routeDataModule from '../../gulp/utils/route-data.js'
 import * as sassDependencyCacheModule from '../../gulp/utils/sass-dependency-cache.js'
 import * as sassPipelineModule from '../../gulp/utils/sass-pipeline.js'
+import * as initTemplateContentModule from '../../scripts/init-template-content.js'
+import * as initTemplateFilesModule from '../../scripts/init-template-files.js'
+import * as initTemplateOpsModule from '../../scripts/init-template-ops.js'
+import * as initTemplatePackageModule from '../../scripts/init-template-package.js'
 import * as envModule from '../../src/config/env.js'
 import * as testHelpersModule from '../test-helpers.js'
 
@@ -76,9 +80,33 @@ describe('Module Boundaries', () => {
       'cleanupSandbox',
       'createMockEnvironment',
       'createTestSandbox',
+      'linkNodeModulesIntoSandbox',
       'runInSandbox',
       'silenceConsole',
       'writeFixtures',
+    ])
+  })
+
+  it('should expose init-template content through a default-only internal module', () => {
+    assert.deepStrictEqual(Object.keys(initTemplateContentModule), ['default'])
+  })
+
+  it('should expose init-template files through a default-only builder module', () => {
+    assert.deepStrictEqual(Object.keys(initTemplateFilesModule), ['default'])
+  })
+
+  it('should expose init-template package policy through one explicit mutation seam', () => {
+    assert.deepStrictEqual(Object.keys(initTemplatePackageModule), [
+      'mutatePackageObject',
+    ])
+  })
+
+  it('should expose init-template ops through a small policy seam plus default runtime api', () => {
+    assert.deepStrictEqual(Object.keys(initTemplateOpsModule).sort(), [
+      'default',
+      'discoverProjectSymlinks',
+      'getDeletePatterns',
+      'pruneGeminiMemoryReferences',
     ])
   })
 

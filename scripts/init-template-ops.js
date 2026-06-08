@@ -1,5 +1,7 @@
+/* eslint-disable max-lines -- Domain orchestration for project initialization requires more lines than the standard limit. */
 import { execSync } from 'node:child_process'
 import fs from 'node:fs/promises'
+import path from 'node:path'
 import { deleteAsync } from 'del'
 import pc from 'picocolors'
 
@@ -8,10 +10,23 @@ const WORKSPACE_COLOR_REPLACEMENT = '"peacock.color": "#333333"'
 const COMPONENTS_MARKER = '## Component List'
 const FALLBACK_COMPONENTS_DOC =
   '# Component Architecture & Strategy\n\n## Component List\n\n'
+const SYMLINK_SKIP_DIRS = new Set([
+  '.git',
+  '.temp',
+  'build-dev',
+  'build-export',
+  'build-prod',
+  'node_modules',
+])
 
-function getDeletePatterns() {
+/**
+ * Returns file patterns that should be removed from the generated project.
+ * @returns {string[]} Delete patterns for showcase and devstack-owned files.
+ */
+export function getDeletePatterns() {
   return [
-    'src/lib/components/**/*',
+    'src/lib',
+    'src/lib/**/*',
     'src/routes/**/*',
     '!src/routes/layout-default.njk',
     '!src/routes/index.njk',
@@ -20,22 +35,80 @@ function getDeletePatterns() {
     '!src/assets/images/favicon.ico',
     'src/assets/fonts/**/*',
     '!src/assets/fonts/.gitkeep',
-    'src/scss/u-devstack.scss',
+    'src/assets/icons/**/*',
+    '!src/assets/icons/.gitkeep',
+    '!src/assets/icons/favicons-source.png',
     'public/**/*',
     '!public/robots.txt',
-    '!public/humans.txt',
     '.github/workflows/deploy.yml',
     'CHANGELOG.md',
     'TODO.md',
+    '.size-limit.json',
+    'memories',
+    'memories/**/*',
+    'tests/**/*',
+    '!tests',
+    '!tests/e2e',
+    '!tests/e2e/**/*',
+    '!tests/test-helpers.js',
+    'tests/unit',
+    'tests/unit/**/*',
+    'tests/integration',
+    'tests/integration/**/*',
+    'tests/visual',
+    'tests/visual/**/*',
+    'tests/fixtures',
+    'tests/fixtures/**/*',
+    'tests/smoke',
+    'tests/smoke/**/*',
   ]
 }
 
 /**
- * @param {boolean} isDryRun - True when the script must not mutate the repo.
- * @param {boolean} isGitRepo - True when the current workspace is a Git repository.
- * @returns {Promise<void>} Resolves after the backup branch attempt finishes.
+ * Removes references to repository-local agent memories from GEMINI.md.
+ * @param {string} content - Current GEMINI.md content.
+ * @returns {string} Pruned GEMINI.md content.
  */
-export async function createGitBackupBranch(isDryRun, isGitRepo) {
+export function pruneGeminiMemoryReferences(content) {
+  const workflowPattern = /^\d+\.\s+If the task touches .*`memories\/`.*\n?/gmu
+  const gotchasPattern = /\n## Gotchas\n\n(?:- .*\n?)*/u
+  return content.replace(workflowPattern, '').replace(gotchasPattern, '')
+}
+
+/**
+ * Discovers project-owned symlinks while skipping dependency and build output trees.
+ * @param {string} rootPath - Directory to scan.
+ * @returns {Promise<string[]>} Relative symlink paths.
+ */
+export async function discoverProjectSymlinks(rootPath = '.') {
+  const symlinks = []
+  await collectProjectSymlinks(rootPath, '.', symlinks)
+  return symlinks.sort()
+}
+
+async function collectProjectSymlinks(rootPath, relativeDir, symlinks) {
+  const absoluteDir = path.join(rootPath, relativeDir)
+  const entries = await fs.readdir(absoluteDir, { withFileTypes: true })
+  for (const entry of entries) {
+    if (SYMLINK_SKIP_DIRS.has(entry.name)) {
+      continue
+    }
+    const relativePath = path.join(relativeDir, entry.name)
+    const displayPath = relativePath
+      .split(path.sep)
+      .join('/')
+      .replace(/^\.\//u, '')
+    const absolutePath = path.join(rootPath, relativePath)
+    const stats = await fs.lstat(absolutePath)
+    if (stats.isSymbolicLink()) {
+      symlinks.push(displayPath)
+    } else if (stats.isDirectory()) {
+      await collectProjectSymlinks(rootPath, relativePath, symlinks)
+    }
+  }
+}
+
+async function createGitBackupBranch(isDryRun, isGitRepo) {
   if (!isGitRepo || isDryRun) {
     return
   }
@@ -51,11 +124,7 @@ export async function createGitBackupBranch(isDryRun, isGitRepo) {
   }
 }
 
-/**
- * @param {boolean} isDryRun - True when showcase files should only be reported.
- * @returns {Promise<void>} Resolves after showcase cleanup completes.
- */
-export async function purgeShowcaseFiles(isDryRun) {
+async function purgeShowcaseFiles(isDryRun) {
   const deletePatterns = getDeletePatterns()
 
   if (isDryRun) {
@@ -69,17 +138,44 @@ export async function purgeShowcaseFiles(isDryRun) {
   )
 }
 
-/**
- * @param {boolean} isDryRun - True when workspace edits should only be logged.
- * @param {string} workspacePath - VS Code workspace file that should be updated.
- * @param {(targetPath: string) => Promise<boolean>} pathExists - Filesystem existence check.
- * @returns {Promise<void>} Resolves after the workspace settings update attempt.
- */
-export async function updateWorkspaceSettings(
-  isDryRun,
-  workspacePath,
-  pathExists
-) {
+async function purgeProjectSymlinks(isDryRun) {
+  const symlinks = await discoverProjectSymlinks('.')
+
+  if (symlinks.length === 0) {
+    return
+  }
+
+  if (isDryRun) {
+    console.log(pc.dim('Dry run: would delete symlinks:'), symlinks)
+    return
+  }
+
+  await Promise.all(
+    symlinks.map((symlinkPath) => {
+      return fs.unlink(symlinkPath)
+    })
+  )
+  console.log(pc.dim(`Deleted ${symlinks.length} project symlinks.`))
+}
+
+async function pruneGeminiInstructions(isDryRun, geminiPath, pathExists) {
+  if (!(await pathExists(geminiPath))) {
+    return
+  }
+
+  if (isDryRun) {
+    console.log(pc.dim(`Dry run: would prune ${geminiPath}`))
+    return
+  }
+
+  const content = await fs.readFile(geminiPath, 'utf-8')
+  const prunedContent = pruneGeminiMemoryReferences(content)
+
+  await fs.writeFile(geminiPath, prunedContent, 'utf-8')
+  console.log(pc.green('✔ Pruned GEMINI.md memory references.'))
+}
+
+async function updateWorkspaceSettings(isDryRun, workspacePath, pathExists) {
   try {
     if (!(await pathExists(workspacePath))) {
       return
@@ -104,13 +200,7 @@ export async function updateWorkspaceSettings(
   }
 }
 
-/**
- * @param {boolean} isDryRun - True when .env should not be created.
- * @param {string} siteUrl - Production site URL written into .env.
- * @param {(targetPath: string) => Promise<boolean>} pathExists - Filesystem existence check.
- * @returns {Promise<void>} Resolves after the .env creation attempt.
- */
-export async function ensureEnvFile(isDryRun, siteUrl, pathExists) {
+async function ensureEnvFile(isDryRun, siteUrl, pathExists) {
   try {
     if (!(await pathExists('.env.example'))) {
       return
@@ -133,15 +223,7 @@ export async function ensureEnvFile(isDryRun, siteUrl, pathExists) {
   }
 }
 
-/**
- * @param {boolean} isDryRun - True when documentation should not be modified.
- * @param {string} componentsDocPath - Components documentation file.
- * @returns {Promise<void>} Resolves after the docs pruning attempt.
- */
-export async function pruneComponentsDocumentation(
-  isDryRun,
-  componentsDocPath
-) {
+async function pruneComponentsDocumentation(isDryRun, componentsDocPath) {
   try {
     const currentDocs = await fs.readFile(componentsDocPath, 'utf-8')
     const markerIndex = currentDocs.indexOf(COMPONENTS_MARKER)
@@ -167,42 +249,36 @@ export async function pruneComponentsDocumentation(
   }
 }
 
-/**
- * @param {boolean} isDryRun - True when the commit should only be logged.
- * @param {boolean} isGitRepo - True when committing is possible in this workspace.
- * @returns {Promise<void>} Resolves after the commit attempt.
- */
-export async function commitCleanState(isDryRun, isGitRepo) {
-  if (!isGitRepo) {
-    console.log(pc.dim('\nSkipping Git commit (not a git repository).'))
-    return
-  }
+async function commitCleanState(_isDryRun, _isGitRepo) {
+  console.log(
+    pc.dim(
+      '\nSkipping Git commit by default. You can manually commit the clean state.'
+    )
+  )
+}
 
+async function runPostInitScripts(isDryRun) {
   if (isDryRun) {
-    console.log(pc.dim('Dry run: would commit clean slate to Git'))
+    console.log(pc.dim('Dry run: would run pnpm format and pnpm add .'))
     return
   }
 
-  console.log(pc.cyan('\nCommitting clean slate to Git...'))
+  console.log(pc.cyan('\nRunning post-initialization scripts...'))
   try {
-    execSync('git add .', { stdio: 'ignore' })
-    execSync('git commit -m "chore: scaffold clean boilerplate"', {
-      stdio: 'ignore',
-    })
-    console.log(pc.green('✔ Successfully committed clean boilerplate state.'))
-  } catch {
+    console.log(pc.dim('Running pnpm format...'))
+    execSync('pnpm format', { stdio: 'inherit' })
+    console.log(pc.dim('Running pnpm add ....'))
+    execSync('pnpm add .', { stdio: 'inherit' })
+    console.log(pc.green('✔ Post-initialization scripts completed.'))
+  } catch (error) {
     console.log(
-      pc.yellow('Git commit failed (maybe no changes or nothing to commit).')
+      pc.yellow('! Post-initialization scripts failed:'),
+      error.message
     )
   }
 }
 
-/**
- * @param {boolean} isDryRun - True when the run was only simulated.
- * @param {string} rawProjectName - Final project name shown to the user.
- * @returns {void}
- */
-export function logCompletion(isDryRun, rawProjectName) {
+function logCompletion(isDryRun, rawProjectName) {
   if (isDryRun) {
     console.log(pc.yellow('\nDry run complete. No changes were made.'))
     return
@@ -217,14 +293,16 @@ export function logCompletion(isDryRun, rawProjectName) {
   )
 }
 
-const initTemplateOpsApi = {
+export default {
   commitCleanState,
   createGitBackupBranch,
   ensureEnvFile,
   logCompletion,
-  purgeShowcaseFiles,
   pruneComponentsDocumentation,
+  pruneGeminiInstructions,
+  purgeProjectSymlinks,
+  purgeShowcaseFiles,
+  runPostInitScripts,
   updateWorkspaceSettings,
 }
-
-export default initTemplateOpsApi
+/* eslint-enable max-lines -- Re-enable limit after orchestration logic. */
