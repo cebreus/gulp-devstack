@@ -1,5 +1,9 @@
 {% macro hero(title="", description="", content="", modifier="", class="", badge="", containerClass="container") %}
-  <section class="c-hero {{ class }} {% if modifier %}c-hero--{{ modifier }}{% endif %}" aria-label="Hero">
+  <section
+    class="c-hero {{ class }} {% if modifier %}c-hero--{{ modifier }}{% endif %}"
+    {% if modifier == "dark" or modifier == "light" %}data-bs-theme="{{ modifier }}"{% endif %}
+    aria-label="Hero"
+  >
     <div class="{{ containerClass }} c-hero__inner">
       {% if badge %}
         <div class="c-hero__badge badge rounded-pill px-3 py-2 fw-medium mb-3"> {{ badge | safe }} </div>

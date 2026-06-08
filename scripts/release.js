@@ -10,7 +10,6 @@ import { join } from 'node:path'
 
 const CONFIG_FILE = '.release-it.tmp.json'
 
-/** @type {import('release-it').Config} */
 const config = {
   git: {
     changelog: 'git log --pretty=format:"* %s (%h)" ${latestTag}...HEAD',
@@ -50,42 +49,50 @@ const config = {
   },
 }
 
-/**
- * Main execution function.
- */
+function runReleaseIt() {
+  console.log('📦 Running release-it via pnpm dlx...')
+
+  // We use pnpm dlx to run release-it with plugins in an isolated environment
+  const args = [
+    'dlx',
+    '--silent',
+    '-p',
+    'release-it@^20.0.0',
+    '-p',
+    '@release-it/conventional-changelog@^10.0.6',
+    '-p',
+    '@j-ulrich/release-it-regex-bumper@^5.4.0',
+    'release-it',
+    '--config',
+    CONFIG_FILE,
+    ...process.argv.slice(2),
+  ]
+
+  const result = spawnSync('pnpm', args, {
+    stdio: 'inherit',
+    shell: true,
+  })
+
+  if (result.status !== 0) {
+    process.exit(result.status ?? 1)
+  }
+}
+
+function cleanupTemporaryConfig(configPath) {
+  try {
+    rmSync(configPath, { force: true })
+  } catch (cleanupError) {
+    console.warn('⚠️  Failed to clean up temporary config:', cleanupError)
+  }
+}
+
 function main() {
   const configPath = join(process.cwd(), CONFIG_FILE)
 
   try {
     console.log('🚀 Preparing release environment...')
     writeFileSync(configPath, JSON.stringify(config, null, 2))
-
-    console.log('📦 Running release-it via pnpm dlx...')
-
-    // We use pnpm dlx to run release-it with plugins in an isolated environment
-    const args = [
-      'dlx',
-      '--silent',
-      '-p',
-      'release-it@^20.0.0',
-      '-p',
-      '@release-it/conventional-changelog@^10.0.6',
-      '-p',
-      '@j-ulrich/release-it-regex-bumper@^5.4.0',
-      'release-it',
-      '--config',
-      CONFIG_FILE,
-      ...process.argv.slice(2),
-    ]
-
-    const result = spawnSync('pnpm', args, {
-      stdio: 'inherit',
-      shell: true,
-    })
-
-    if (result.status !== 0) {
-      process.exit(result.status ?? 1)
-    }
+    runReleaseIt(configPath)
   } catch (error) {
     console.error(
       '❌ Release failed:',
@@ -93,11 +100,7 @@ function main() {
     )
     process.exit(1)
   } finally {
-    try {
-      rmSync(configPath, { force: true })
-    } catch (cleanupError) {
-      console.warn('⚠️  Failed to clean up temporary config:', cleanupError)
-    }
+    cleanupTemporaryConfig(configPath)
   }
 }
 

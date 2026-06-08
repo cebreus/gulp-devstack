@@ -11,8 +11,12 @@ export default function (plop) {
         name: 'name',
         message: 'Component name (kebab-case, e.g. "my-button"):',
         validate: (value) => {
-          if (!value) return 'Name is required'
-          if (!/^[a-z0-9-]+$/.test(value)) return 'Use kebab-case'
+          if (!value) {
+            return 'Name is required'
+          }
+          if (!/^[a-z0-9-]+$/.test(value)) {
+            return 'Use kebab-case'
+          }
           return true
         },
       },

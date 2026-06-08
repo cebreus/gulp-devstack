@@ -36,18 +36,4 @@ document.addEventListener('DOMContentLoaded', () => {
   ;[...popoverTriggerList].map((el) => new Popover(el))
 })
 
-// Export for use in other files
-export {
-  // Alert,
-  // Button,
-  // Carousel,
-  // Collapse,
-  Dropdown,
-  Modal,
-  // Offcanvas,
-  Popover,
-  // ScrollSpy,
-  // Tab,
-  // Toast,
-  Tooltip,
-}
+export { Dropdown, Modal, Popover, Tooltip }

@@ -15,7 +15,7 @@ hero:
     Built for developers who demand precision over abstraction.
   modifier: dark
   content: |-
-    <a class="btn btn-primary mb-3 me-sm-3 px-4 py-2" href="/about/">See how it works</a>
+    <a class="btn btn-primary mb-3 me-sm-3 px-4 py-2" href="/about/">Read the guide</a>
     <a class="btn c-hero__btn mb-3 px-4 py-2" href="https://github.com/cebreus/gulp-devstack" target="_blank" rel="noopener">View on GitHub</a>
 seo:
   title: 'Gulp DevStack - Predictable Static Web Delivery'
@@ -48,7 +48,7 @@ bento_items:
     img_data:
       - number: "01"
         label: "Development"
-        text: "Real-time design with HMR and tools."
+        text: "Live reload, source maps, and fast iteration."
         cmd: "pnpm dev"
       - number: "02"
         label: "Static Export"
@@ -64,7 +64,7 @@ bento_items:
     icon: file-earmark-code.svg
     href: "/about/#export-mode"
   - name: Security Hardened
-    text: Subresource Integrity (SRI) caching and asset revisioning out of the box.
+    text: Subresource Integrity (SRI) and asset revisioning out of the box.
     size: small
     compact: true
     icon: shield-lock.svg
@@ -127,7 +127,7 @@ bento_items:
     size: large
     __icon: plug.svg
     mdOrder: 8
-    text: "Seamless orchestration of best-in-class tools. No-config automation for the modern web. Gulp 5, esbuild, and Node 22+ with full ESM support."
+    text: "Seamless orchestration of best-in-class tools. No-config automation for the modern web. Gulp 5, esbuild, and Node 24.10+ with full ESM support."
     href: "/about/#stack"
     img_ref: stack_integration_visual
     img_data:
