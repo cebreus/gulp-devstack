@@ -1,0 +1,124 @@
+{% extends "layout-default.njk" %}
+{% block content %}
+  <div class="container py-5 c-about c-showcase">
+    <section class="c-about__section c-about__section--intro">
+      <div class="row g-4 g-xl-5 align-items-start c-showcase__intro-panel">
+        <div class="col-xl-7">
+          <div class="c-about__eyebrow">Showcase Scope</div>
+          <h2 class="c-about__headline">A clean place to inspect the visual system on its own.</h2>
+          <div class="text-muted lead mb-0">{{ page.content | md | safe }}</div>
+        </div>
+        <div class="col-xl-5">
+          <div class="c-showcase__hero-notes">
+            <div class="c-showcase__note">
+              <h3 class="h6 mb-2">Live hero above</h3>
+              <p class="small text-muted mb-0"
+                >The page hero is itself the hero component in use, so the first screen doubles as a real component
+                example.</p
+              >
+            </div>
+            <div class="c-showcase__note">
+              <h3 class="h6 mb-2">Use this page for</h3>
+              <p class="small text-muted mb-0"
+                >Inspecting visual patterns, card variants, and token-driven UI choices without mixing them into product
+                messaging.</p
+              >
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="c-about__section">
+      <div class="row row-cols-1 row-cols-md-3 g-4">
+        <div class="col">
+          <div class="c-about__step">
+            <h3 class="h6 fw-semibold">Hero framing</h3>
+            <p class="small text-muted mb-0"
+              >Badge, promise, support text, and action pairings are treated as a reusable presentation pattern.</p
+            >
+          </div>
+        </div>
+        <div class="col">
+          <div class="c-about__step">
+            <h3 class="h6 fw-semibold">Card language</h3>
+            <p class="small text-muted mb-0"
+              >The same card family supports homepage proof blocks, documentation surfaces, and softer guide content.</p
+            >
+          </div>
+        </div>
+        <div class="col">
+          <div class="c-about__step">
+            <h3 class="h6 fw-semibold">Token discipline</h3>
+            <p class="small text-muted mb-0"
+              >Bootstrap-derived tokens stay visible enough that authored templates still explain how the UI is
+              built.</p
+            >
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="c-about__section">
+      <div class="row g-4 align-items-start">
+        <div class="col-lg-8">
+          <div class="c-about__section-head mb-0">
+            <div class="c-about__eyebrow">Hero Component</div>
+            <h2 class="c-about__section-title mb-2">What the hero is responsible for</h2>
+            <p class="text-muted mb-0">
+              The hero should establish the page promise, compress the explanation into one readable block, and offer
+              one or two actions with clear priority. The live example is already rendered at the top of this page.
+            </p>
+          </div>
+        </div>
+        <div class="col-lg-4">
+          <div class="c-about__surface p-4">
+            <h3 class="h6 mb-2">Current usage pattern</h3>
+            <ul class="small text-muted mb-0">
+              <li class="mb-2">Homepage: product promise and primary CTA</li>
+              <li class="mb-2">About: decision framing and fit statement</li>
+              <li>Showcase: live component reference in production context</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="c-about__section">
+      <div class="row g-4 align-items-start">
+        <div class="col-lg-4">
+          <div class="c-about__surface p-4">
+            <h3 class="h5 mb-3">Use This Page For</h3>
+            <ul class="small text-muted mb-0">
+              <li class="mb-2">reviewing reusable card patterns</li>
+              <li class="mb-2">inspecting the active color system</li>
+              <li>seeing how design tokens map into authored UI output</li>
+            </ul>
+          </div>
+        </div>
+        <div class="col-lg-8">
+          <div class="c-about__surface c-showcase__hero-stage p-4 p-lg-5">
+            <div class="c-about__eyebrow">Why it is separated</div>
+            <h2 class="c-about__section-title mb-3">The visual layer should not compete with the product guide.</h2>
+            <p class="text-muted mb-0">
+              <code>About</code> is there to help someone decide whether the workflow fits their delivery needs.
+              <code>Showcase</code> is where the same person can inspect how that decision is expressed through
+              components, spacing, cards, and reusable presentation patterns.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="c-about__section pt-5 border-top c-ds">
+      <h2 class="c-ds__title display-6 fw-semibold">Design System</h2>
+      <p class="text-muted">
+        This showcase isolates the visual layer from the product explanation. Use the
+        <a href="/about/">About page</a> for audience, workflow, and delivery intent. Use this page when you need
+        concrete examples of how the current UI language is authored and rendered.
+      </p>
+      {% include "about/_colors-guide.njk" %}
+      {% include "about/_cards-guide.njk" %}
+    </section>
+  </div>
+{% endblock %}
