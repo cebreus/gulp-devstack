@@ -8,7 +8,6 @@ export default {
     '@visionappscz/stylelint-config',
     '@visionappscz/stylelint-config/order',
     '@visionappscz/stylelint-config/scss',
-    'stylelint-config-prettier-scss',
   ],
   customSyntax: 'postcss-scss',
   rules: {
@@ -27,6 +26,8 @@ export default {
       'ms',
     ],
     'plugin/no-low-performance-animation-properties': true,
+    'at-rule-empty-line-before': null,
+    'scss/operator-no-newline-after': null,
     'plugin/selector-bem-pattern': {
       preset: 'bem',
       implicitComponents: '**/c-*.scss',
