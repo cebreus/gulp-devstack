@@ -7,12 +7,18 @@ import { afterEach, describe, it } from 'node:test'
 import { setTimeout as delay } from 'node:timers/promises'
 import { chromium } from '@playwright/test'
 
-import { cleanupSandbox, createTestSandbox } from '../test-helpers.js'
+import {
+  cleanupSandbox,
+  createTestSandbox,
+  linkNodeModulesIntoSandbox,
+} from '../test-helpers.js'
 
 const START_TIMEOUT_MS = 60000
 const RELOAD_TIMEOUT_MS = 30000
-const ORIGINAL_HEADING = 'What this project offers.'
-const UPDATED_HEADING = 'What this project offers right now.'
+const SHOWCASE_HEADING = 'What this project offers.'
+const SHOWCASE_UPDATED_HEADING = 'What this project offers right now.'
+const BLANK_HEADING = 'It works!'
+const BLANK_UPDATED_HEADING = 'It works right now!'
 
 async function copyProjectFixture(sandboxPath) {
   await Promise.all([
@@ -36,6 +42,7 @@ async function copyProjectFixture(sandboxPath) {
       path.join(sandboxPath, 'package.json')
     ),
   ])
+  await linkNodeModulesIntoSandbox(sandboxPath)
 }
 
 async function waitForServer(url, childProcess, output) {
@@ -78,6 +85,36 @@ async function stopProcess(childProcess) {
   }
 }
 
+async function resolveWatchTarget(sandboxPath) {
+  const showcaseTemplatePath = path.join(
+    sandboxPath,
+    'src/routes/about/index.njk'
+  )
+
+  try {
+    const showcaseTemplate = await fs.readFile(showcaseTemplatePath, 'utf8')
+    if (showcaseTemplate.includes(SHOWCASE_HEADING)) {
+      return {
+        urlPath: '/about/',
+        templatePath: showcaseTemplatePath,
+        originalHeading: SHOWCASE_HEADING,
+        updatedHeading: SHOWCASE_UPDATED_HEADING,
+      }
+    }
+  } catch {}
+
+  const homepageTemplatePath = path.join(sandboxPath, 'src/routes/index.njk')
+  const homepageTemplate = await fs.readFile(homepageTemplatePath, 'utf8')
+
+  return {
+    urlPath: '/',
+    templatePath: homepageTemplatePath,
+    originalHeading: BLANK_HEADING,
+    updatedHeading: BLANK_UPDATED_HEADING,
+    templateContent: homepageTemplate,
+  }
+}
+
 describe('E2E: Dev Watch Reload', { timeout: 120000 }, () => {
   const sandboxesToCleanup = []
 
@@ -92,10 +129,7 @@ describe('E2E: Dev Watch Reload', { timeout: 120000 }, () => {
     sandboxesToCleanup.push(sandboxPath)
     await copyProjectFixture(sandboxPath)
 
-    const aboutTemplatePath = path.join(
-      sandboxPath,
-      'src/routes/about/index.njk'
-    )
+    const watchTarget = await resolveWatchTarget(sandboxPath)
     const gulpBinPath = path.resolve('node_modules/gulp/bin/gulp.js')
     const port = 3300 + Math.floor(Math.random() * 300)
     const baseUrl = `http://127.0.0.1:${port}`
@@ -124,34 +158,45 @@ describe('E2E: Dev Watch Reload', { timeout: 120000 }, () => {
     const browser = await chromium.launch()
 
     try {
-      await waitForServer(`${baseUrl}/about/`, devProcess, childOutput)
-
-      const page = await browser.newPage()
-      await page.goto(`${baseUrl}/about/`, { waitUntil: 'networkidle' })
-      await page.waitForFunction(
-        (text) => document.body.innerText.includes(text),
-        ORIGINAL_HEADING
+      await waitForServer(
+        `${baseUrl}${watchTarget.urlPath}`,
+        devProcess,
+        childOutput
       )
 
-      const template = await fs.readFile(aboutTemplatePath, 'utf8')
+      const page = await browser.newPage()
+      await page.goto(`${baseUrl}${watchTarget.urlPath}`, {
+        waitUntil: 'networkidle',
+      })
+      await page.waitForFunction(
+        (text) => document.body.innerText.includes(text),
+        watchTarget.originalHeading
+      )
+
+      const template =
+        watchTarget.templateContent ||
+        (await fs.readFile(watchTarget.templatePath, 'utf8'))
       assert.ok(
-        template.includes(ORIGINAL_HEADING),
-        `Fixture heading "${ORIGINAL_HEADING}" was not found in sandbox template.`
+        template.includes(watchTarget.originalHeading),
+        `Fixture heading "${watchTarget.originalHeading}" was not found in sandbox template.`
       )
 
       await fs.writeFile(
-        aboutTemplatePath,
-        template.replace(ORIGINAL_HEADING, UPDATED_HEADING)
+        watchTarget.templatePath,
+        template.replace(
+          watchTarget.originalHeading,
+          watchTarget.updatedHeading
+        )
       )
 
       await page.waitForFunction(
         (text) => document.body.innerText.includes(text),
-        UPDATED_HEADING,
+        watchTarget.updatedHeading,
         { timeout: RELOAD_TIMEOUT_MS }
       )
 
       const renderedText = await page.locator('body').innerText()
-      assert.match(renderedText, new RegExp(UPDATED_HEADING))
+      assert.match(renderedText, new RegExp(watchTarget.updatedHeading))
 
       await page.close()
     } finally {
