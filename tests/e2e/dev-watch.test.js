@@ -106,12 +106,25 @@ async function resolveWatchTarget(sandboxPath) {
   const homepageTemplatePath = path.join(sandboxPath, 'src/routes/index.njk')
   const homepageTemplate = await fs.readFile(homepageTemplatePath, 'utf8')
 
+  if (homepageTemplate.includes(BLANK_HEADING)) {
+    return {
+      urlPath: '/',
+      templatePath: homepageTemplatePath,
+      originalHeading: BLANK_HEADING,
+      updatedHeading: BLANK_UPDATED_HEADING,
+      templateContent: homepageTemplate,
+    }
+  }
+
+  const homepageDataPath = path.join(sandboxPath, 'src/routes/index.md')
+  const homepageData = await fs.readFile(homepageDataPath, 'utf8')
+
   return {
     urlPath: '/',
-    templatePath: homepageTemplatePath,
+    templatePath: homepageDataPath,
     originalHeading: BLANK_HEADING,
     updatedHeading: BLANK_UPDATED_HEADING,
-    templateContent: homepageTemplate,
+    templateContent: homepageData,
   }
 }
 

@@ -5,6 +5,20 @@
       <meta charset="{{ site.meta.charset | default('utf-8') }}" />
       <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       <title>{{ (page.seo.title or page.title or site.title) | striptags }}</title>
+
+      <script>
+        ;(() => {
+          const getPreferredTheme = () => (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+          const setTheme = (theme) => document.documentElement.setAttribute('data-bs-theme', theme)
+
+          setTheme(getPreferredTheme())
+
+          window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+            setTheme(getPreferredTheme())
+          })
+        })()
+      </script>
+
       {% block css %}
         <!-- inject:css --><!-- endinject -->
 
@@ -23,49 +37,20 @@
       {% block favicons %}
         {% include "components/favicons/favicons.njk" %}
       {% endblock %}
-
-      {% block meta_og %}
-        {% include "components/meta-rich-snippets/open-graph.njk" %}
-      {% endblock %}
-
-      {% block meta_twitter %}
-        {% include "components/meta-rich-snippets/twitter-cards.njk" %}
-      {% endblock %}
     </head>
   {% endblock %}
-  <body data-template="page" data-bs-theme="light">
+  <body>
     {% block header %}
-      {% include "components/header/header.njk" %}
-    {% endblock %}
-
-    {# <pre>{{ page | dump(2) }}</pre> #}
-    {# <pre>{{ site | dump(2) }}</pre> #}
-
-    {% block hero %}
-      {% if page.hero %}
-        {% from "components/hero/hero.njk" import hero %}
-        {{
-          hero(
-            title = page.hero.title,
-            description = page.hero.description,
-            content = page.hero.content,
-            modifier = page.hero.modifier,
-            badge = page.hero.badge
-          )
-        }}
-      {% endif %}
     {% endblock %}
 
     {% block main %}
-      <main class="o-main">
-        {% block content %}
-          <div class="container py-5"> {{ page.content | md | safe }} </div>
-        {% endblock %}
-      </main>
+
+      {% block content %}
+        {{ page.content | md | safe }}
+      {% endblock %}
     {% endblock %}
 
     {% block footer %}
-      {% include "components/footer/footer.njk" %}
     {% endblock %}
 
     {% block js %}

@@ -39,9 +39,6 @@
   --bs-border-radius-lg: 0.75rem;
   --bs-box-shadow-sm: 0 0.125rem 0.25rem rgb(0 0 0 / 7.5%);
   --bs-box-shadow: 0 0.5rem 1rem rgb(0 0 0 / 15%);
-
-  /* Project specific */
-  --deep-blue-bg: #0a1d39;
 }
 
 [data-bs-theme='dark'] {
@@ -55,8 +52,4 @@
 
 body {
   min-width: 320px;
-}
-
-.bg-deep-blue {
-  background-color: var(--deep-blue-bg);
 }

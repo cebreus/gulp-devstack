@@ -7,20 +7,20 @@
     }
   }
 %}
-{% extends "layout-minimal.njk" %}
-{% from "components/hero/hero.njk" import hero %}
+{% extends "layout-default.njk" %}
+
 {% block content %}
-  {%
-    call hero(
-      title = "404",
-      badge = "Page Not Found",
-      description = "Sorry, the page you are looking for doesn't exist or has been moved to a different section.",
-      modifier = "no-gradient",
-      class = "w-100"
-    )
-  %}
-    <div class="d-flex justify-content-center mt-3">
-      <a href="/" class="btn btn-primary btn-lg rounded-pill px-4 py-2"> Back to home </a>
+  <main class="container">
+    <div class="row justify-content-center align-items-center vh-100">
+      <div class="col-auto">
+        <div class="card text-center">
+          <div class="card-body p-5">
+            <h1 class="card-title">404 — Page Not Found</h1>
+            <p class="card-text">The page you are looking for might have been removed or is temporarily unavailable.</p>
+            <a href="/" class="btn btn-primary">Go Home</a>
+          </div>
+        </div>
+      </div>
     </div>
-  {% endcall %}
+  </main>
 {% endblock %}

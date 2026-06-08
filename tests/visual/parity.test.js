@@ -6,7 +6,7 @@ import { chromium } from '@playwright/test'
 
 import { compareScreenshots, startStaticServer } from './helpers.js'
 
-const ROUTES = ['/', '/about/', '/404.html']
+const ROUTES = ['/', '/404.html']
 const THEMES = ['light', 'dark']
 const VIEWPORTS = [
   { name: 'xs', width: 390, height: 844 },
@@ -157,14 +157,6 @@ describe('Visual Pipeline Parity', { timeout: 60000 }, () => {
 
   it('should keep build and export visually identical for Home (Desktop Dark)', async () => {
     await assertVisualParity('/', 'dark', 'xl')
-  })
-
-  it('should keep build and export visually identical for About (Mobile Dark)', async () => {
-    await assertVisualParity('/about/', 'dark', 'xs')
-  })
-
-  it('should keep build and export visually identical for About (Desktop Light)', async () => {
-    await assertVisualParity('/about/', 'light', 'xl')
   })
 
   it('should keep build and export visually identical for 404 (Desktop Light)', async () => {

@@ -23,8 +23,6 @@ Gulp DevStack follows a **"Zero-Trust" Continuous Validation** model. We treat o
 - For async guard-clauses, pair `assert.doesNotReject(...)` with a positive observation, such as a warning emission or an unchanged output.
 - Use sandboxes for filesystem side-effects and clean them up in `after(...)` or `runInSandbox(...)`.
 
----
-
 ## 2. The Testing Hierarchy
 
 ### Level 1: Unit Tests (`tests/unit/`)
@@ -73,8 +71,6 @@ Gulp DevStack follows a **"Zero-Trust" Continuous Validation** model. We treat o
 - Keep this suite in `verify:pipeline` as a regression guard for formatter, injection, and output-layout changes.
 - **Command**: `pnpm test:visual`
 
----
-
 ## 3. Local Dev Loop vs. CI Gate
 
 To prevent "Zero-Trust" from slowing down development, we separate local loops from final validation.
@@ -96,7 +92,6 @@ For a professional release, always follow this **deterministic order** — from 
 6. **Build E2E Validation** (`pnpm test:prod`): Browser + accessibility checks against the production build.
 7. **Export E2E Validation** (`pnpm test:export`): Browser + accessibility checks against the export build.
 8. **Visual Parity** (`pnpm test:visual`): Confirm `build` and `export` render the same pages.
-9. **Performance Budget** (`pnpm sanity:budget`): Size-limit check.
 
 **Shortcut**: `pnpm verify:pipeline` executes this entire sequence automatically.
 
@@ -163,8 +158,6 @@ describe('My Feature', () => {
 | `createMockEnvironment(...)` | `object`          | Returns a mock `process.env`-like object          |
 | `silenceConsole(...)`        | `void`            | Silences noisy `console.log` in integration tests |
 
----
-
 ## 5. Summary Table
 
 | Metric             | Tool        | Standard            |
@@ -173,5 +166,4 @@ describe('My Feature', () => {
 | **Browser Engine** | Playwright  | Chromium (headless) |
 | **Accessibility**  | Axe-core    | WCAG 2.1 AA         |
 | **Asset Hashing**  | SRI/SHA384  | W3C Security        |
-| **Performance**    | Size-limit  | Custom Budgets      |
 | **Link Integrity** | Linkinator  | Recursive check     |

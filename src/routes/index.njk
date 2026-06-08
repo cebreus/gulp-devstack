@@ -1,88 +1,27 @@
 {% extends "layout-default.njk" %}
 
 {% block content %}
-  {% from "components/card/card.njk" import card %}
-
-  <div class="container py-5">
-    {# Connection element to Hero - REMOVED #}
-    <div class="mb-5 text-center position-relative">
-      <h2 class="display-5 fw-semibold mb-3 mt-4">Engineered for Predictability</h2>
-      <div class="row justify-content-center">
-        <div class="col-lg-8 col-xl-7">
-          <p class="text-muted lead mb-0">
-            Unlike complex JS frameworks, Gulp DevStack prioritizes explicit control and production-ready output without
-            the black-box magic.
-          </p>
-        </div>
-      </div>
-    </div>
-
-    <div class="u-bento-grid">
-      {% for item in bento_items %}
-        {% set dynamic_img = null %}
-        {% if item.img_ref == "stack_integration_visual" and item.img_data %}
-          {% set dynamic_img %}
-            <div class="c-integration-grid">
-              {% for intItem in item.img_data %}
-                <div class="c-integration-item" title="{{ intItem.title }}"> {% include intItem.svg %} </div>
-              {% endfor %}
-            </div>
-          {% endset %}
-        {% elif item.img_ref == "pipeline_visual" and item.img_data %}
-          {% set dynamic_img %}
-            <div class="c-pipeline">
-              {% for step in item.img_data %}
-                <div class="c-pipeline__step">
-                  <span class="c-pipeline__number">{{ step.number }}</span>
-                  <div class="c-pipeline__info">
-                    <span class="c-pipeline__label">{{ step.label }}</span>
-                    <span class="c-pipeline__text">{{ step.text }}</span>
-                  </div>
-                  <span class="c-pipeline__cmd">{{ step.cmd }}</span>
-                </div>
-              {% endfor %}
-            </div>
-          {% endset %}
-        {% elif item.img_ref == "feature_list_visual" and item.img_data %}
-          {% set dynamic_img %}
-            <div class="c-feature-list">
-              <div class="c-feature-list__grid">
-                {% for fItem in item.img_data %}
-                  <div class="c-feature-item">
-                    <span class="c-feature-item__icon"></span>
-                    <div class="c-feature-item__content">
-                      <span class="c-feature-item__title">{{ fItem.title | safe }}</span>
-                      <span class="c-feature-item__text">{{ fItem.text }}</span>
-                    </div>
-                  </div>
-                {% endfor %}
-              </div>
-            </div>
-          {% endset %}
+  {# Flattened structure: container handles flex centering directly #}
+  <main class="container py-5 vh-100 d-flex align-items-center justify-content-center">
+    {% if page.hero %}
+      <div class="p-5 bg-body-tertiary rounded-3 text-center">
+        <h1 class="display-5 fw-bold">{{ page.hero.title }}</h1>
+        <p class="lead text-muted">{{ page.hero.description }}</p>
+        {% if page.hero.buttons %}
+          <div class="d-flex justify-content-center gap-3 mt-4">
+            {% for btn in page.hero.buttons %}
+              <a
+                href="{{ btn.url }}"
+                class="btn {{ btn.class or 'btn-primary' }} btn-lg px-4"
+                target="_blank"
+                rel="noopener"
+              >
+                {{ btn.text }}
+              </a>
+            {% endfor %}
+          </div>
         {% endif %}
-        <div
-          class="u-bento-span-{{ item.size | default('medium') }}{{ ' u-order-md-' + item.mdOrder if item.mdOrder }}"
-        >
-          {{
-            card(
-              title = item.name,
-              body = item.text,
-              icon = item.icon,
-              badge = item.badge,
-              img = dynamic_img,
-              href = item.href,
-              variant = item.variant or "bento",
-              featured = item.featured,
-              compact = item.compact,
-              class = "h-100"
-            )
-          }}
-        </div>
-      {% endfor %}
-    </div>
-
-    {% if content %}
-      {# Content already handled inside Bento #}
+      </div>
     {% endif %}
-  </div>
+  </main>
 {% endblock %}
