@@ -1,113 +1,34 @@
 import assert from 'node:assert/strict'
+import fs from 'node:fs/promises'
 import path from 'node:path'
 import { describe, it } from 'node:test'
 
 import {
-  buildGlobalContext,
-  buildTemplateContext,
+  clearRouteAssetCache,
+  discoverRouteStyles,
+} from '../../gulp/utils/navigation-assets.js'
+import {
   getMenuDataArtifactPath,
   getPageDataArtifactPath,
   getRouteDataArtifactsDir,
   getSiteDataArtifactPath,
-  resolveTransformKey,
-  transformJsonToHtml,
-} from '../../gulp/utils/index.js'
+  loadPageDataArtifact,
+  loadRouteArtifactsContext,
+  writeMenuDataArtifact,
+  writePageDataArtifact,
+} from '../../gulp/utils/route-data.js'
+import { runInSandbox } from '../test-helpers.js'
 
-describe('HTML Helpers (Unit)', function htmlHelperTests() {
-  describe('resolveTransformKey', function transformKeyTests() {
-    it('should map css -> transformCss', function verifyCssMapping() {
-      assert.strictEqual(resolveTransformKey('css'), 'transformCss')
-    })
-
-    it('should map js -> transformJs', function verifyJsMapping() {
-      assert.strictEqual(resolveTransformKey('js'), 'transformJs')
-    })
-
-    it('should map cdn-js -> transformCdnJs', function verifyCdnJsMapping() {
-      assert.strictEqual(resolveTransformKey('cdn-js'), 'transformCdnJs')
-    })
-
-    it('should return null for unknown tags', function verifyUnknownTagMapping() {
-      assert.strictEqual(resolveTransformKey('unknown'), null)
-    })
-  })
-
-  describe('transformJsonToHtml', function jsonToHtmlTests() {
-    const mockParams = {
-      dataSource: '/tmp/src',
-      output: '/tmp/dest',
-    }
-
-    it('should correctly transform file path and content', async function verifyJsonTransformation() {
-      const fileContent = JSON.stringify({
-        title: 'Test Page',
-        content: '# Hello',
-      })
-      const mockFile = {
-        path: path.resolve(mockParams.dataSource, 'test.json'),
-        base: path.resolve(mockParams.dataSource),
-        contents: Buffer.from(fileContent),
-        isBuffer: function isBuffer() {
-          return true
-        },
-        isNull: function isNull() {
-          return false
-        },
-      }
-
-      const result = await transformJsonToHtml(mockFile, mockParams)
-
-      assert.ok(result.path.endsWith('test.html'))
-      assert.ok(result.contents.toString().includes('layout-default.njk'))
-      assert.strictEqual(result.data.title, 'Test Page')
-    })
-
-    it('should throw descriptive error for invalid JSON payload', async function verifyInvalidJsonError() {
-      const mockFile = {
-        path: path.resolve(mockParams.dataSource, 'broken.json'),
-        base: path.resolve(mockParams.dataSource),
-        contents: Buffer.from('{"title":"Broken",'),
-        isBuffer: function isBuffer() {
-          return true
-        },
-        isNull: function isNull() {
-          return false
-        },
-      }
-
-      await assert.rejects(async function runBrokenJson() {
-        await transformJsonToHtml(mockFile, mockParams)
-      }, /Failed to parse JSON/)
-    })
-
-    it('should throw descriptive error when parsed payload is not an object', async function verifyNonObjectJsonError() {
-      const mockFile = {
-        path: path.resolve(mockParams.dataSource, 'scalar.json'),
-        base: path.resolve(mockParams.dataSource),
-        contents: Buffer.from('"not-an-object"'),
-        isBuffer: function isBuffer() {
-          return true
-        },
-        isNull: function isNull() {
-          return false
-        },
-      }
-
-      await assert.rejects(async function runScalarJson() {
-        await transformJsonToHtml(mockFile, mockParams)
-      }, /Parsed JSON must be an object/)
-    })
-  })
-
-  describe('route content artifacts', function routeContentArtifactTests() {
-    it('should resolve route artifacts into the pages temp directory', function verifyArtifactsDir() {
+describe('HTML Helpers (Unit)', () => {
+  describe('route content artifacts', () => {
+    it('should resolve route artifacts into the pages temp directory', () => {
       assert.strictEqual(
         getRouteDataArtifactsDir('/tmp/build-data'),
         path.join('/tmp/build-data', 'pages')
       )
     })
 
-    it('should resolve the site and menu artifact paths', function verifySharedArtifactPaths() {
+    it('should resolve the site and menu artifact paths', () => {
       const artifactsBase = path.join('/tmp/build-data', 'pages')
 
       assert.strictEqual(
@@ -120,7 +41,7 @@ describe('HTML Helpers (Unit)', function htmlHelperTests() {
       )
     })
 
-    it('should resolve a page artifact from the route path', function verifyPageArtifactPath() {
+    it('should resolve a page artifact from the route path', () => {
       const artifactPath = getPageDataArtifactPath({
         artifactsBase: '/tmp/build-data/pages',
         routesBase: '/tmp/project/src/routes',
@@ -132,40 +53,110 @@ describe('HTML Helpers (Unit)', function htmlHelperTests() {
         path.join('/tmp/build-data/pages', 'about/index.json')
       )
     })
-  })
 
-  describe('route content context', function routeContentContextTests() {
-    it('should merge site and menu artifacts into one global context', function verifyGlobalContext() {
-      const result = buildGlobalContext({
-        siteData: { title: 'Site' },
-        menuData: { menu: [{ name: 'Home' }] },
-      })
+    it('should write and reload page and menu artifacts through route-data seam', async () => {
+      await runInSandbox('route-artifact-io', async (sandbox) => {
+        const tempBase = path.join(sandbox, '.tmp')
+        const routesBase = path.join(sandbox, 'src', 'routes')
+        const filePath = path.join(routesBase, 'about', 'index.md')
+        const artifactsBase = getRouteDataArtifactsDir(tempBase)
+        const pageData = { title: 'About', pageId: 'about', path: '/about/' }
 
-      assert.deepStrictEqual(result, {
-        title: 'Site',
-        menu: [{ name: 'Home' }],
+        await writePageDataArtifact({
+          artifactsBase,
+          routesBase,
+          filePath,
+          pageData,
+        })
+        await writeMenuDataArtifact(artifactsBase, [
+          { name: 'About', order: 2, path: '/about/' },
+        ])
+        await fs.mkdir(tempBase, { recursive: true })
+        await fs.writeFile(
+          getSiteDataArtifactPath(tempBase),
+          JSON.stringify({ title: 'Sandbox Site' }, null, 2)
+        )
+
+        const loadedPage = await loadPageDataArtifact({
+          artifactsBase,
+          routesBase,
+          filePath,
+        })
+        const loadedContext = await loadRouteArtifactsContext(tempBase)
+
+        assert.deepStrictEqual(loadedPage, pageData)
+        assert.deepStrictEqual(loadedContext, {
+          siteData: { title: 'Sandbox Site' },
+          menuData: {
+            menu: [{ name: 'About', order: 2, path: '/about/' }],
+          },
+        })
       })
     })
 
-    it('should assemble the final template context shape', function verifyTemplateContextShape() {
-      const result = buildTemplateContext({
-        pageData: { title: 'About' },
-        globalContext: { title: 'Site' },
-        config: { version: 'dev' },
-        pageStyles: ['/assets/css/about.css'],
-        pageScripts: ['/assets/js/about.js'],
-        isPrivate: function isPrivate(filePath) {
-          return filePath.startsWith('_')
-        },
-      })
+    it('should return empty objects when route artifacts are missing', async () => {
+      await runInSandbox('route-artifact-empty', async (sandbox) => {
+        const tempBase = path.join(sandbox, '.tmp')
+        const loadedContext = await loadRouteArtifactsContext(tempBase)
 
-      assert.strictEqual(result.title, 'About')
-      assert.deepStrictEqual(result.page, { title: 'About' })
-      assert.deepStrictEqual(result.site, { title: 'Site' })
-      assert.deepStrictEqual(result.pageStyles, ['/assets/css/about.css'])
-      assert.deepStrictEqual(result.pageScripts, ['/assets/js/about.js'])
-      assert.strictEqual(result.config.version, 'dev')
-      assert.strictEqual(result.isPrivate('_draft.md'), true)
+        assert.deepStrictEqual(loadedContext, {
+          siteData: {},
+          menuData: {},
+        })
+      })
+    })
+
+    it('should throw with cause when a route artifact contains invalid json', async () => {
+      await runInSandbox('route-artifact-invalid-json', async (sandbox) => {
+        const tempBase = path.join(sandbox, '.tmp')
+        const routesBase = path.join(sandbox, 'src', 'routes')
+        const artifactsBase = getRouteDataArtifactsDir(tempBase)
+        const filePath = path.join(routesBase, 'about', 'index.njk')
+        const artifactPath = getPageDataArtifactPath({
+          artifactsBase,
+          routesBase,
+          filePath,
+        })
+
+        await fs.mkdir(path.dirname(artifactPath), { recursive: true })
+        await fs.writeFile(artifactPath, '{invalid json')
+
+        await assert.rejects(
+          () =>
+            loadPageDataArtifact({
+              artifactsBase,
+              routesBase,
+              filePath,
+            }),
+          (error) => {
+            assert.match(error.message, /Failed to read route artifact/)
+            assert.ok(error.cause instanceof Error)
+            return true
+          }
+        )
+      })
+    })
+  })
+
+  describe('route asset discovery', () => {
+    it('should expose newly added route styles after cache clear', async () => {
+      await runInSandbox('route-asset-cache', async (sandbox) => {
+        const assetDir = path.join(sandbox, 'assets/css/about')
+        await fs.mkdir(assetDir, { recursive: true })
+
+        const emptyResult = await discoverRouteStyles('about', 'index', sandbox)
+        assert.deepStrictEqual(emptyResult, [])
+
+        await fs.writeFile(path.join(assetDir, 'index.css'), '.about {}')
+        clearRouteAssetCache()
+
+        const updatedResult = await discoverRouteStyles(
+          'about',
+          'index',
+          sandbox
+        )
+        assert.deepStrictEqual(updatedResult, ['/assets/css/about/index.css'])
+      })
     })
   })
 })

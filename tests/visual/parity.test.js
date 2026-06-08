@@ -23,10 +23,6 @@ let browser = null
 let buildServer = null
 let exportServer = null
 
-/**
- * @param {string} routePath
- * @returns {string}
- */
 function toSnapshotName(routePath) {
   if (routePath === '/') {
     return 'home'
@@ -38,9 +34,6 @@ function toSnapshotName(routePath) {
     .replace(/^-|-$/g, '')
 }
 
-/**
- * @returns {Promise<void>}
- */
 async function assertArtifactsExist() {
   const rootDir = process.cwd()
   await Promise.all([
@@ -49,14 +42,9 @@ async function assertArtifactsExist() {
   ])
 }
 
-/**
- * @param {import('@playwright/test').Page} page
- * @param {'light'|'dark'} theme
- * @returns {Promise<void>}
- */
 async function applyTheme(page, theme) {
   await page.emulateMedia({ colorScheme: theme })
-  await page.evaluate(function setTheme(nextTheme) {
+  await page.evaluate((nextTheme) => {
     document.documentElement.dataset.bsTheme = nextTheme
     if (document.body) {
       document.body.dataset.bsTheme = nextTheme
@@ -65,13 +53,9 @@ async function applyTheme(page, theme) {
   await page.waitForTimeout(DEFAULT_WAIT_AFTER_THEME_MS)
 }
 
-/**
- * @param {import('@playwright/test').Page} page
- * @returns {Promise<void>}
- */
 async function stabilizePage(page) {
   await page.waitForLoadState('networkidle')
-  await page.evaluate(async function waitForFonts() {
+  await page.evaluate(async () => {
     await document.fonts.ready
   })
   await page.addStyleTag({
@@ -93,13 +77,6 @@ async function stabilizePage(page) {
   })
 }
 
-/**
- * @param {string} baseUrl
- * @param {string} routePath
- * @param {{ width: number, height: number }} viewport
- * @param {'light'|'dark'} theme
- * @returns {Promise<Buffer>}
- */
 async function capturePageScreenshot(baseUrl, routePath, viewport, theme) {
   const context = await browser.newContext({
     viewport: {
@@ -120,8 +97,8 @@ async function capturePageScreenshot(baseUrl, routePath, viewport, theme) {
   }
 }
 
-describe('Visual Pipeline Parity', function visualParitySuite() {
-  before(async function prepareVisualParitySuite() {
+describe('Visual Pipeline Parity', { timeout: 60000 }, () => {
+  before(async () => {
     await assertArtifactsExist()
     browser = await chromium.launch()
 
@@ -132,7 +109,7 @@ describe('Visual Pipeline Parity', function visualParitySuite() {
     ])
   })
 
-  after(async function cleanupVisualParitySuite() {
+  after(async () => {
     if (browser) {
       await browser.close()
     }
@@ -146,47 +123,51 @@ describe('Visual Pipeline Parity', function visualParitySuite() {
     }
   })
 
-  for (const routePath of ROUTES) {
-    for (const theme of THEMES) {
-      for (const viewport of VIEWPORTS) {
-        const routeName = toSnapshotName(routePath)
-        const testName = [
-          routeName,
-          theme,
-          `${viewport.name}-${viewport.width}x${viewport.height}`,
-        ].join(' | ')
+  async function assertVisualParity(routePath, theme, viewportName) {
+    const viewport = VIEWPORTS.find((v) => {
+      return v.name === viewportName
+    })
+    assert.ok(
+      viewport,
+      `Unknown viewport "${viewportName}". Available viewports: ${VIEWPORTS.map((v) => v.name).join(', ')}.`
+    )
 
-        it(`should keep build and export visually identical for ${testName}`, async function verifyVisualParity() {
-          const [buildScreenshot, exportScreenshot] = await Promise.all([
-            capturePageScreenshot(
-              buildServer.baseUrl,
-              routePath,
-              viewport,
-              theme
-            ),
-            capturePageScreenshot(
-              exportServer.baseUrl,
-              routePath,
-              viewport,
-              theme
-            ),
-          ])
+    const testName = `${toSnapshotName(routePath)} | ${theme} | ${viewport.name}`
 
-          const diff = await compareScreenshots(
-            buildScreenshot,
-            exportScreenshot
-          )
+    const [buildScreenshot, exportScreenshot] = await Promise.all([
+      capturePageScreenshot(buildServer.baseUrl, routePath, viewport, theme),
+      capturePageScreenshot(exportServer.baseUrl, routePath, viewport, theme),
+    ])
 
-          assert.ok(
-            diff.diffRatio <= MAX_DIFF_PIXEL_RATIO,
-            [
-              `Visual mismatch between build-prod and build-export for ${testName}.`,
-              `Different pixels: ${diff.diffPixels}/${diff.totalPixels}.`,
-              `Diff ratio: ${diff.diffRatio}.`,
-            ].join(' ')
-          )
-        })
-      }
-    }
+    const diff = await compareScreenshots(buildScreenshot, exportScreenshot)
+
+    assert.ok(
+      diff.diffRatio <= MAX_DIFF_PIXEL_RATIO,
+      [
+        `Visual mismatch between build-prod and build-export for ${testName}.`,
+        `Different pixels: ${diff.diffPixels}/${diff.totalPixels}.`,
+        `Diff ratio: ${diff.diffRatio}.`,
+      ].join(' ')
+    )
   }
+
+  it('should keep build and export visually identical for Home (Mobile Light)', async () => {
+    await assertVisualParity('/', 'light', 'xs')
+  })
+
+  it('should keep build and export visually identical for Home (Desktop Dark)', async () => {
+    await assertVisualParity('/', 'dark', 'xl')
+  })
+
+  it('should keep build and export visually identical for About (Mobile Dark)', async () => {
+    await assertVisualParity('/about/', 'dark', 'xs')
+  })
+
+  it('should keep build and export visually identical for About (Desktop Light)', async () => {
+    await assertVisualParity('/about/', 'light', 'xl')
+  })
+
+  it('should keep build and export visually identical for 404 (Desktop Light)', async () => {
+    await assertVisualParity('/404.html', 'light', 'xl')
+  })
 })

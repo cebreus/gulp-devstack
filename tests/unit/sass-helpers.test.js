@@ -3,29 +3,39 @@ import path from 'node:path'
 import { describe, it } from 'node:test'
 
 import { resolveConfig } from '../../gulp/config.js'
+import * as sassModule from '../../gulp/tasks/process-sass.js'
 import { buildSassIncludePaths } from '../../gulp/tasks/process-sass.js'
 
-describe('Sass Helpers (Unit)', function sassHelpersTestSuite() {
+describe('Sass Helpers (Unit)', () => {
   const config = resolveConfig('dev')
 
-  describe('buildSassIncludePaths', function buildSassIncludePathsTestSuite() {
-    it('should return standard include paths by default', function testDefaultIncludePaths() {
+  describe('public API boundaries', () => {
+    it('should keep pipeline glue internal and expose only explicit seams', () => {
+      assert.ok('buildSassIncludePaths' in sassModule)
+      assert.ok('getSassCompilerOptions' in sassModule)
+      assert.ok(!('buildSassPipeline' in sassModule))
+      assert.ok(!('processSass' in sassModule))
+    })
+  })
+
+  describe('buildSassIncludePaths', () => {
+    it('should return standard include paths by default', () => {
       const paths = buildSassIncludePaths(null, config)
 
-      const hasSrc = paths.some(function checkSrcPath(p) {
+      const hasSrc = paths.some((p) => {
         return p.endsWith('src')
       })
-      const hasNodeModules = paths.some(function checkNodeModulesPath(p) {
+      const hasNodeModules = paths.some((p) => {
         return p.endsWith('node_modules')
       })
-      const hasCwd = paths.includes(path.resolve('./'))
+      const hasCwd = paths.includes(process.cwd())
 
       assert.ok(hasSrc, 'Should include src directory')
       assert.ok(hasNodeModules, 'Should include node_modules')
       assert.ok(hasCwd, 'Should include current working directory')
     })
 
-    it('should append extra path when provided', function testExtraIncludePath() {
+    it('should append extra path when provided', () => {
       const extraPath = 'src/components/special'
       const paths = buildSassIncludePaths(extraPath, config)
 
@@ -33,7 +43,7 @@ describe('Sass Helpers (Unit)', function sassHelpersTestSuite() {
       assert.ok(hasExtra, 'Should include the extra specified path')
     })
 
-    it('should correctly resolve paths with custom buildConfig', function testCustomConfigPaths() {
+    it('should correctly resolve paths with custom buildConfig', () => {
       const mockConfig = { sassBase: './custom/scss' }
       const paths = buildSassIncludePaths(null, mockConfig)
 

@@ -1,88 +1,231 @@
 import assert from 'node:assert/strict'
 import fs from 'node:fs/promises'
 import path from 'node:path'
-import { describe, it } from 'node:test'
+import { afterEach, beforeEach, describe, it, mock } from 'node:test'
 
 import { resolveConfig } from '../../gulp/config.js'
-import {
-  buildSassPipeline,
+import processSass, {
   compileRouteStyles,
+  processAllSass,
 } from '../../gulp/tasks/process-sass.js'
-import { streamToPromise } from '../../gulp/utils/index.js'
-import { runInSandbox, writeFixtures } from '../test-helpers.js'
+import { runInSandbox, silenceConsole, writeFixtures } from '../test-helpers.js'
 
-describe('Sass Pipeline Integration', function testSassPipeline() {
-  it('should catch and handle sass compilation errors', async function testSassCompilationError() {
-    await runInSandbox(
-      'sass-error',
-      async function executeSassErrorTest(sandbox) {
-        const errorFixtures = {
-          'src/style.scss': 'body { color: $non-existent-variable; }',
-        }
-        await writeFixtures(sandbox, errorFixtures)
-        const outputDir = path.join(sandbox, 'dist')
+silenceConsole(beforeEach, afterEach, mock)
 
-        const devConfig = resolveConfig('dev')
+function buildSandboxSassConfig(sandbox) {
+  const devConfig = resolveConfig('dev')
+  const srcBase = path.join(sandbox, 'src')
 
-        const sassPipeline = await buildSassPipeline(devConfig, {
-          src: path.join(sandbox, 'src/style.scss'),
-          dest: outputDir,
-          skipIntegrity: true,
-        })
-        await streamToPromise(sassPipeline)
+  return {
+    ...devConfig,
+    srcBase,
+    routesBase: path.join(srcBase, 'routes'),
+    sassBase: path.join(srcBase, 'scss'),
+    sassBootstrap: path.join(srcBase, 'scss/bootstrap.scss'),
+    sassCustom: path.join(srcBase, 'scss/custom.scss'),
+    sassComponents: path.join(srcBase, 'scss/components.scss'),
+    paths: {
+      ...devConfig.paths,
+      sass: path.join(sandbox, 'dist'),
+    },
+    skipIntegrity: true,
+  }
+}
 
-        const cssFileExists = await fs
-          .access(path.join(outputDir, 'style.css'))
-          .then(function onAccessSuccess() {
-            return true
-          })
-          .catch(function onAccessError() {
-            return false
-          })
-        assert.strictEqual(
-          cssFileExists,
-          false,
-          'CSS file should not exist on compilation error'
-        )
-      }
-    )
+describe('Sass Pipeline Integration', () => {
+  let mockConsoleError
+
+  beforeEach(() => {
+    mockConsoleError = mock.method(console, 'error', () => {})
   })
 
-  it('should return immediately when no route styles are found', async function testEmptyRouteStyles() {
+  afterEach(() => {
+    mockConsoleError.mock.restore()
+  })
+
+  async function testProcessSass(sandbox, options = {}) {
+    const outputDir = path.join(sandbox, 'dist')
     const devConfig = resolveConfig('dev')
-    await assert.doesNotReject(async function executeCompileRouteStyles() {
-      await compileRouteStyles(devConfig)
+    await processSass(
+      devConfig,
+      path.join(sandbox, 'src/style.scss'),
+      outputDir,
+      { skipIntegrity: true, ...options }
+    )
+    return outputDir
+  }
+
+  it('should catch and handle sass compilation errors', async () => {
+    await runInSandbox('sass-error', async (sandbox) => {
+      const errorFixtures = {
+        'src/style.scss': 'body { color: $non-existent-variable; }',
+      }
+      await writeFixtures(sandbox, errorFixtures)
+      const outputDir = await testProcessSass(sandbox)
+
+      const cssFileExists = await fs
+        .access(path.join(outputDir, 'style.css'))
+        .then(() => {
+          return true
+        })
+        .catch(() => {
+          return false
+        })
+      assert.strictEqual(
+        cssFileExists,
+        false,
+        'CSS file should not exist on compilation error'
+      )
     })
   })
 
-  it('should support custom postcss plugins', async function testPostcssPlugins() {
-    await runInSandbox(
-      'sass-postcss',
-      async function executePostcssTest(sandbox) {
-        const postcssFixtures = {
-          'src/style.scss':
-            'body { display: flex; color: blue; background: green; }',
-        }
-        await writeFixtures(sandbox, postcssFixtures)
-        const outputDir = path.join(sandbox, 'dist')
+  it('should return immediately when no route styles are found', async () => {
+    await runInSandbox('sass-empty-routes', async (sandbox) => {
+      await writeFixtures(sandbox, {
+        'src/scss/custom.scss': '.custom-layer { color: red; }',
+      })
 
-        const devConfig = resolveConfig('dev')
-        const sassPipeline = await buildSassPipeline(devConfig, {
-          src: path.join(sandbox, 'src/style.scss'),
-          dest: outputDir,
-          postcssPlugins: [],
-          minify: false,
-          skipIntegrity: true,
-        })
-        await streamToPromise(sassPipeline)
+      const devConfig = buildSandboxSassConfig(sandbox)
+      let compiledCount
+      await assert.doesNotReject(async () => {
+        compiledCount = await compileRouteStyles(devConfig)
+      })
+      assert.strictEqual(
+        compiledCount,
+        undefined,
+        'compileRouteStyles should return undefined when no route SCSS files are found'
+      )
+    })
+  })
 
-        const generatedCss = await fs.readFile(
-          path.join(outputDir, 'style.css'),
-          'utf8'
-        )
-        assert.ok(generatedCss.length > 0)
-        assert.ok(generatedCss.includes('display: flex'))
+  it('should support custom postcss plugins', async () => {
+    await runInSandbox('sass-postcss', async (sandbox) => {
+      const postcssFixtures = {
+        'src/style.scss':
+          'body { display: flex; color: blue; background: green; }',
       }
-    )
+      await writeFixtures(sandbox, postcssFixtures)
+      const outputDir = await testProcessSass(sandbox, { minify: false })
+
+      const generatedCss = await fs.readFile(
+        path.join(outputDir, 'style.css'),
+        'utf8'
+      )
+      assert.ok(generatedCss.length > 0)
+      assert.ok(generatedCss.includes('display: flex'))
+    })
+  })
+
+  it('should emit external Sass source maps in dev mode', async () => {
+    await runInSandbox('sass-sourcemaps-dev', async (sandbox) => {
+      await writeFixtures(sandbox, {
+        'src/style.scss': 'body { color: blue; }',
+      })
+      const outputDir = await testProcessSass(sandbox)
+
+      const generatedCss = await fs.readFile(
+        path.join(outputDir, 'style.css'),
+        'utf8'
+      )
+      const generatedMap = await fs.readFile(
+        path.join(outputDir, 'style.css.map'),
+        'utf8'
+      )
+
+      assert.ok(
+        generatedCss.includes('sourceMappingURL=style.css.map'),
+        'CSS should link to an external source map'
+      )
+      assert.ok(generatedMap.includes('"sources"'))
+    })
+  })
+
+  it('should compile Bootstrap from the project Sass entrypoint', async () => {
+    await runInSandbox('sass-project-bootstrap', async (sandbox) => {
+      await writeFixtures(sandbox, {
+        'src/scss/bootstrap.scss':
+          '.from-project-bootstrap { color: rgb(1, 2, 3); }',
+        'src/scss/custom.scss': '.custom-layer { color: red; }',
+        'src/scss/components.scss': '.component-layer { color: blue; }',
+        'src/routes/index.scss': '.route-layer { color: green; }',
+      })
+
+      const devConfig = buildSandboxSassConfig(sandbox)
+      await processAllSass(devConfig, 'dev')
+
+      const bootstrapCss = await fs.readFile(
+        path.join(devConfig.paths.sass, 'bootstrap.css'),
+        'utf8'
+      )
+      const componentsCss = await fs.readFile(
+        path.join(devConfig.paths.sass, 'components.css'),
+        'utf8'
+      )
+
+      assert.ok(bootstrapCss.includes('.from-project-bootstrap'))
+      assert.ok(componentsCss.includes('.component-layer'))
+    })
+  })
+
+  it('should recompile route styles when shared route abstracts change', async () => {
+    await runInSandbox('sass-route-abstracts', async (sandbox) => {
+      await writeFixtures(sandbox, {
+        'src/scss/_route-abstracts.scss': '$route-color: red;',
+        'src/routes/index.scss':
+          "@import '../scss/route-abstracts'; .route { color: $route-color; }",
+      })
+
+      const devConfig = buildSandboxSassConfig(sandbox)
+      await compileRouteStyles(devConfig, [], { skipNewer: true })
+
+      const routeCssPath = path.join(devConfig.paths.sass, 'index.css')
+      const initialCss = await fs.readFile(routeCssPath, 'utf8')
+      assert.ok(initialCss.includes('color: red'))
+
+      await fs.writeFile(
+        path.join(sandbox, 'src/scss/_route-abstracts.scss'),
+        '$route-color: blue;'
+      )
+      await compileRouteStyles(devConfig, [], { skipNewer: true })
+
+      const updatedCss = await fs.readFile(routeCssPath, 'utf8')
+      assert.ok(updatedCss.includes('color: blue'))
+    })
+  })
+
+  it('should skip unchanged route styles while preserving import invalidation', async () => {
+    await runInSandbox('sass-route-cache', async (sandbox) => {
+      await writeFixtures(sandbox, {
+        'src/scss/_route-abstracts.scss': '$route-color: red;',
+        'src/routes/index.scss':
+          "@import '../scss/route-abstracts'; .route { color: $route-color; }",
+      })
+
+      const devConfig = buildSandboxSassConfig(sandbox)
+      const firstRun = await compileRouteStyles(devConfig, [], {
+        skipNewer: true,
+      })
+      const routeCssPath = path.join(devConfig.paths.sass, 'index.css')
+      const firstStats = await fs.stat(routeCssPath)
+
+      const secondRun = await compileRouteStyles(devConfig, [], {
+        skipNewer: true,
+      })
+      const secondStats = await fs.stat(routeCssPath)
+
+      assert.deepStrictEqual(secondRun, [])
+      assert.deepStrictEqual(firstRun, [routeCssPath])
+      assert.strictEqual(secondStats.mtimeMs, firstStats.mtimeMs)
+
+      await fs.writeFile(
+        path.join(sandbox, 'src/scss/_route-abstracts.scss'),
+        '$route-color: blue;'
+      )
+      const thirdRun = await compileRouteStyles(devConfig, [], {
+        skipNewer: true,
+      })
+
+      assert.deepStrictEqual(thirdRun, [routeCssPath])
+    })
   })
 })

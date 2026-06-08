@@ -23,10 +23,6 @@ const CONTENT_TYPES = {
 const PIXEL_CHANNELS = 4
 const PIXEL_DIFF_THRESHOLD = 16
 
-/**
- * @param {string} pathname
- * @returns {string}
- */
 function normalizeRequestPath(pathname) {
   if (!pathname || pathname === '/') {
     return '/index.html'
@@ -39,11 +35,6 @@ function normalizeRequestPath(pathname) {
   return pathname
 }
 
-/**
- * @param {string} rootDir
- * @param {string} requestPath
- * @returns {string|null}
- */
 function resolveStaticFile(rootDir, requestPath) {
   const normalizedPath = normalizeRequestPath(requestPath)
   const decodedPath = decodeURIComponent(normalizedPath)
@@ -77,21 +68,13 @@ function resolveStaticFile(rootDir, requestPath) {
   return null
 }
 
-/**
- * @param {string} filePath
- * @returns {string}
- */
 function getContentType(filePath) {
   const extension = path.extname(filePath).toLowerCase()
   return CONTENT_TYPES[extension] || 'application/octet-stream'
 }
 
-/**
- * @param {string} rootDir
- * @returns {Promise<{ baseUrl: string, close: () => Promise<void> }>}
- */
 export async function startStaticServer(rootDir) {
-  const server = createServer(async function handleRequest(req, res) {
+  const server = createServer(async (req, res) => {
     try {
       const origin = `http://${req.headers.host || '127.0.0.1'}`
       const url = new URL(req.url || '/', origin)
@@ -112,7 +95,7 @@ export async function startStaticServer(rootDir) {
     }
   })
 
-  await new Promise(function listen(resolve, reject) {
+  await new Promise((resolve, reject) => {
     server.once('error', reject)
     server.listen(0, '127.0.0.1', resolve)
   })
@@ -122,10 +105,12 @@ export async function startStaticServer(rootDir) {
 
   return {
     baseUrl: `http://127.0.0.1:${address.port}`,
-    close: async function close() {
-      await new Promise(function shutdown(resolve, reject) {
+    close: async () => {
+      await new Promise((resolve, reject) => {
         server.close((error) => {
-          if (error) return reject(error)
+          if (error) {
+            return reject(error)
+          }
           resolve()
         })
       })
@@ -133,10 +118,6 @@ export async function startStaticServer(rootDir) {
   }
 }
 
-/**
- * @param {Buffer} imageBuffer
- * @returns {Promise<{ data: Uint8Array, width: number, height: number }>}
- */
 async function readRawImage(imageBuffer) {
   const { data, info } = await sharp(imageBuffer)
     .ensureAlpha()
@@ -146,20 +127,10 @@ async function readRawImage(imageBuffer) {
   return { data, width: info.width, height: info.height }
 }
 
-/**
- * @param {number} channelA
- * @param {number} channelB
- * @returns {number}
- */
 function getChannelDifference(channelA, channelB) {
   return Math.abs(channelA - channelB)
 }
 
-/**
- * @param {Uint8Array} leftData
- * @param {Uint8Array} rightData
- * @returns {{ diffPixels: number, totalPixels: number, diffRatio: number }}
- */
 function compareRawPixels(leftData, rightData) {
   let diffPixels = 0
   const totalPixels = leftData.length / PIXEL_CHANNELS
@@ -196,11 +167,6 @@ function compareRawPixels(leftData, rightData) {
   }
 }
 
-/**
- * @param {Buffer} leftImage
- * @param {Buffer} rightImage
- * @returns {Promise<{ diffPixels: number, totalPixels: number, diffRatio: number }>}
- */
 export async function compareScreenshots(leftImage, rightImage) {
   const [left, right] = await Promise.all([
     readRawImage(leftImage),

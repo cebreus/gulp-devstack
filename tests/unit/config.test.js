@@ -1,11 +1,12 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 
+import * as configModule from '../../gulp/config.js'
 import { resolveConfig } from '../../gulp/config.js'
 
-describe('Configuration System (Approach B)', function configSystemTests() {
-  describe('resolveConfig', function resolveConfigTests() {
-    it('should return correct object for dev mode', function verifyDevConfig() {
+describe('Configuration System (Approach B)', () => {
+  describe('resolveConfig', () => {
+    it('should return correct object for dev mode', () => {
       const config = resolveConfig('dev')
 
       assert.strictEqual(config.version, 'dev')
@@ -15,7 +16,7 @@ describe('Configuration System (Approach B)', function configSystemTests() {
       assert.strictEqual(config.paths.sass, './build-dev/assets/css')
     })
 
-    it('should return correct object for build mode', function verifyProdConfig() {
+    it('should return correct object for build mode', () => {
       const config = resolveConfig('build')
 
       assert.strictEqual(config.version, 'prod')
@@ -24,7 +25,7 @@ describe('Configuration System (Approach B)', function configSystemTests() {
       assert.strictEqual(config.paths.build, './build-prod')
     })
 
-    it('should return correct object for export mode', function verifyExportConfig() {
+    it('should return correct object for export mode', () => {
       const config = resolveConfig('export')
 
       assert.strictEqual(config.version, 'export')
@@ -33,21 +34,35 @@ describe('Configuration System (Approach B)', function configSystemTests() {
       assert.strictEqual(config.formatCode, true)
     })
 
-    it('should throw error for invalid build mode', function verifyInvalidModeError() {
-      assert.throws(function runInvalidMode() {
+    it('should throw error for invalid build mode', () => {
+      assert.throws(() => {
         resolveConfig('invalid')
       }, /Invalid BUILD_MODE/)
     })
 
-    it(' should throw error when mode is missing', function verifyMissingModeError() {
-      assert.throws(function runMissingMode() {
+    it('should throw error when mode is missing', () => {
+      assert.throws(() => {
         resolveConfig()
       }, /Invalid BUILD_MODE/)
     })
+
+    it('should expose only resolveConfig as named public API', () => {
+      assert.ok('resolveConfig' in configModule)
+      assert.ok(!('srcBase' in configModule))
+      assert.ok(!('routesBase' in configModule))
+      assert.ok(!('staticBase' in configModule))
+      assert.ok(!('tempBase' in configModule))
+      assert.ok(!('assetsBase' in configModule))
+      assert.ok(!('componentsPath' in configModule))
+      assert.ok(!('sassBase' in configModule))
+      assert.ok(!('sassBootstrap' in configModule))
+      assert.ok(!('sassCustom' in configModule))
+      assert.ok(!('sassComponents' in configModule))
+    })
   })
 
-  describe('Path Consistency', function pathConsistencyTests() {
-    it('should have consistent asset path structure across modes', function verifyPathConsistency() {
+  describe('Path Consistency', () => {
+    it('should have consistent asset path structure across modes', () => {
       const dev = resolveConfig('dev')
       const prod = resolveConfig('build')
 
@@ -55,15 +70,24 @@ describe('Configuration System (Approach B)', function configSystemTests() {
       assert.ok(prod.paths.js.endsWith('/assets/js'))
       assert.ok(dev.sassBase.includes('/scss'))
     })
+
+    it('should split Sass watch scopes by compile target', () => {
+      const config = resolveConfig('dev')
+
+      assert.ok(config.bootstrapWatch.includes('./src/scss/bootstrap.scss'))
+      assert.ok(config.projectSassWatch.includes('./src/scss/components.scss'))
+      assert.ok(
+        config.routeSassWatch.includes('./src/scss/_route-abstracts.scss')
+      )
+    })
   })
 
-  describe('Lazy Environment Resolution', function environmentResolutionTests() {
-    it('should pick up SITE_BASE_URL from process.env at resolution time', function verifyBaseUrlResolution() {
+  describe('Lazy Environment Resolution', () => {
+    it('should pick up SITE_BASE_URL from process.env at resolution time', () => {
       const oldUrl = process.env.SITE_BASE_URL
       process.env.SITE_BASE_URL = 'http://test.local'
 
       const config = resolveConfig('dev')
-      assert.strictEqual(config.baseUrl, 'http://test.local')
       assert.strictEqual(config.faviconGen.url, 'http://test.local')
 
       process.env.SITE_BASE_URL = oldUrl

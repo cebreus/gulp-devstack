@@ -1,41 +1,62 @@
 import assert from 'node:assert/strict'
-import { describe, it } from 'node:test'
+import { afterEach, beforeEach, describe, it, mock } from 'node:test'
 
-import { getEsbuildConfig, processJs } from '../../gulp/tasks/process-js.js'
+import processJs, { getEsbuildConfig } from '../../gulp/tasks/process-js.js'
 
-describe('JS Pipeline (Unit)', function jsPipelineTests() {
-  const mockBuildConfig = {
+describe('JS Pipeline (Unit)', () => {
+  const MOCK_BUILD_CONFIG = {
     minifyJs: true,
     sourceMaps: false,
   }
 
-  describe('getEsbuildConfig', function esbuildConfigTests() {
-    it('should return default config when no options provided', function verifyDefaultConfig() {
-      const esConfig = getEsbuildConfig({}, mockBuildConfig)
+  describe('getEsbuildConfig', () => {
+    it('should return default config when no options provided', () => {
+      const esConfig = getEsbuildConfig({}, MOCK_BUILD_CONFIG)
       assert.strictEqual(esConfig.bundle, false)
       assert.strictEqual(esConfig.minify, true)
       assert.strictEqual(esConfig.sourcemap, false)
     })
 
-    it('should override global config with local options', function verifyConfigOverrides() {
+    it('should override global config with local options', () => {
       const esConfig = getEsbuildConfig(
         { minify: false, sourceMaps: true },
-        mockBuildConfig
+        MOCK_BUILD_CONFIG
       )
       assert.strictEqual(esConfig.minify, false)
       assert.strictEqual(esConfig.sourcemap, 'external')
     })
 
-    it('should use explicit ESM format by default', function verifyEsmFormat() {
-      const esConfig = getEsbuildConfig({}, mockBuildConfig)
+    it('should use explicit ESM format by default', () => {
+      const esConfig = getEsbuildConfig({}, MOCK_BUILD_CONFIG)
       assert.strictEqual(esConfig.format, 'esm')
     })
   })
 
-  describe('processJs Guard Clauses', function guardClauseTests() {
-    it('should resolve early when no files provided', async function verifyEmptyFileList() {
-      await processJs(mockBuildConfig, [], './dist')
-      await processJs(mockBuildConfig, null, './dist')
+  describe('processJs Guard Clauses', () => {
+    let mockConsoleWarn
+
+    beforeEach(() => {
+      mockConsoleWarn = mock.method(console, 'warn', () => {})
+    })
+
+    afterEach(() => {
+      mockConsoleWarn.mock.restore()
+    })
+
+    it('should resolve early when no files provided', async () => {
+      await processJs(MOCK_BUILD_CONFIG, [], './dist')
+      await processJs(MOCK_BUILD_CONFIG, null, './dist')
+
+      assert.strictEqual(
+        MOCK_BUILD_CONFIG.minifyJs,
+        true,
+        'Precondition: mock config must be prod-like'
+      )
+      assert.strictEqual(
+        mockConsoleWarn.mock.calls.length,
+        2,
+        'Should emit exactly one warn per empty call'
+      )
     })
   })
 })

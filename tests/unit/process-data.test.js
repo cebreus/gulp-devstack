@@ -9,160 +9,170 @@ import {
   buildPageData,
   buildRouteExpressionContext,
   resolvePageLocation,
-} from '../../gulp/utils/index.js'
+} from '../../gulp/utils/route-data.js'
 
-describe('Process Data Pure Logic', function processDataLogicTests() {
-  describe('resolveDataExpressions', function dataExpressionTests() {
-    const context = {
+describe('Process Data Pure Logic - resolveDataExpressions', () => {
+  const context = {
+    site: { version: '4.5.0' },
+    page: { title: 'Home' },
+  }
+
+  it('should leave plain strings untouched', () => {
+    const input = 'Hello World'
+    const result = resolveDataExpressions(input, context)
+    assert.strictEqual(result, 'Hello World')
+  })
+
+  it('should resolve simple Nunjucks expressions', () => {
+    const input = 'Version {{ site.version }}'
+    const result = resolveDataExpressions(input, context)
+    assert.strictEqual(result, 'Version 4.5.0')
+  })
+
+  it('should resolve expressions in nested objects', () => {
+    const input = {
+      hero: {
+        badge: 'v{{ site.version }}',
+        text: 'Welcome to {{ page.title }}',
+      },
+    }
+    const expected = {
+      hero: {
+        badge: 'v4.5.0',
+        text: 'Welcome to Home',
+      },
+    }
+    const result = resolveDataExpressions(input, context)
+    assert.deepStrictEqual(result, expected)
+  })
+
+  it('should resolve expressions in arrays', () => {
+    const input = ['{{ site.version }}', 'other']
+    const expected = ['4.5.0', 'other']
+    const result = resolveDataExpressions(input, context)
+    assert.deepStrictEqual(result, expected)
+  })
+
+  it('should handle invalid expressions gracefully by returning original string', () => {
+    const input = '{{ site.invalid.path }}'
+    let result
+    assert.doesNotThrow(() => {
+      result = resolveDataExpressions(input, context)
+    })
+    // Graceful degradation: must return a string (either empty or original)
+    assert.strictEqual(
+      typeof result,
+      'string',
+      'Result must be a string on invalid expression'
+    )
+  })
+
+  it('should throw an error for malformed nunjucks syntax', () => {
+    const input = '{% if true %}' // Missing endif causes a Nunjucks compile error
+    assert.throws(
+      () => resolveDataExpressions(input, context),
+      /\[ProcessData\] Failed to render expression/
+    )
+  })
+})
+
+describe('Process Data Pure Logic - buildRouteExpressionContext', () => {
+  it('should expose site and page objects for frontmatter rendering', () => {
+    const result = buildRouteExpressionContext({
+      frontmatter: { title: 'Home' },
+      siteConfig: { version: '4.5.0' },
+    })
+
+    assert.deepStrictEqual(result, {
       site: { version: '4.5.0' },
       page: { title: 'Home' },
-    }
-
-    it('should leave plain strings untouched', function verifyPlainStrings() {
-      const input = 'Hello World'
-      const result = resolveDataExpressions(input, context)
-      assert.strictEqual(result, 'Hello World')
-    })
-
-    it('should resolve simple Nunjucks expressions', function verifySimpleExpressions() {
-      const input = 'Version {{ site.version }}'
-      const result = resolveDataExpressions(input, context)
-      assert.strictEqual(result, 'Version 4.5.0')
-    })
-
-    it('should resolve expressions in nested objects', function verifyNestedObjectExpressions() {
-      const input = {
-        hero: {
-          badge: 'v{{ site.version }}',
-          text: 'Welcome to {{ page.title }}',
-        },
-      }
-      const expected = {
-        hero: {
-          badge: 'v4.5.0',
-          text: 'Welcome to Home',
-        },
-      }
-      const result = resolveDataExpressions(input, context)
-      assert.deepStrictEqual(result, expected)
-    })
-
-    it('should resolve expressions in arrays', function verifyArrayExpressions() {
-      const input = ['{{ site.version }}', 'other']
-      const expected = ['4.5.0', 'other']
-      const result = resolveDataExpressions(input, context)
-      assert.deepStrictEqual(result, expected)
-    })
-
-    it('should handle invalid expressions gracefully by returning original string', function verifyInvalidExpressions() {
-      const input = '{{ site.invalid.path }}'
-      assert.doesNotThrow(function runInvalidExpression() {
-        resolveDataExpressions(input, context)
-      })
     })
   })
+})
 
-  describe('buildRouteExpressionContext', function routeExpressionContextTests() {
-    it('should expose site and page objects for frontmatter rendering', function verifyExpressionContextShape() {
-      const result = buildRouteExpressionContext({
-        frontmatter: { title: 'Home' },
-        siteConfig: { version: '4.5.0' },
-      })
+describe('Process Data Pure Logic - resolvePageLocation', () => {
+  const routesRoot = './src/routes'
+  const absRoutesRoot = path.resolve(routesRoot)
 
-      assert.deepStrictEqual(result, {
-        site: { version: '4.5.0' },
-        page: { title: 'Home' },
-      })
-    })
+  it('should resolve root index correctly', () => {
+    const filePath = path.join(absRoutesRoot, 'index.md')
+    const result = resolvePageLocation(filePath, 'index', routesRoot)
+    assert.strictEqual(result.pagePath, '/')
+    assert.strictEqual(result.relativeDir, '')
   })
 
-  describe('resolvePageLocation', function pageLocationTests() {
-    const routesRoot = './src/routes'
-    const absRoutesRoot = path.resolve(routesRoot)
-
-    it('should resolve root index correctly', function verifyRootIndexLocation() {
-      const filePath = path.join(absRoutesRoot, 'index.md')
-      const result = resolvePageLocation(filePath, 'index', routesRoot)
-      assert.strictEqual(result.pagePath, '/')
-      assert.strictEqual(result.relativeDir, '')
-    })
-
-    it('should resolve nested index correctly', function verifyNestedIndexLocation() {
-      const filePath = path.join(absRoutesRoot, 'about/index.md')
-      const result = resolvePageLocation(filePath, 'index', routesRoot)
-      assert.strictEqual(result.pagePath, '/about/')
-      assert.strictEqual(result.relativeDir, 'about')
-    })
-
-    it('should resolve deep nested file correctly', function verifyDeepFileLocation() {
-      const filePath = path.join(absRoutesRoot, 'blog/2024/post.md')
-      const result = resolvePageLocation(filePath, 'post', routesRoot)
-      assert.strictEqual(result.pagePath, '/blog/2024/post')
-      assert.strictEqual(result.relativeDir, 'blog/2024')
-    })
+  it('should resolve nested index correctly', () => {
+    const filePath = path.join(absRoutesRoot, 'about/index.md')
+    const result = resolvePageLocation(filePath, 'index', routesRoot)
+    assert.strictEqual(result.pagePath, '/about/')
+    assert.strictEqual(result.relativeDir, 'about')
   })
 
-  describe('applySeoDefaults', function seoDefaultsTests() {
-    it('should generate canonical URL correctly', function verifyCanonicalUrl() {
-      const pageData = { title: 'Test' }
-      const siteConfig = { baseUrl: 'https://example.com' }
-      const result = applySeoDefaults(pageData, '/my-page', siteConfig)
+  it('should resolve deep nested file correctly', () => {
+    const filePath = path.join(absRoutesRoot, 'blog/2024/post.md')
+    const result = resolvePageLocation(filePath, 'post', routesRoot)
+    assert.strictEqual(result.pagePath, '/blog/2024/post')
+    assert.strictEqual(result.relativeDir, 'blog/2024')
+  })
+})
 
-      assert.strictEqual(
-        result.seo.canonicalSelf,
-        'https://example.com/my-page'
-      )
-      assert.strictEqual(result.openGraph.url, 'https://example.com/my-page')
-    })
+describe('Process Data Pure Logic - applySeoDefaults', () => {
+  it('should generate canonical URL correctly', () => {
+    const pageData = { title: 'Test' }
+    const siteConfig = { baseUrl: 'https://example.com' }
+    const result = applySeoDefaults(pageData, '/my-page', siteConfig)
 
-    it('should preserve existing SEO metadata', function verifySeoPreservation() {
-      const pageData = { seo: { title_suffix: ' - Custom' } }
-      const result = applySeoDefaults(pageData, '/', { baseUrl: '' })
-      assert.strictEqual(result.seo.title_suffix, ' - Custom')
-    })
+    assert.strictEqual(result.seo.canonicalSelf, 'https://example.com/my-page')
+    assert.strictEqual(result.openGraph.url, 'https://example.com/my-page')
   })
 
-  describe('buildPageData', function pageDataBuilderTests() {
-    it('should assemble full page payload with auto pageId', function verifyPagePayload() {
-      const frontmatter = { title: 'Hello' }
-      const content = '# Body'
-      const result = buildPageData({
-        frontmatter,
-        content,
-        fileName: 'my-file',
-        pagePath: '/blog/my-file',
-      })
+  it('should preserve existing SEO metadata', () => {
+    const pageData = { seo: { title_suffix: ' - Custom' } }
+    const result = applySeoDefaults(pageData, '/', { baseUrl: '' })
+    assert.strictEqual(result.seo.title_suffix, ' - Custom')
+  })
+})
 
-      assert.strictEqual(result.title, 'Hello')
-      assert.strictEqual(result.content, '# Body')
-      assert.strictEqual(result.pageId, 'my-file')
-      assert.strictEqual(result.path, '/blog/my-file')
+describe('Process Data Pure Logic - buildPageData', () => {
+  it('should assemble full page payload with auto pageId', () => {
+    const frontmatter = { title: 'Hello' }
+    const content = '# Body'
+    const result = buildPageData({
+      frontmatter,
+      content,
+      fileName: 'my-file',
+      pagePath: '/blog/my-file',
     })
 
-    it('should use "home" as pageId for root index', function verifyRootPageId() {
-      const result = buildPageData({
-        frontmatter: {},
-        content: '',
-        fileName: 'index',
-        pagePath: '/',
-      })
-      assert.strictEqual(result.pageId, 'home')
-    })
+    assert.strictEqual(result.title, 'Hello')
+    assert.strictEqual(result.content, '# Body')
+    assert.strictEqual(result.pageId, 'my-file')
+    assert.strictEqual(result.path, '/blog/my-file')
   })
 
-  describe('buildMenuData', function menuDataTests() {
-    it('should sort menu entries by order', function verifyMenuSorting() {
-      const result = buildMenuData([
-        { name: 'Second', order: 2 },
+  it('should use "home" as pageId for root index', () => {
+    const result = buildPageData({
+      frontmatter: {},
+      content: '',
+      fileName: 'index',
+      pagePath: '/',
+    })
+    assert.strictEqual(result.pageId, 'home')
+  })
+})
+
+describe('Process Data Pure Logic - buildMenuData', () => {
+  it('should sort menu entries by order', () => {
+    const result = buildMenuData([
+      { name: 'Second', order: 2 },
+      { name: 'First', order: 1 },
+    ])
+
+    assert.deepStrictEqual(result, {
+      menu: [
         { name: 'First', order: 1 },
-      ])
-
-      assert.deepStrictEqual(result, {
-        menu: [
-          { name: 'First', order: 1 },
-          { name: 'Second', order: 2 },
-        ],
-      })
+        { name: 'Second', order: 2 },
+      ],
     })
   })
 })
