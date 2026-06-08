@@ -25,12 +25,18 @@ const logger = loggerLib.createLogger('ProcessJs')
  * @returns {object} Esbuild configuration object
  */
 export function getEsbuildConfig(options = {}, buildConfig) {
-  const { bundle = false, outputFormat = 'esm', minify, sourceMaps } = options
+  const {
+    bundle = false,
+    outputFormat = 'esm',
+    minify,
+    sourceMaps,
+    entryPoints,
+  } = options
 
   const shouldMinify = minify ?? buildConfig.minifyJs
   const shouldGenerateSourceMaps = sourceMaps ?? buildConfig.sourceMaps
 
-  return {
+  const result = {
     bundle,
     format: outputFormat,
     minify: shouldMinify,
@@ -39,6 +45,12 @@ export function getEsbuildConfig(options = {}, buildConfig) {
     target: ['es2022'],
     logLevel: loggerLib.isDebugEnabled() ? 'info' : 'warning',
   }
+
+  if (entryPoints) {
+    result.entryPoints = entryPoints
+  }
+
+  return result
 }
 
 /**
@@ -70,22 +82,26 @@ export default async function processJs(
     return
   }
 
-  const { createGulpEsbuild } = await import('gulp-esbuild')
-  const gulpEsbuild = createGulpEsbuild()
+  const srcOptions = {
+    ...(options.base && { base: options.base }),
+    ...(options.cwd && { cwd: options.cwd }),
+  }
 
-  const esbuildConfig = getEsbuildConfig(options, config)
+  const resolvedEntryPoints = await glob(filePaths, srcOptions)
 
+  if (resolvedEntryPoints.length === 0) {
+    logger.debug('No files matched for JS processing, skipping esbuild.')
+    return
+  }
+
+  const gulpEsbuild = (await import('gulp-esbuild')).createGulpEsbuild()
+  const esbuildConfig = getEsbuildConfig(
+    { ...options, entryPoints: resolvedEntryPoints },
+    config
+  )
   logger.debug(
     `Processing JS with esbuild to ${pc.dim(outputDir)} (bundle: ${esbuildConfig.bundle}, minify: ${esbuildConfig.minify})`
   )
-
-  const srcOptions = {}
-  if (options.base) {
-    srcOptions.base = options.base
-  }
-  if (options.cwd) {
-    srcOptions.cwd = options.cwd
-  }
 
   const processedFiles = []
   const jsPipeline = gulp
@@ -107,23 +123,7 @@ export default async function processJs(
       })
     )
     .pipe(gulpEsbuild(esbuildConfig))
-    .pipe(
-      new Transform({
-        objectMode: true,
-        transform(file, _enc, cb) {
-          const isSourceMap = file.basename.endsWith('.js.map')
-
-          if (
-            esbuildConfig.minify &&
-            !isSourceMap &&
-            !file.basename.includes('.min.')
-          ) {
-            file.extname = `.min${file.extname}`
-          }
-          cb(null, file)
-        },
-      })
-    )
+    .pipe(createMinRenameTransform(esbuildConfig.minify))
     .pipe(gulp.dest(outputDir))
 
   jsPipeline.on('data', (file) => {
@@ -180,4 +180,23 @@ export async function processAllJs(config) {
     processJs(config, config.jsFiles, config.paths.js, sharedOptions),
     ...routeTasks,
   ])
+}
+
+/**
+ * Creates a transform stream to handle .min extension for minified files.
+ * @param {boolean} shouldMinify - Whether minification is enabled
+ * @returns {Transform} Gulp transform stream
+ */
+function createMinRenameTransform(shouldMinify) {
+  return new Transform({
+    objectMode: true,
+    transform(file, _enc, cb) {
+      const isSourceMap = file.basename.endsWith('.js.map')
+
+      if (shouldMinify && !isSourceMap && !file.basename.includes('.min.')) {
+        file.extname = `.min${file.extname}`
+      }
+      cb(null, file)
+    },
+  })
 }
