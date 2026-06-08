@@ -1,3 +1,4 @@
+import { Readable, Transform } from 'node:stream'
 import gulp from 'gulp'
 
 import loggerLib, {
@@ -9,6 +10,46 @@ import loggerLib, {
 
 const logger = loggerLib.createLogger('PurgeCss')
 
+const PURGECSS_SAFELIST = {
+  standard: [
+    'active',
+    'collapsing',
+    'collapse',
+    'collapsed',
+    'fade',
+    'offcanvas-backdrop',
+    'open',
+    'scroll',
+    'show',
+    'showing',
+    'hiding',
+    'alert-dismissible',
+    'modal-backdrop',
+    'modal-open',
+    'modal-static',
+    'header-search__result',
+  ],
+  greedy: [
+    /tooltip/,
+    /popover/,
+    /^bs-/,
+    /^modal-/,
+    /^dropdown-/,
+    /^navbar-/,
+    /^offcanvas-/,
+    /^accordion-/,
+    /^collapse/,
+    /^carousel-/,
+    /^active/,
+    /^show/,
+    /^is-/,
+    /^was-/,
+    /^sticky-/,
+    /^fixed-/,
+  ],
+  deep: [/^data-bs-popper/, /^tns/, /^sl/],
+}
+
 /**
  * Gulp Task: Optimizes CSS files by removing unused selectors.
  * Analyzes linked HTML files to determine which CSS rules are actually needed.
@@ -17,18 +58,15 @@ const logger = loggerLib.createLogger('PurgeCss')
  * @param {string} outputDir - Destination directory
  * @returns {Promise<void>} Resolves when purging is complete
  */
-export async function purgeCss(inputCss, inputHtml, outputDir) {
+export default async function purgeCss(inputCss, inputHtml, outputDir) {
   if (!inputCss || !inputHtml || !outputDir) {
     logger.warn(
       'PurgeCSS task skipped: invalid input/output parameters. Provide CSS input, HTML content sources, and an output directory.'
     )
-    const { Readable } = await import('node:stream')
     return Readable.from([])
   }
 
-  const mod = await import('gulp-purgecss')
-  const { Transform } = await import('node:stream')
-  const purgecss = mod.default || mod
+  const { default: purgecss } = await import('gulp-purgecss')
 
   const contentSources = (
     Array.isArray(inputHtml) ? inputHtml : [inputHtml]
@@ -36,55 +74,15 @@ export async function purgeCss(inputCss, inputHtml, outputDir) {
 
   const processedFiles = []
 
-  // Safelist contains selectors that should NEVER be purged,
-  // typically those added dynamically by JS (Bootstrap, sliders, etc.)
-  const purgingSafelist = {
-    standard: [
-      'active',
-      'collapsing',
-      'collapse',
-      'collapsed',
-      'fade',
-      'offcanvas-backdrop',
-      'open',
-      'scroll',
-      'show',
-      'showing',
-      'hiding',
-      'alert-dismissible',
-      'modal-backdrop',
-      'modal-open',
-      'modal-static',
-      'header-search__result',
-    ],
-    greedy: [
-      /tooltip/,
-      /popover/,
-      /^bs-/,
-      /^modal-/,
-      /^dropdown-/,
-      /^navbar-/,
-      /^offcanvas-/,
-      /^accordion-/,
-      /^collapse/,
-      /^carousel-/,
-      /^active/,
-      /^show/,
-      /^is-/,
-      /^was-/,
-      /^sticky-/,
-      /^fixed-/,
-    ],
-    deep: [/^data-bs-popper/, /^tns/, /^sl/],
-  }
-
   const purgePipeline = gulp
     .src(inputCss)
     .pipe(
       new Transform({
         objectMode: true,
         transform(file, _enc, cb) {
-          if (isPrivateFile(file.path)) return cb(null, null)
+          if (isPrivateFile(file.path)) {
+            return cb(null, null)
+          }
           cb(null, file)
         },
       })
@@ -92,7 +90,7 @@ export async function purgeCss(inputCss, inputHtml, outputDir) {
     .pipe(
       purgecss({
         content: contentSources,
-        safelist: purgingSafelist,
+        safelist: PURGECSS_SAFELIST,
       })
     )
     .pipe(gulp.dest(outputDir))
@@ -117,5 +115,3 @@ export async function purgeCss(inputCss, inputHtml, outputDir) {
     throw new Error('PurgeCSS operation failed.', { cause: error })
   }
 }
-
-export default purgeCss

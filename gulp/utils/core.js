@@ -6,6 +6,8 @@ import { finished } from 'node:stream/promises'
 
 import logger from './logger.js'
 
+const MAX_TRACKED_LOGS = 100
+
 /**
  * Gulp Transform: Validates file integrity during the pipeline.
  * Throws an error if a file is empty or corrupted, preventing silent build failures.
@@ -23,7 +25,9 @@ export function ensureFileIntegrity({
   return new Transform({
     objectMode: true,
     transform(file, _enc, cb) {
-      if (skipIntegrity || file.isNull()) return cb(null, file)
+      if (skipIntegrity || file.isNull()) {
+        return cb(null, file)
+      }
       if (file.isStream()) {
         return cb(
           new Error(`[${taskName}] Streaming is not supported. Use buffers.`)
@@ -55,12 +59,20 @@ export function ensureFileIntegrity({
  */
 export function getEnv(key, fallback, env = process.env) {
   const rawValue = env[key]
-  if (rawValue === undefined) return fallback
+  if (rawValue === undefined) {
+    return fallback
+  }
   const value = String(rawValue)
   const lower = value.toLowerCase()
-  if (lower === 'true') return true
-  if (lower === 'false') return false
-  if (!isNaN(Number(value)) && value.trim() !== '') return Number(value)
+  if (lower === 'true') {
+    return true
+  }
+  if (lower === 'false') {
+    return false
+  }
+  if (!isNaN(Number(value)) && value.trim() !== '') {
+    return Number(value)
+  }
   return rawValue
 }
 
@@ -70,7 +82,9 @@ export function getEnv(key, fallback, env = process.env) {
  * @returns {boolean} True for enabled-like values
  */
 export function toBooleanFlag(value) {
-  if (typeof value === 'boolean') return value
+  if (typeof value === 'boolean') {
+    return value
+  }
   const normalized = String(value || '')
     .trim()
     .toLowerCase()
@@ -101,7 +115,6 @@ export async function ensureDirectoryExists(targetPath, loggerInstance) {
     return
   }
 
-  // Node.js native mkdir with recursive: true handles the existence check automatically (no-op if exists)
   await fs.promises.mkdir(targetPath, { recursive: true })
   if (loggerInstance) {
     loggerInstance.debug(`Ensured directory: ${getRelativePath(targetPath)}`)
@@ -114,7 +127,9 @@ export async function ensureDirectoryExists(targetPath, loggerInstance) {
  * @returns {boolean} True if the file or any parent directory in its path is private
  */
 export function isPrivateFile(filePath) {
-  if (!filePath) return false
+  if (!filePath) {
+    return false
+  }
   const segments = filePath.split(/[/\\]/)
   return segments.some((segment) => segment.startsWith('_'))
 }
@@ -138,13 +153,14 @@ export function toKebabCase(input) {
  * @returns {string} The base directory
  */
 export function getDirFromGlob(pattern) {
-  if (!pattern || pattern.length === 0) return ''
+  if (!pattern || pattern.length === 0) {
+    return ''
+  }
 
   const base = Array.isArray(pattern) ? pattern[0] : pattern
   const firstStarIndex = base.indexOf('*')
 
   if (firstStarIndex === -1) {
-    // If no globstar, assume it might be a directory path itself
     return path.dirname(base)
   }
 
@@ -178,7 +194,13 @@ export function handleEmptyPaths(target, logMessage) {
  * @returns {Promise<import('node:stream').Stream>} Promise resolving with the stream upon completion
  */
 export async function streamToPromise(stream) {
-  if (!stream || typeof stream.on !== 'function') return stream
+  if (!stream || typeof stream.on !== 'function') {
+    return stream
+  }
+
+  if (typeof stream.resume === 'function') {
+    stream.resume()
+  }
 
   try {
     await finished(stream)
@@ -214,22 +236,10 @@ export function attachPipelineLogging({
   emptyMessage,
   errorMessage,
 }) {
-  const MAX_TRACKED_LOGS = 100
-  const format =
-    typeof formatFilePath === 'function' ? formatFilePath : (v) => v
-
-  const cleanup = function removeListeners() {
-    // We don't destroy on success as Gulp might need the stream for next pipe,
-    // but we remove listeners to avoid leaks.
-    stream.removeAllListeners('end')
-    stream.removeAllListeners('error')
-    stream.removeAllListeners('data')
-  }
-
-  stream.on('end', function onStreamEnd() {
+  function onStreamEnd() {
     if (trackedFiles.length > 0) {
       const displayCount = Math.min(trackedFiles.length, MAX_TRACKED_LOGS)
-      const list = trackedFiles.slice(0, displayCount).map(format)
+      const list = trackedFiles.slice(0, displayCount).map(formatFilePath)
 
       if (trackedFiles.length > MAX_TRACKED_LOGS) {
         list.push(`... and ${trackedFiles.length - MAX_TRACKED_LOGS} more`)
@@ -241,15 +251,23 @@ export function attachPipelineLogging({
       loggerInstance.debug(emptyMessage)
     }
     cleanup()
-  })
+  }
 
-  stream.on('error', function onStreamError(err) {
+  function onStreamError(err) {
     loggerInstance.error(`${errorMessage} Cause: ${err.message}`)
     if (typeof stream.destroy === 'function') {
       stream.destroy()
     }
     cleanup()
-  })
+  }
+
+  function cleanup() {
+    stream.removeListener('end', onStreamEnd)
+    stream.removeListener('error', onStreamError)
+  }
+
+  stream.on('end', onStreamEnd)
+  stream.on('error', onStreamError)
 
   return stream
 }
@@ -288,8 +306,12 @@ export async function cleanupDir(dir, regex, label, loggerInstance) {
   try {
     const entries = await fs.promises.readdir(dir, { withFileTypes: true })
     for (const entry of entries) {
-      if (entry.isDirectory()) continue
-      if (regex.test(entry.name)) continue
+      if (entry.isDirectory()) {
+        continue
+      }
+      if (regex.test(entry.name)) {
+        continue
+      }
       await fs.promises.unlink(path.join(dir, entry.name))
       loggerInstance.info(`Removed ${label}: ${entry.name}`)
     }

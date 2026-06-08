@@ -1,4 +1,3 @@
-import fs from 'node:fs/promises'
 import path from 'node:path'
 import { Transform } from 'node:stream'
 import matter from 'gray-matter'
@@ -6,27 +5,18 @@ import nunjucks from 'nunjucks'
 import gulp from 'gulp'
 
 import { siteDefaults } from '../../src/config/site.js'
-import loggerLib, {
-  buildMenuData,
+import loggerLib, { getRelativePath, isPrivateFile } from '../utils/index.js'
+import {
   buildPageData,
   buildRouteExpressionContext,
   extractMenuEntry,
-  getMenuDataArtifactPath,
-  getPageDataArtifactPath,
-  isPrivateFile,
   resolvePageLocation,
-} from '../utils/index.js'
+  writeMenuDataArtifact,
+  writePageDataArtifact,
+} from '../utils/route-data.js'
 
 const logger = loggerLib.createLogger('ProcessData')
 
-/**
- * Internal: Renders a Nunjucks expression within a frontmatter string value.
- * Throws if the expression is syntactically invalid — caller must handle.
- * @param {string} value - The string to evaluate.
- * @param {Record<string, unknown>} context - Data context.
- * @returns {string} Processed string.
- * @private
- */
 function renderExpression(value, context) {
   if (!value.includes('{{') && !value.includes('{%')) {
     return value
@@ -57,37 +47,85 @@ export function resolveDataExpressions(data, context) {
   }
 
   if (data !== null && typeof data === 'object') {
-    const entries = Object.entries(data).map(([key, value]) => [
-      key,
-      resolveDataExpressions(value, context),
-    ])
-    return Object.fromEntries(entries)
+    return Object.fromEntries(
+      Object.entries(data).map(([key, value]) => [
+        key,
+        resolveDataExpressions(value, context),
+      ])
+    )
   }
 
   return data
 }
 
-/**
- * Internal: Writes page JSON artifact to disk.
- * @param {object} params - Write parameters.
- * @param {string} params.dest - Destination base directory.
- * @param {string} params.routesRoot - Root of the source routes.
- * @param {string} params.filePath - Original file path.
- * @param {Record<string, unknown>} params.data - Data to write.
- * @returns {Promise<string>} Relative path to the generated file.
- * @private
- */
-async function writeDataArtifact({ dest, routesRoot, filePath, data }) {
-  const outputFilePath = getPageDataArtifactPath({
-    artifactsBase: dest,
-    routesBase: routesRoot,
-    filePath,
+function logDuplicatePageId(usedPageIds, jsonData, filePath) {
+  if (usedPageIds.has(jsonData.pageId)) {
+    logger.warn(
+      `Duplicate pageId '${jsonData.pageId}' in ${filePath}. This may cause routing conflicts.`
+    )
+  }
+
+  usedPageIds.add(jsonData.pageId)
+}
+
+function buildMenuEntry(frontmatter, fileName, pagePath, pageId) {
+  const menuEntry = extractMenuEntry(frontmatter, fileName)
+  if (!menuEntry.show) {
+    return null
+  }
+
+  return {
+    ...menuEntry,
+    path: pagePath,
+    url: pagePath,
+    pageId,
+  }
+}
+
+function createExpressionContext(frontmatter) {
+  return buildRouteExpressionContext({
+    frontmatter,
+    siteConfig: siteDefaults,
+  })
+}
+
+async function processContentFile(file, routesRoot, dest, usedPageIds) {
+  const rawContent = file.contents.toString().trim()
+  const fileName = path.basename(file.path, path.extname(file.path))
+
+  if (!rawContent) {
+    logger.warn(`Skipping empty data file: ${path.basename(file.path)}`)
+    return null
+  }
+
+  const { data: frontmatter, content } = matter(rawContent)
+  const { pagePath } = resolvePageLocation(file.path, fileName, routesRoot)
+  const renderedFrontmatter = resolveDataExpressions(
+    frontmatter,
+    createExpressionContext(frontmatter)
+  )
+
+  const jsonData = buildPageData({
+    frontmatter: renderedFrontmatter,
+    content,
+    fileName,
+    pagePath,
+    options: { homePageId: 'home' },
+    siteConfig: siteDefaults,
   })
 
-  await fs.mkdir(path.dirname(outputFilePath), { recursive: true })
-  await fs.writeFile(outputFilePath, JSON.stringify(data, null, 2))
+  logDuplicatePageId(usedPageIds, jsonData, file.path)
 
-  return path.relative(process.cwd(), outputFilePath)
+  return {
+    jsonData,
+    menuEntry: buildMenuEntry(frontmatter, fileName, pagePath, jsonData.pageId),
+    outputFilePath: await writePageDataArtifact({
+      pageData: jsonData,
+      filePath: file.path,
+      artifactsBase: dest,
+      routesBase: routesRoot,
+    }),
+  }
 }
 
 /**
@@ -99,8 +137,11 @@ async function writeDataArtifact({ dest, routesRoot, filePath, data }) {
  * @param {string} [options.routesRoot] - Root directory for routes
  * @returns {import('node:stream').Stream} Gulp stream
  */
-export function processData(src, dest, options = {}) {
-  const routesRoot = options.routesRoot || './src/routes'
+export default function processData(
+  src,
+  dest,
+  { routesRoot = './src/routes' } = {}
+) {
   logger.debug(
     `Processing dataset from ${src} to ${dest} (routesRoot: ${routesRoot})`
   )
@@ -112,83 +153,30 @@ export function processData(src, dest, options = {}) {
 
   const dataTransform = new Transform({
     objectMode: true,
-    async construct(cb) {
-      try {
-        await fs.mkdir(dest, { recursive: true })
-        cb()
-      } catch (err) {
-        cb(err)
-      }
-    },
     async transform(file, _enc, cb) {
       if (isPrivateFile(file.path)) {
         logger.verbose(`Skipping private content: ${path.basename(file.path)}`)
         return cb()
       }
 
-      const rawContent = file.contents.toString().trim()
-      const fileName = path.basename(file.path, path.extname(file.path))
-
-      if (!rawContent) {
-        logger.warn(`Skipping empty data file: ${path.basename(file.path)}`)
-        return cb()
-      }
-
       try {
-        const { data: frontmatter, content } = matter(rawContent)
-        const { pagePath } = resolvePageLocation(
-          file.path,
-          fileName,
-          routesRoot
-        )
-
-        // Resolve Nunjucks expressions within the frontmatter
-        const expressionContext = buildRouteExpressionContext({
-          frontmatter,
-          siteConfig: siteDefaults,
-        })
-        const renderedFrontmatter = resolveDataExpressions(
-          frontmatter,
-          expressionContext
-        )
-
-        const jsonData = buildPageData({
-          frontmatter: renderedFrontmatter,
-          content,
-          fileName,
-          pagePath,
-          options: { homePageId: 'home' },
-          siteConfig: siteDefaults,
-        })
-
-        if (usedPageIds.has(jsonData.pageId)) {
-          logger.warn(
-            `Duplicate pageId '${jsonData.pageId}' in ${file.path}. This may cause routing conflicts.`
-          )
-        }
-        usedPageIds.add(jsonData.pageId)
-
-        // Menu processing
-        const menuEntry = extractMenuEntry(frontmatter, fileName)
-        if (menuEntry.show) {
-          globalMenuItems.push({
-            ...menuEntry,
-            path: pagePath,
-            url: pagePath,
-            pageId: jsonData.pageId,
-          })
-        }
-
-        const artifactPath = await writeDataArtifact({
-          dest,
+        const result = await processContentFile(
+          file,
           routesRoot,
-          filePath: file.path,
-          data: jsonData,
-        })
+          dest,
+          usedPageIds
+        )
+        if (!result) {
+          cb()
+          return
+        }
 
+        const { jsonData, menuEntry, outputFilePath } = result
+        if (menuEntry) {
+          globalMenuItems.push(menuEntry)
+        }
         processedCount += 1
-        generatedFiles.push(artifactPath)
-
+        generatedFiles.push(getRelativePath(outputFilePath))
         file.contents = Buffer.from(JSON.stringify(jsonData))
         this.push(file)
         cb()
@@ -199,10 +187,8 @@ export function processData(src, dest, options = {}) {
     },
     async flush(cb) {
       try {
-        const menuFile = getMenuDataArtifactPath(dest)
-        const menuData = buildMenuData(globalMenuItems)
-        await fs.writeFile(menuFile, JSON.stringify(menuData, null, 2))
-        generatedFiles.push(path.relative(process.cwd(), menuFile))
+        const menuFile = await writeMenuDataArtifact(dest, globalMenuItems)
+        generatedFiles.push(getRelativePath(menuFile))
 
         logger.info(`Dataset complete. ${processedCount} entries created.`)
         logger.list('Generated artifacts', generatedFiles)
@@ -216,24 +202,3 @@ export function processData(src, dest, options = {}) {
 
   return gulp.src(src).pipe(dataTransform)
 }
-
-/**
- * High-level orchestration for dataset generation based on build mode.
- * @param {object} config - Project configuration provider
- * @param {boolean} [fullBuild] - Whether to include site-wide metadata (true) or just pages (false)
- * @returns {import('gulp').TaskFunction | import('node:stream').Stream} Gulp parallel task result or stream
- */
-export function processAllData(config, fullBuild = false) {
-  const datasetPages = () =>
-    processData(config.datasetPagesSource, config.datasetPagesBuild)
-
-  if (fullBuild) {
-    const datasetSite = () =>
-      processData(config.siteConfigFile, config.tempBase)
-    return gulp.parallel(datasetSite, datasetPages)
-  }
-
-  return datasetPages
-}
-
-export default processData

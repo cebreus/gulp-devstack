@@ -11,7 +11,7 @@ const logger = loggerLib.createLogger('Clean')
  * @returns {Promise<string[]>} List of successfully deleted paths
  * @throws {Error} If the deletion operation fails
  */
-export async function cleanBuild(paths) {
+export default async function cleanBuild(paths) {
   if (handleEmptyPaths(paths, 'No paths provided for cleaning')) {
     return []
   }
@@ -33,5 +33,3 @@ export async function cleanBuild(paths) {
     throw new Error(`Deletion failed: ${error.message}`, { cause: error })
   }
 }
-
-export default cleanBuild

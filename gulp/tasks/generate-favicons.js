@@ -28,7 +28,11 @@ const logger = loggerLib.createLogger('GenerateFavicons')
  * @returns {Promise<void>} Resolves when all files are written
  * @throws {Error} If the source image is missing or generation fails
  */
-export async function generateFavicons(sourcePath, outputDir, faviconConfig) {
+export default async function generateFavicons(
+  sourcePath,
+  outputDir,
+  faviconConfig
+) {
   if (!sourcePath || !outputDir) {
     throw new Error('Favicon task skipped: invalid source or destination.', {
       cause: new Error(`src: ${sourcePath}, dest: ${outputDir}`),
@@ -36,14 +40,12 @@ export async function generateFavicons(sourcePath, outputDir, faviconConfig) {
   }
 
   try {
-    try {
-      await fs.access(sourcePath)
-      logger.debug(`Found favicon source: ${sourcePath}`)
-    } catch {
+    await fs.access(sourcePath).catch((error) => {
       throw new Error(`Favicon source image not found at: ${sourcePath}`, {
-        cause: new Error('Ensure the source image exists in src/assets/icons/'),
+        cause: error,
       })
-    }
+    })
+    logger.debug(`Found favicon source: ${sourcePath}`)
 
     await fs.mkdir(outputDir, { recursive: true })
     logger.debug('Starting generation with provided configuration...')
@@ -79,5 +81,3 @@ export async function generateFavicons(sourcePath, outputDir, faviconConfig) {
     throw error
   }
 }
-
-export default generateFavicons

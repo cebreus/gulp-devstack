@@ -3,23 +3,16 @@ import { readFileSync } from 'node:fs'
 const pkg = JSON.parse(readFileSync('./package.json', 'utf8'))
 
 // --- Static Path Constants ---
-export const srcBase = './src'
-export const routesBase = './src/routes'
-export const staticBase = './public'
-export const tempBase = process.env.GULP_TEMP_DIR || '.temp'
-export const assetsBase = `${srcBase}/assets`
-export const componentsPath = `${srcBase}/lib/components`
-export const sassBase = `${srcBase}/scss`
-export const sassCore = `${sassBase}/bootstrap.scss`
-export const sassCustom = `${sassBase}/custom.scss`
-export const sassUtils = `${sassBase}/utils.scss`
-export const sassComponentsGlob = `${srcBase}/lib/components/**/*.scss`
-export const sassHeader = `${componentsPath}/header/header.scss`
-export const sassHero = `${componentsPath}/hero/hero.scss`
-export const bootstrapCssSource =
-  './node_modules/bootstrap/dist/css/bootstrap.css'
-export const bootstrapCssMin =
-  './node_modules/bootstrap/dist/css/bootstrap.min.css'
+const srcBase = './src'
+const routesBase = './src/routes'
+const staticBase = './public'
+const tempBase = process.env.GULP_TEMP_DIR || '.temp'
+const assetsBase = `${srcBase}/assets`
+const componentsPath = `${srcBase}/lib/components`
+const sassBase = `${srcBase}/scss`
+const sassBootstrap = `${sassBase}/bootstrap.scss`
+const sassCustom = `${sassBase}/custom.scss`
+const sassComponents = `${sassBase}/components.scss`
 
 // --- Shared Assets Defaults ---
 const imageOptimizationBase = {
@@ -50,7 +43,6 @@ const MODES = {
     concatFiles: true,
     optimizeImages: false,
     sourceMaps: true,
-    generateFavicons: false,
   },
   build: {
     version: 'prod',
@@ -60,7 +52,6 @@ const MODES = {
     concatFiles: true,
     optimizeImages: true,
     sourceMaps: false,
-    generateFavicons: true,
   },
   export: {
     version: 'export',
@@ -70,7 +61,6 @@ const MODES = {
     concatFiles: true,
     optimizeImages: true,
     sourceMaps: false,
-    generateFavicons: true,
     formatCode: true,
   },
 }
@@ -86,7 +76,6 @@ const MODES = {
  *   concatFiles: boolean,
  *   optimizeImages: boolean,
  *   sourceMaps: boolean,
- *   generateFavicons: boolean,
  *   formatCode?: boolean,
  *   srcBase: string,
  *   routesBase: string,
@@ -95,21 +84,19 @@ const MODES = {
  *   assetsBase: string,
  *   componentsPath: string,
  *   sassBase: string,
- *   sassCore: string,
+ *   sassBootstrap: string,
  *   sassCustom: string,
- *   sassUtils: string,
- *   sassComponentsGlob: string,
- *   sassHero: string,
- *   bootstrapCssSource: string,
- *   bootstrapCssMin: string,
- *   sassWatch: string[],
+ *   sassComponents: string,
+ *   bootstrapWatch: string[],
+ *   projectSassWatch: string[],
+ *   routeSassWatch: string[],
+ *   routeJsWatch: string[],
  *   jsFiles: string,
  *   imagesJpg: string,
  *   imagesPng: string,
  *   imagesSvg: string,
  *   imagesBase: string,
  *   iconsBase: string,
- *   siteConfigFile: string,
  *   datasetPagesSource: string,
  *   datasetPagesBuild: string,
  *   fontloadFile: string,
@@ -118,8 +105,6 @@ const MODES = {
  *     build: string,
  *     sass: string,
  *     js: string,
- *     fonts: string,
- *     icons: string,
  *     images: string,
  *     favicons: string
  *   },
@@ -145,8 +130,7 @@ const MODES = {
  *     max_preserve_newlines: number,
  *     end_with_newline: boolean
  *   },
- *   fontLoad: { fontsDir: string, cssDir: string, cssFilename: string },
- *   baseUrl: string|undefined
+ *   fontLoad: { fontsDir: string, cssDir: string, cssFilename: string }
  * }} Flat configuration object
  */
 export function resolveConfig(mode) {
@@ -171,19 +155,28 @@ export function resolveConfig(mode) {
     componentsPath,
     // SCSS specifics
     sassBase,
-    sassCore,
+    sassBootstrap,
     sassCustom,
-    sassUtils,
-    sassComponentsGlob,
-    sassHeader,
-    sassHero,
-    bootstrapCssSource,
-    bootstrapCssMin,
-    sassWatch: [
-      `${sassBase}/**/*.scss`,
-      `${componentsPath}/**/*.scss`,
-      `${routesBase}/**/*.scss`,
+    sassComponents,
+    bootstrapWatch: [
+      sassBootstrap,
+      `${sassBase}/globals.scss`,
+      `${sassBase}/variables.scss`,
+      `${sassBase}/variables-dark.scss`,
     ],
+    projectSassWatch: [
+      sassCustom,
+      sassComponents,
+      `${componentsPath}/**/*.scss`,
+      `${sassBase}/globals.scss`,
+      `${sassBase}/variables.scss`,
+      `${sassBase}/variables-dark.scss`,
+    ],
+    routeSassWatch: [
+      `${routesBase}/**/*.scss`,
+      `${sassBase}/_route-abstracts.scss`,
+    ],
+    routeJsWatch: [`${routesBase}/**/*.js`],
     // JS specifics
     jsFiles: `${srcBase}/js/**/*.js`,
     // Images
@@ -193,7 +186,6 @@ export function resolveConfig(mode) {
     imagesBase: `${assetsBase}/images`,
     iconsBase: `${assetsBase}/icons`,
     // Data/Templates
-    siteConfigFile: `${srcBase}/config/site.js`,
     datasetPagesSource: `${routesBase}/**/*.md`,
     datasetPagesBuild: `${tempBase}/pages`,
     fontloadFile: `${srcBase}/config/fonts.list`,
@@ -203,8 +195,6 @@ export function resolveConfig(mode) {
       build: buildBase,
       sass: `${assetsDest}/css`,
       js: `${assetsDest}/js`,
-      fonts: `${assetsDest}/fonts`,
-      icons: `${assetsDest}/icons`,
       images: `${assetsDest}/images`,
       favicons: `${assetsDest}/favicons`,
     },
@@ -213,13 +203,14 @@ export function resolveConfig(mode) {
       'assets/css/fonts*.css',
       'assets/css/bootstrap*.css',
       'assets/css/custom*.css',
-      'assets/css/header*.css',
-      'assets/css/hero*.css',
+      'assets/css/components*.css',
       'assets/js/bootstrap*.js',
       'assets/js/custom*.js',
       'assets/js/main*.js',
     ],
     // Tools config
+    // `sourceMaps` enables development sourcemaps for JS and Sass.
+    // Production and export builds keep source maps disabled.
     imageOptimization: {
       ...imageOptimizationBase,
       jpg: { ...imageOptimizationBase.jpg, lqs: mode !== 'dev' },
@@ -231,11 +222,6 @@ export function resolveConfig(mode) {
       end_with_newline: true,
     },
     fontLoad: { fontsDir: 'fonts/', cssDir: 'css/', cssFilename: 'fonts.css' },
-    // Globals
-    baseUrl: process.env.SITE_BASE_URL,
     skipIntegrity: process.env.GULP_SKIP_INTEGRITY === 'true',
   }
 }
-
-// Backward compatibility helper for legacy tasks not yet refactored
-export const getConfig = resolveConfig

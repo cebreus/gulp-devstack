@@ -1,6 +1,7 @@
 import path from 'node:path'
 import { dest, src } from 'gulp'
 
+import { stripTrailingLineWhitespace } from '../utils/html-output.js'
 import loggerLib, { isPrivateFile, streamToPromise } from '../utils/index.js'
 
 const logger = loggerLib.createLogger('GenerateSri')
@@ -12,7 +13,7 @@ const logger = loggerLib.createLogger('GenerateSri')
  * @param {string} outputDir - Destination directory
  * @returns {Promise<import('node:stream').Stream>} Gulp stream
  */
-export async function generateSri(input, outputDir) {
+export default async function generateSri(input, outputDir) {
   if (!input || !outputDir) {
     logger.warn('SRI task skipped: invalid input or output parameters.')
     const { Readable } = await import('node:stream')
@@ -20,7 +21,6 @@ export async function generateSri(input, outputDir) {
   }
 
   const { default: sri } = await import('gulp-sri-hash')
-  const { default: htmlmin } = await import('gulp-htmlmin')
   const { Transform } = await import('node:stream')
 
   const sriPipeline = src(input)
@@ -28,7 +28,9 @@ export async function generateSri(input, outputDir) {
       new Transform({
         objectMode: true,
         transform(file, _enc, cb) {
-          if (isPrivateFile(file.path)) return cb(null, null)
+          if (isPrivateFile(file.path)) {
+            return cb(null, null)
+          }
           cb(null, file)
         },
       })
@@ -44,11 +46,17 @@ export async function generateSri(input, outputDir) {
         },
       })
     )
-
     .pipe(
-      htmlmin({
-        collapseWhitespace: true,
-        collapseBooleanAttributes: true,
+      new Transform({
+        objectMode: true,
+        transform(file, _enc, cb) {
+          if (file?.contents) {
+            file.contents = Buffer.from(
+              stripTrailingLineWhitespace(file.contents.toString())
+            )
+          }
+          cb(null, file)
+        },
       })
     )
     .pipe(dest(outputDir))
@@ -61,5 +69,3 @@ export async function generateSri(input, outputDir) {
     throw error
   }
 }
-
-export default generateSri

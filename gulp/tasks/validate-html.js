@@ -12,7 +12,7 @@ const logger = loggerLib.createLogger('ValidateHtml')
  * @param {string|string[]} input - Glob pattern(s) for HTML files to validate
  * @returns {import('node:stream').Stream} Gulp stream
  */
-export function validateHtml(input) {
+export default function validateHtml(input) {
   const validator = new HtmlValidate({
     extends: ['html-validate:recommended'],
     rules: {
@@ -28,10 +28,15 @@ export function validateHtml(input) {
     new Transform({
       objectMode: true,
       transform: function (file, _enc, cb) {
-        if (isPrivateFile(file.path)) return cb(null, null)
-        if (file.isNull()) return cb(null, file)
-        if (file.isStream())
+        if (isPrivateFile(file.path)) {
+          return cb(null, null)
+        }
+        if (file.isNull()) {
+          return cb(null, file)
+        }
+        if (file.isStream()) {
           return cb(new Error('Streaming is not supported for validation.'))
+        }
         ;(async () => {
           try {
             const report = await validator.validateString(
@@ -59,8 +64,11 @@ export function validateHtml(input) {
             const isError = msg.severity === 2
             const logMethod = isError ? 'error' : 'warn'
 
-            if (isError) errorCount += 1
-            else warningCount += 1
+            if (isError) {
+              errorCount += 1
+            } else {
+              warningCount += 1
+            }
 
             logger[logMethod](
               `${getRelativePath(result.filePath)}:${msg.line}:${msg.column} - ${msg.message} (${msg.ruleId})`
@@ -72,9 +80,15 @@ export function validateHtml(input) {
           const summaryMessage = `HTML validation finished: ${errorCount} errors, ${warningCount} warnings.`
           if (errorCount > 0) {
             logger.error(summaryMessage)
-          } else {
-            logger.warn(summaryMessage)
+            cb(
+              new Error(summaryMessage, {
+                cause: new Error('HTML validation reported blocking errors.'),
+              })
+            )
+            return
           }
+
+          logger.warn(summaryMessage)
         } else {
           logger.verbose('HTML validation passed successfully (0 issues).')
         }
@@ -85,5 +99,3 @@ export function validateHtml(input) {
 
   return validationPipeline
 }
-
-export default validateHtml
