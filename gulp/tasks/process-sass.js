@@ -281,6 +281,7 @@ export async function compileProjectStyles(config, mode) {
     processSass(config, config.sassComponents, config.paths.sass, {
       ...options,
       outputFilename: 'components.css',
+      skipIntegrity: true,
     }),
   ])
   return flattenWrittenFiles(results)

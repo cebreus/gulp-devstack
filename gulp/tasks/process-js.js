@@ -182,11 +182,6 @@ export async function processAllJs(config) {
   ])
 }
 
-/**
- * Creates a transform stream to handle .min extension for minified files.
- * @param {boolean} shouldMinify - Whether minification is enabled
- * @returns {Transform} Gulp transform stream
- */
 function createMinRenameTransform(shouldMinify) {
   return new Transform({
     objectMode: true,
