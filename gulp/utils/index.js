@@ -29,6 +29,7 @@ export {
   getLqsPlaceholder,
   optimizeWithSharp,
 } from './image-helpers.js'
+export { calculateReadingTime } from './content-metrics.js'
 export { createLogger } from './logger.js'
 export { loggerLib as logger }
 

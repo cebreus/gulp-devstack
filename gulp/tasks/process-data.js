@@ -5,7 +5,11 @@ import nunjucks from 'nunjucks'
 import gulp from 'gulp'
 
 import { siteDefaults } from '../../src/config/site.js'
-import loggerLib, { getRelativePath, isPrivateFile } from '../utils/index.js'
+import loggerLib, {
+  calculateReadingTime,
+  getRelativePath,
+  isPrivateFile,
+} from '../utils/index.js'
 import {
   buildPageData,
   buildRouteExpressionContext,
@@ -113,6 +117,8 @@ async function processContentFile(file, routesRoot, dest, usedPageIds) {
     options: { homePageId: 'home' },
     siteConfig: siteDefaults,
   })
+
+  jsonData.readingTime = calculateReadingTime(content)
 
   logDuplicatePageId(usedPageIds, jsonData, file.path)
 

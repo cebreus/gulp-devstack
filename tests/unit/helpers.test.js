@@ -24,7 +24,7 @@ describe('Helpers Utility - public API boundaries', () => {
     assert.ok(!('buildPageData' in utilsModule))
     assert.ok(!('buildRouteExpressionContext' in utilsModule))
     assert.ok(!('buildTemplateContext' in utilsModule))
-    assert.ok(!('calculateOutputPath' in utilsModule))
+    assert.equal(typeof utilsModule.calculateReadingTime, 'function')
     assert.equal(typeof utilsModule.cleanHtmlComments, 'function')
     assert.equal(typeof utilsModule.createLogger, 'function')
     assert.ok(!('deepTrimStrings' in utilsModule))

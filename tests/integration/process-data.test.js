@@ -42,6 +42,8 @@ describe('processData Integration', () => {
 
       assert.strictEqual(indexData.title, 'Home')
       assert.strictEqual(indexData.content, '# Home Content')
+      assert.strictEqual(indexData.readingTime.words, 2)
+      assert.strictEqual(indexData.readingTime.minutes, 1)
       assert.ok(Array.isArray(menuData.menu))
       assert.strictEqual(menuData.menu[0].name, 'Home')
     })
