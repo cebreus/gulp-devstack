@@ -32,7 +32,11 @@ describe('Copy Static Task', () => {
     await fs.writeFile(nestedFile, 'Nested Content')
 
     // Run copy task
-    await copyStatic(path.join(srcDir, '**/*'), srcDir, destDir)
+    await copyStatic(
+      path.join(srcDir, '**/*').replace(/\\/g, '/'),
+      srcDir,
+      destDir
+    )
 
     // Verify files were copied
     const copiedTestFile = path.join(destDir, 'test.txt')
@@ -78,7 +82,11 @@ describe('Copy Static Task', () => {
     )
 
     // Run copy task
-    await copyStatic(path.join(srcDir, '**/*'), srcDir, destDir)
+    await copyStatic(
+      path.join(srcDir, '**/*').replace(/\\/g, '/'),
+      srcDir,
+      destDir
+    )
 
     // Verify only non-private files were copied
     const publicFile = path.join(destDir, 'public.txt')

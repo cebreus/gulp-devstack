@@ -43,7 +43,10 @@ function createTemplatesPath(config) {
 function collectGlobalAssetPaths(config) {
   const discoveredAssetPaths = config.globalInjectAssets.flatMap(
     function collectPaths(pattern) {
-      return globSync(path.join(config.paths.build, pattern), { posix: true })
+      return globSync(
+        path.join(config.paths.build, pattern).replace(/\\/g, '/'),
+        { posix: true }
+      )
     }
   )
 

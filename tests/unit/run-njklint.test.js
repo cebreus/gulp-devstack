@@ -25,17 +25,23 @@ describe('run-njklint', () => {
   })
 
   it('should compare direct-run paths after URL and argv normalization', () => {
+    const repoPath = process.platform === 'win32' ? 'C:\\repo' : '/repo'
+    const scriptPath =
+      repoPath +
+      (process.platform === 'win32'
+        ? '\\scripts\\run-njklint.js'
+        : '/scripts/run-njklint.js')
+    const moduleUrl =
+      'file://' +
+      (process.platform === 'win32'
+        ? '/' + scriptPath.replace(/\\/g, '/')
+        : scriptPath)
+
+    assert.equal(isDirectRun(moduleUrl, scriptPath), true)
     assert.equal(
       isDirectRun(
-        'file:///repo/scripts/run-njklint.js',
-        '/repo/scripts/run-njklint.js'
-      ),
-      true
-    )
-    assert.equal(
-      isDirectRun(
-        'file:///repo/scripts/run-njklint.js',
-        '/repo/scripts/other.js'
+        moduleUrl,
+        repoPath + (process.platform === 'win32' ? '\\other.js' : '/other.js')
       ),
       false
     )

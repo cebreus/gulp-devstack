@@ -24,9 +24,9 @@ describe('Asset Pipeline Integration', () => {
       }
       await writeFixtures(testDir, assetFixtures)
 
-      await generateRevision({
-        inputAssets: path.join(buildBase, '**/*.css'),
-        inputHtml: path.join(buildBase, '**/*.html'),
+      const results = await generateRevision({
+        inputAssets: [path.join(buildBase, '**/*.css').replace(/\\/g, '/')],
+        inputHtml: [path.join(buildBase, '**/*.html').replace(/\\/g, '/')],
         buildBase,
         manifestPath,
       })
@@ -63,7 +63,7 @@ describe('Asset Pipeline Integration', () => {
       await writeFixtures(testDir, sriFixtures)
 
       const stream = await generateSri(
-        path.join(buildBase, '**/*.html'),
+        path.join(buildBase, '**/*.html').replace(/\\/g, '/'),
         buildBase
       )
       await streamToPromise(stream)

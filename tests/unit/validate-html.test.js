@@ -40,7 +40,9 @@ describe('Validate HTML Task', () => {
             '<!DOCTYPE html><html lang="en"><head><title>Test</title></head><body><h1>Private</h1></body></html>',
         })
 
-        const globPath = path.join(sandboxPath, 'src/**/*.html')
+        const globPath = path
+          .join(sandboxPath, 'src/**/*.html')
+          .replace(/\\/g, '/')
         const stream = validateHtml(globPath)
         const processedFiles = []
 
@@ -74,7 +76,9 @@ describe('Validate HTML Task', () => {
             '<!DOCTYPE html><html lang="en"><head><title>Test</title></head><body><center>Invalid</center></body></html>',
         })
 
-        const globPath = path.join(sandboxPath, 'src/**/*.html')
+        const globPath = path
+          .join(sandboxPath, 'src/**/*.html')
+          .replace(/\\/g, '/')
         const stream = validateHtml(globPath)
 
         await assert.rejects(
@@ -105,7 +109,9 @@ describe('Validate HTML Task', () => {
         // By targeting the directory itself with allowEmpty: true, or just letting src() read it.
         // Actually, validateHtml uses `src(input)` with default options.
         // It's easier to verify it doesn't crash on an empty directory match.
-        const globPath = path.join(sandboxPath, 'src/empty_dir')
+        const globPath = path
+          .join(sandboxPath, 'src/empty_dir')
+          .replace(/\\/g, '/')
         const stream = validateHtml(globPath)
 
         await new Promise((resolve, reject) => {

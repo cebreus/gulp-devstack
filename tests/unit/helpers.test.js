@@ -110,6 +110,10 @@ describe('Helpers Utility - getDirFromGlob', () => {
       getDirFromGlob('src/assets/js/**/*.js'),
       'src/assets/js/'
     )
+    assert.strictEqual(
+      getDirFromGlob('src\\assets\\js\\**\\*.js'),
+      'src\\assets\\js\\'
+    )
   })
 
   it('should handle array of globs by taking the first one', () => {

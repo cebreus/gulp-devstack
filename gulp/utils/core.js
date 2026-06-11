@@ -165,7 +165,7 @@ export function getDirFromGlob(pattern) {
   }
 
   const sub = base.substring(0, firstStarIndex)
-  const lastSlash = sub.lastIndexOf('/')
+  const lastSlash = Math.max(sub.lastIndexOf('/'), sub.lastIndexOf('\\'))
   return sub.substring(0, lastSlash + 1)
 }
 

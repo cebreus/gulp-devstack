@@ -76,7 +76,14 @@ export function isDirectRun(moduleUrl, argvPath) {
     return false
   }
 
-  return fileURLToPath(moduleUrl) === path.resolve(argvPath)
+  const modulePath = fileURLToPath(moduleUrl)
+  const scriptPath = path.resolve(argvPath)
+
+  if (process.platform === 'win32') {
+    return modulePath.toLowerCase() === scriptPath.toLowerCase()
+  }
+
+  return modulePath === scriptPath
 }
 
 if (isDirectRun(import.meta.url, process.argv[1])) {
