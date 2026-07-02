@@ -92,10 +92,12 @@ export async function optimizeWithSharp(buffer, targetType, quality) {
         .jpeg({ quality, mozjpeg: true, progressive: true })
         .toBuffer()
     case 'webp':
-      return instance.webp({ quality }).toBuffer()
+      return instance
+        .webp({ quality, effort: 6, smartSubsample: true })
+        .toBuffer()
     case 'avif':
       return instance
-        .avif({ quality: Math.max(quality - 20, 40), speed: 5 })
+        .avif({ quality: Math.max(quality - 20, 40), effort: 9 })
         .toBuffer()
     case 'png':
       return instance.png({ compressionLevel: 9, effort: 10 }).toBuffer()

@@ -1,28 +1,56 @@
 import { readFileSync } from 'node:fs'
 
+import { toPosixPath } from './utils/core.js'
+
 const pkg = JSON.parse(readFileSync('./package.json', 'utf8'))
 
 // --- Static Path Constants ---
 const srcBase = './src'
-const routesBase = './src/routes'
+const routesBase = `${srcBase}/routes`
 const staticBase = './public'
-const tempBase = process.env.GULP_TEMP_DIR || '.temp'
 const assetsBase = `${srcBase}/assets`
 const componentsPath = `${srcBase}/lib/components`
 const sassBase = `${srcBase}/scss`
-const sassBootstrap = `${sassBase}/bootstrap.scss`
-const sassCustom = `${sassBase}/custom.scss`
-const sassComponents = `${sassBase}/components.scss`
 
-// --- Shared Assets Defaults ---
-const imageOptimizationBase = {
+const SASS_ENTRYPOINTS = {
+  bootstrap: `${sassBase}/bootstrap.scss`,
+  custom: `${sassBase}/custom.scss`,
+  components: `${sassBase}/components.scss`,
+}
+
+// --- Watch Patterns (Static Manifest) ---
+const WATCH_CONFIG = {
+  bootstrapWatch: [
+    SASS_ENTRYPOINTS.bootstrap,
+    `${sassBase}/globals.scss`,
+    `${sassBase}/variables.scss`,
+    `${sassBase}/variables-dark.scss`,
+  ],
+  projectSassWatch: [
+    SASS_ENTRYPOINTS.custom,
+    SASS_ENTRYPOINTS.components,
+    `${componentsPath}/**/*.scss`,
+    `${sassBase}/globals.scss`,
+    `${sassBase}/variables.scss`,
+    `${sassBase}/variables-dark.scss`,
+  ],
+  routeSassWatch: [
+    `${routesBase}/**/*.scss`,
+    `${sassBase}/_route-abstracts.scss`,
+  ],
+  routeJsWatch: [`${routesBase}/**/*.js`],
+  templateWatchPaths: [`${srcBase}/**/*.njk`, `${srcBase}/**/*.md`],
+}
+
+// --- Tool Defaults ---
+const IMAGE_OPTIMIZATION = {
   jpg: { quality: 85, mozjpeg: true, progressive: true, lqs: false },
   webp: { quality: 80 },
   avif: { quality: 50, speed: 5 },
   png: { compressionLevel: 9, palette: true },
 }
 
-const faviconGenConfig = {
+const FAVICON_CONFIG = {
   appName: pkg.name,
   appShortName: pkg.name,
   appDescription: pkg.description,
@@ -68,70 +96,7 @@ const MODES = {
 /**
  * Validates and resolves full configuration for a given mode.
  * @param {'dev'|'build'|'export'} mode - The build mode to use
- * @returns {{
- *   version: string,
- *   buildBase: string,
- *   minifyJs: boolean,
- *   minifyCss: boolean,
- *   concatFiles: boolean,
- *   optimizeImages: boolean,
- *   sourceMaps: boolean,
- *   formatCode?: boolean,
- *   srcBase: string,
- *   routesBase: string,
- *   staticBase: string,
- *   tempBase: string,
- *   assetsBase: string,
- *   componentsPath: string,
- *   sassBase: string,
- *   sassBootstrap: string,
- *   sassCustom: string,
- *   sassComponents: string,
- *   bootstrapWatch: string[],
- *   projectSassWatch: string[],
- *   routeSassWatch: string[],
- *   routeJsWatch: string[],
- *   jsFiles: string,
- *   imagesJpg: string,
- *   imagesPng: string,
- *   imagesSvg: string,
- *   imagesBase: string,
- *   iconsBase: string,
- *   datasetPagesSource: string,
- *   datasetPagesBuild: string,
- *   fontloadFile: string,
- *   templateWatchPaths: string[],
- *   paths: {
- *     build: string,
- *     sass: string,
- *     js: string,
- *     images: string,
- *     favicons: string
- *   },
- *   imageOptimization: {
- *     jpg: { quality: number, mozjpeg: boolean, progressive: boolean, lqs: boolean },
- *     webp: { quality: number },
- *     avif: { quality: number, speed: number },
- *     png: { compressionLevel: number, palette: boolean }
- *   },
- *   faviconGen: {
- *     appName: string,
- *     appShortName: string,
- *     appDescription: string,
- *     developerName: string,
- *     background: string,
- *     path: string,
- *     display: string,
- *     icons: { android: boolean, appleIcon: boolean, windows: boolean, favicons: boolean },
- *     url: string|undefined
- *   },
- *   htmlBeautify: {
- *     indent_size: number,
- *     max_preserve_newlines: number,
- *     end_with_newline: boolean
- *   },
- *   fontLoad: { fontsDir: string, cssDir: string, cssFilename: string }
- * }} Flat configuration object
+ * @returns {object} Flat configuration object
  */
 export function resolveConfig(mode) {
   const m = MODES[mode]
@@ -141,56 +106,33 @@ export function resolveConfig(mode) {
     })
   }
 
-  const buildBase = process.env.GULP_OUT_DIR || m.buildBase
+  const buildBase = toPosixPath(process.env.GULP_OUT_DIR || m.buildBase)
+  const tempBase = toPosixPath(process.env.GULP_TEMP_DIR || '.temp')
   const assetsDest = `${buildBase}/assets`
 
   return {
     ...m,
-    // Static paths
+    ...WATCH_CONFIG,
+    buildBase,
+    tempBase,
     srcBase,
     routesBase,
     staticBase,
-    tempBase,
     assetsBase,
     componentsPath,
-    // SCSS specifics
     sassBase,
-    sassBootstrap,
-    sassCustom,
-    sassComponents,
-    bootstrapWatch: [
-      sassBootstrap,
-      `${sassBase}/globals.scss`,
-      `${sassBase}/variables.scss`,
-      `${sassBase}/variables-dark.scss`,
-    ],
-    projectSassWatch: [
-      sassCustom,
-      sassComponents,
-      `${componentsPath}/**/*.scss`,
-      `${sassBase}/globals.scss`,
-      `${sassBase}/variables.scss`,
-      `${sassBase}/variables-dark.scss`,
-    ],
-    routeSassWatch: [
-      `${routesBase}/**/*.scss`,
-      `${sassBase}/_route-abstracts.scss`,
-    ],
-    routeJsWatch: [`${routesBase}/**/*.js`],
-    // JS specifics
+    sassBootstrap: SASS_ENTRYPOINTS.bootstrap,
+    sassCustom: SASS_ENTRYPOINTS.custom,
+    sassComponents: SASS_ENTRYPOINTS.components,
     jsFiles: `${srcBase}/js/**/*.js`,
-    // Images
     imagesJpg: `${assetsBase}/images/**/*.{jpg,jpeg}`,
     imagesPng: `${assetsBase}/images/**/*.png`,
     imagesSvg: `${assetsBase}/images/**/*.svg`,
     imagesBase: `${assetsBase}/images`,
     iconsBase: `${assetsBase}/icons`,
-    // Data/Templates
     datasetPagesSource: `${routesBase}/**/*.md`,
     datasetPagesBuild: `${tempBase}/pages`,
     fontloadFile: `${srcBase}/config/fonts.list`,
-    templateWatchPaths: [`${srcBase}/**/*.njk`, `${srcBase}/**/*.md`],
-    // Computed Paths
     paths: {
       build: buildBase,
       sass: `${assetsDest}/css`,
@@ -198,7 +140,6 @@ export function resolveConfig(mode) {
       images: `${assetsDest}/images`,
       favicons: `${assetsDest}/favicons`,
     },
-    // Global System Layers (Order is handled by getAssetWeight in process-html.js)
     globalInjectAssets: [
       'assets/css/fonts*.css',
       'assets/css/bootstrap*.css',
@@ -208,14 +149,11 @@ export function resolveConfig(mode) {
       'assets/js/custom*.js',
       'assets/js/main*.js',
     ],
-    // Tools config
-    // `sourceMaps` enables development sourcemaps for JS and Sass.
-    // Production and export builds keep source maps disabled.
     imageOptimization: {
-      ...imageOptimizationBase,
-      jpg: { ...imageOptimizationBase.jpg, lqs: mode !== 'dev' },
+      ...IMAGE_OPTIMIZATION,
+      jpg: { ...IMAGE_OPTIMIZATION.jpg, lqs: mode !== 'dev' },
     },
-    faviconGen: { ...faviconGenConfig, url: process.env.SITE_BASE_URL },
+    faviconGen: { ...FAVICON_CONFIG, url: process.env.SITE_BASE_URL },
     htmlBeautify: {
       indent_size: 2,
       max_preserve_newlines: 1,
