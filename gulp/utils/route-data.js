@@ -2,6 +2,7 @@ import fs from 'node:fs/promises'
 import path from 'node:path'
 
 import { siteDefaults } from '../../src/config/site.js'
+import { toPosixPath } from './core.js'
 
 const ROUTE_DATA_ARTIFACTS_DIRNAME = 'pages'
 const SITE_DATA_ARTIFACT_FILENAME = 'site.json'
@@ -126,6 +127,7 @@ export async function writePageDataArtifact({
     artifactsBase,
     routesBase,
     filePath,
+    pageData,
   })
 
   await fs.mkdir(path.dirname(artifactPath), { recursive: true })
@@ -162,18 +164,19 @@ export function resolvePageLocation(
   fileName,
   routesRoot = './src/routes'
 ) {
-  const absoluteRoutesRoot = path.resolve(routesRoot)
-  const absoluteFilePath = path.resolve(filePath)
+  const absoluteRoutesRoot = toPosixPath(path.resolve(routesRoot))
+  const absoluteFilePath = toPosixPath(path.resolve(filePath))
+
   const isRouteFile = absoluteFilePath.startsWith(absoluteRoutesRoot)
   const relativeDir = isRouteFile
-    ? path
-        .relative(absoluteRoutesRoot, path.dirname(absoluteFilePath))
-        .replace(/\\/g, '/')
+    ? toPosixPath(
+        path.relative(absoluteRoutesRoot, path.dirname(absoluteFilePath))
+      )
     : ''
 
   let pagePath = relativeDir !== '' ? `/${relativeDir}/` : '/'
   if (fileName !== 'index') {
-    pagePath = path.join(pagePath, fileName).replace(/\\/g, '/')
+    pagePath = toPosixPath(path.join(pagePath, fileName))
     if (!pagePath.startsWith('/')) {
       pagePath = `/${pagePath}`
     }

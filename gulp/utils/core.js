@@ -92,6 +92,19 @@ export function toBooleanFlag(value) {
 }
 
 /**
+ * Normalizes a path string to POSIX format (forward slashes).
+ * Gulp and globbing libraries require forward slashes for cross-platform consistency.
+ * @param {string} pathString - Source path string.
+ * @returns {string} Normalized POSIX path.
+ */
+export function toPosixPath(pathString) {
+  if (typeof pathString !== 'string') {
+    return pathString
+  }
+  return pathString.replace(/\\/g, '/')
+}
+
+/**
  * Returns the relative path of a file or directory from the current execution context.
  * @param {string} absolutePath - The full path to resolve
  * @returns {string} The relative path

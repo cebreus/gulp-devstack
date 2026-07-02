@@ -85,12 +85,34 @@ describe('Configuration System (Approach B)', () => {
   describe('Lazy Environment Resolution', () => {
     it('should pick up SITE_BASE_URL from process.env at resolution time', () => {
       const oldUrl = process.env.SITE_BASE_URL
-      process.env.SITE_BASE_URL = 'http://test.local'
+      try {
+        process.env.SITE_BASE_URL = 'http://test.local'
 
-      const config = resolveConfig('dev')
-      assert.strictEqual(config.faviconGen.url, 'http://test.local')
+        const config = resolveConfig('dev')
+        assert.strictEqual(config.faviconGen.url, 'http://test.local')
+      } finally {
+        process.env.SITE_BASE_URL = oldUrl
+      }
+    })
 
-      process.env.SITE_BASE_URL = oldUrl
+    it('should normalize environment output paths for POSIX globs', () => {
+      const oldOutDir = process.env.GULP_OUT_DIR
+      const oldTempDir = process.env.GULP_TEMP_DIR
+
+      try {
+        process.env.GULP_OUT_DIR = 'build\\prod'
+        process.env.GULP_TEMP_DIR = '.temp\\pages'
+
+        const config = resolveConfig('build')
+
+        assert.strictEqual(config.buildBase, 'build/prod')
+        assert.strictEqual(config.tempBase, '.temp/pages')
+        assert.strictEqual(config.paths.sass, 'build/prod/assets/css')
+        assert.strictEqual(config.datasetPagesBuild, '.temp/pages/pages')
+      } finally {
+        process.env.GULP_OUT_DIR = oldOutDir
+        process.env.GULP_TEMP_DIR = oldTempDir
+      }
     })
   })
 })
