@@ -2,26 +2,47 @@
 
 - **Date Discovered:** 2026-05-25 UNKNOWN
 - **Category:** Logic/Correctness
-- **Context/Manifestation:** `build-prod/404.html` rendered without any stylesheet links while still using Bootstrap and component classes such as `btn`, `container`, `badge`, and `c-hero`. The root cause was that `src/routes/layout-minimal.njk` emitted only `pageInlineStyles` and skipped the same `inject:css` and `pageStyles` contract used by the default layout.
-- **Rule:** Any route layout that renders shared Bootstrap or component classes must include both the global `inject:css` block and the `pageStyles` loop, not only inline styles.
+- **Context/Manifestation:** `layout-minimal.njk` skip `inject:css` and `pageStyles`. Pages miss Bootstrap/component CSS.
+- **Rule:** Route layout using Bootstrap/components must include global `inject:css` block and `pageStyles` loop.
 
 ## Template Date Filters Must Handle Intl Option Objects
 
 - **Date Discovered:** 2026-05-25 UNKNOWN
 - **Category:** Logic/Correctness
-- **Context/Manifestation:** Visual parity between `build-prod` and `build-export` broke in the footer because `{{ site.now | date({ year: 'numeric' }) }}` was rendered differently. The root cause was that the Nunjucks `date` filter only handled the `'YYYY'` token and otherwise fell back to `toISOString()`, so object-based formats produced full ISO strings instead of a year.
-- **Rule:** Keep the template `date` filter routed through the shared UTC formatter that supports both `'YYYY'` and `Intl.DateTimeFormat` option objects.
+- **Context/Manifestation:** Nunjucks `date` filter fail object formats, fallback to `toISOString()`. Break `build-prod` vs `build-export` parity.
+- **Rule:** Route template `date` filter via shared UTC formatter supporting `'YYYY'` and `Intl.DateTimeFormat` objects.
 
 ## Passing Tests Must Not Leak Expected Logger Failures
 
 - **Date Discovered:** 2026-05-26 UNKNOWN
 - **Category:** Logic/Correctness
-- **Context/Manifestation:** Negative-path tests such as debug diagnostics can intentionally trigger `logger.warn()` and `logger.error()` for missing templates or missing build artifacts while still passing. When those console channels are left unsuppressed, the suite reports scary `WARN`/`ERROR` lines even though assertions succeeded, creating false-positive pipeline failure noise.
-- **Rule:** Keep passing test output clean. Use `silenceConsole(beforeEach, afterEach, mock)` for `console.log` pipeline noise, and additionally mock `console.warn`/`console.error` inside any test file that intentionally exercises warn/error logger branches.
+- **Context/Manifestation:** Negative-path tests trigger `logger.warn()`/`logger.error()`. Create false-positive pipeline failure noise.
+- **Rule:** Use `silenceConsole` for `console.log`. Mock `console.warn`/`console.error` in tests exercising logger branches.
 
 ## Validate Html Tests Must Mock Console Not createLogger
 
 - **Date Discovered:** 2026-06-08 UNKNOWN
 - **Category:** Logic/Correctness
-- **Context/Manifestation:** `gulp/tasks/validate-html.js` creates its `logger` once at module import time. In `tests/unit/validate-html.test.js`, mocking fresh objects returned by `loggerLib.createLogger()` did not intercept that module-scoped logger, so the expected failing-validation path still printed real `[ERROR] [ValidateHtml] ...` lines during a passing test run. The fix was to mock `console.error`/`console.warn`/`console.log`, which is the actual sink used by the captured logger.
-- **Rule:** When testing `gulp/tasks/validate-html.js`, intercept console methods rather than mocking new `createLogger()` instances; the task's logger is already captured at import time.
+- **Context/Manifestation:** `validate-html.js` create logger at module import. Mocking `createLogger()` fail intercept. Noise leak into test output.
+- **Rule:** Intercept `console.*` directly when testing `validate-html.js`. Logger already captured at import.
+
+## POSIX Glob Path Normalization
+
+- **Date Discovered:** 2026-06-11
+- **Category:** Logic/Correctness
+- **Context/Manifestation:** `globSync` with `{ posix: true }` fail match Windows `\` paths from `path.join`.
+- **Rule:** Centralize path normalization in `gulp/config.js` via `toPosixPath()`. Base paths must be POSIX-compliant.
+
+## Cross-Platform Directory Resolution from Globs
+
+- **Date Discovered:** 2026-06-11
+- **Category:** Logic/Correctness
+- **Context/Manifestation:** Base dir extraction from glob fail on Windows if only check `/`.
+- **Rule:** Use `Math.max(sub.lastIndexOf('/'), sub.lastIndexOf('\\'))` to find last directory separator.
+
+## Windows-Safe Script Entrypoint Detection
+
+- **Date Discovered:** 2026-06-11
+- **Category:** Logic/Correctness
+- **Context/Manifestation:** Direct entrypoint detection fail on Windows due to drive letter case/slashes.
+- **Rule:** Normalize paths and use case-insensitive compare on Windows for `isDirectRun`.

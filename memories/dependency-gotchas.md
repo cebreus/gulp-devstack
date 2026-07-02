@@ -2,26 +2,33 @@
 
 - **Date Discovered:** 2026-05-26 UNKNOWN
 - **Category:** Dependency
-- **Context/Manifestation:** This repo carries native or build-time packages such as `sharp`, `esbuild`, `@parcel/watcher`, `gifsicle`, `mozjpeg`, and `optipng-bin`, and the workspace root now contains `pnpm-workspace.yaml` with explicit `allowBuilds` entries for them. During validation, install-time failures around native postinstall/build steps were a real issue, and the current repo state relies on that allowlist being present.
-- **Rule:** Do not remove or bypass `pnpm-workspace.yaml` `allowBuilds` entries for the native/postinstall toolchain; installs and validation depend on those packages being permitted to run their build scripts.
+- **Context/Manifestation:** Repo use native packages (`sharp`, `esbuild`, `@parcel/watcher`, `gifsicle`, `mozjpeg`, `optipng-bin`). Install fail without `allowBuilds` in `pnpm-workspace.yaml`.
+- **Rule:** Keep `allowBuilds` entries in `pnpm-workspace.yaml`. Install need them.
 
 ## Duplicate sharp libvips Builds Trigger Runtime Warning Noise
 
 - **Date Discovered:** 2026-05-26 UNKNOWN
 - **Category:** Dependency
-- **Context/Manifestation:** Multiple `pnpm test` runs in this repo emitted Objective-C runtime warnings that `GNotificationCenterDelegate` was implemented in two different `@img/sharp-libvips-darwin-arm64` dylibs at once. The root cause is that the dependency tree can contain more than one libvips package revision for `sharp`, so macOS loads duplicate native libraries during image-related tests.
-- **Rule:** When touching the image toolchain or lockfile, check for duplicate `@img/sharp-libvips-darwin-arm64` versions. If the warning reappears or worsens, treat it as a dependency dedupe problem in the `sharp` native stack, not as an application-logic regression.
+- **Context/Manifestation:** `pnpm test` emit Objective-C warning `GNotificationCenterDelegate` implemented twice. macOS load duplicate `sharp-libvips` dylibs.
+- **Rule:** Check duplicate `@img/sharp-libvips-darwin-arm64` in lockfile. Warning = dedupe problem, not logic bug.
 
 ## pnpm Overrides Must Live In pnpm-workspace.yaml
 
 - **Date Discovered:** 2026-05-26 UNKNOWN
 - **Category:** Dependency
-- **Context/Manifestation:** During the `favicons -> sharp` dedupe fix, `corepack pnpm@11.1.3 install --lockfile-only` warned that the `pnpm` field in `package.json` was no longer read and ignored `pnpm.overrides`. The override started working only after it was moved to the root `pnpm-workspace.yaml`, where the lockfile then recorded `overrides: favicons>sharp: 0.34.5`.
-- **Rule:** In this repo, dependency overrides must be declared in the root `pnpm-workspace.yaml`, not in `package.json`, or pnpm will ignore them.
+- **Context/Manifestation:** The package manager ignores `pnpm.overrides` in `package.json`. Overrides only work in `pnpm-workspace.yaml`.
+- **Rule:** Put dependency overrides in `pnpm-workspace.yaml`, not `package.json`.
 
 ## Nunjucklinter Banner Output Must Be Filtered Through The Wrapper
 
 - **Date Discovered:** 2026-06-08 UNKNOWN
 - **Category:** Dependency
-- **Context/Manifestation:** The `nunjucklinter` CLI used by this repo prints informational banners such as `Linting directory: ...` and `Linting file: ...` before real results. That noise was unwanted in `pnpm run lint:templates` and `pnpm run format:templates`, so the repo now routes both scripts through `scripts/run-njklint.js`, which removes only those banner lines while preserving real errors, fix output, and exit status.
-- **Rule:** Run Nunjucks linting through `scripts/run-njklint.js`, not the raw `njklint` binary, when invoking the repo's template lint/format scripts.
+- **Context/Manifestation:** `nunjucklinter` CLI print noisy banner lines. `scripts/run-njklint.js` wrapper strip noise, keep real output/status.
+- **Rule:** Use `scripts/run-njklint.js` for lint/format, not raw `njklint`.
+
+## Playwright Binary Provisioning
+
+- **Date Discovered:** 2026-06-11
+- **Category:** Dependency
+- **Context/Manifestation:** Playwright binaries not auto-install with `pnpm install`. E2E tests fail.
+- **Rule:** Run `playwright install chromium` in `package.json` `postinstall`.

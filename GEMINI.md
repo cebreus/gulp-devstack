@@ -65,6 +65,10 @@ pnpm run component
 4. If `graphify` CLI is available and `graphify-out/graph.json` exists, try using it before manual spelunking.
 5. Refresh the graph only if it is stale and the task warrants it.
 6. If the task touches architecture, build pipeline, dependencies, or tricky logic, read the relevant file in `memories/`.
+   - For Build Pipeline-related constraints, read memories/build-pipeline-gotchas.md
+   - For Dependency-related constraints, read memories/dependency-gotchas.md
+   - For Logic/Correctness-related constraints, read memories/logic-correctness-gotchas.md
+   - For Architectural-related constraints, read memories/architectural-gotchas.md
 7. Add or update the failing test first.
 8. Implement the smallest possible change.
 9. Refactor only with tests green and only inside the approved scope.
