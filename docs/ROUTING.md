@@ -4,13 +4,13 @@ Gulp DevStack uses a **"File-Based Routing"** system combined with a hybrid Nunj
 
 ## 1. How Routing Works
 
-Every file in `src/routes/` deterministically maps to a public URL. We generate "Pretty URLs" (Permalinks) by default.
+Every routable `.njk` template in `src/routes/` deterministically maps to a public URL. Files named `layout-*.njk` are internal layout templates and are excluded from output. Markdown files provide page data and content; they do not produce HTML by themselves unless a matching `.njk` template renders them.
 
-| Source File                  | Build Output        | Final URL      |
-| :--------------------------- | :------------------ | :------------- |
-| `src/routes/index.njk`       | `/index.html`       | `/` (Homepage) |
-| `src/routes/about/index.njk` | `/about/index.html` | `/about/`      |
-| `src/routes/404.njk`         | `/404.html`         | `/404.html`    |
+| Source Files                                       | Build Output        | Final URL      |
+| :------------------------------------------------- | :------------------ | :------------- |
+| `src/routes/index.njk` + optional `index.md`       | `/index.html`       | `/` (Homepage) |
+| `src/routes/about/index.njk` + optional `index.md` | `/about/index.html` | `/about/`      |
+| `src/routes/404.njk` + optional `404.md`           | `/404.html`         | `/404.html`    |
 
 > \[!TIP]
 > Use `src/routes/404.njk` instead of `404/index.njk`. Most static hosting providers (Netlify, GitHub Pages) expect a top-level `404.html` file to act as the global error catch-all.
@@ -21,7 +21,7 @@ A single route can be composed of multiple files working together. Gulp DevStack
 
 1. **`.njk` (Template)**: The primary presentation logic. It defines the structure and layout.
 2. **`.md` (Data)**: The content source.
-3. **Merge**: If both `index.njk` and `index.md` exist in the same folder, the `.njk` file takes precedence as the template, but all data from the `.md` file (YAML frontmatter and content) is **automatically injected** into the Nunjucks context.
+3. **Merge**: If both `index.njk` and `index.md` exist in the same folder, the `.njk` file is the routable template, and all data from the `.md` file (YAML frontmatter and content) is **automatically injected** into the Nunjucks context as `page`.
 
 This pattern is essential for "Headless CMS Readiness." You can keep your UI logic in `.njk` while a CMS writes data purely to `.md` files.
 
@@ -33,7 +33,7 @@ To define or change a layout, use the native Nunjucks `extends` tag at the very 
 
 ```jinja
 {# src/routes/404.njk #}
-{% extends "layout-minimal.njk" %}
+{% extends "layout-default.njk" %}
 
 {% block content %}
   <div class="o-404-container">

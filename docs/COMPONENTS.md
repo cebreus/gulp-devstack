@@ -25,6 +25,8 @@ This generates a dedicated folder `src/lib/components/[name]/` containing:
 - `[name].scss`: The scoped SCSS file using the `.c-[name]` BEM class.
 - `[name].md`: API documentation and expected data contract.
 
+The generator does not automatically import the SCSS into a shared entrypoint. Wire shared component styles through `src/scss/components.scss`, or keep page-only styles beside the route under `src/routes/`.
+
 ## 3. Integrating Components
 
 ### SCSS Integration
@@ -74,12 +76,17 @@ When using macros, use the Nunjucks `call` block to pass complex HTML structures
 
 - **Framework-First Strategy**: BEM is recommended for complex UI blocks, but it's not a strict requirement. You are encouraged to combine BEM with **Bootstrap 5 utility classes** (`d-flex`, `mt-3`, etc.) to avoid writing redundant CSS.
 - **Don't Over-Engineer**: If a piece of UI is unique to a single page, keep it in the page template. Only extract to `src/lib/components/` if it will be reused.
-- **Strict Defaults**: Always use Nunjucks `default` filters (`{{ title | default("No Title") }}`) inside your macros to prevent templates from breaking when data is missing.
+- **Strict Defaults**: Use Nunjucks `default` filters (`{{ title | default("No Title") }}`) inside reusable macros when the missing-data fallback is intentional. Let required data fail loudly when a broken page should stop the build.
 - **CMS Readiness**: When you isolate UI into components, you can easily map complex data from a Headless CMS (via `.md` frontmatter) straight into your Macros. This decoupling of data and presentation is what makes the project enterprise-ready.
 
 ## Component List
 
 *(This section is automatically updated by `pnpm run component`. Do not remove the heading below.)*
+
+### favicons
+
+- **Path**: `src/lib/components/favicons`
+- **Status**: System
 
 ### meta-rich-snippets
 

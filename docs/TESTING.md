@@ -54,7 +54,7 @@ Gulp DevStack follows a **"Zero-Trust" Continuous Validation** model. We treat o
 
 - **Engine**: **Playwright** (Chromium) via `node:test`.
 - **Validation**:
-  - **A11y**: WCAG 2.1 AA compliance check via **Axe-core** (`wcag2a`, `wcag2aa`, `best-practice`).
+  - **A11y**: Axe-core checks for `wcag2a`, `wcag2aa`, and `best-practice` rules in Chromium.
   - **Link Integrity**: Dead link and broken anchor detection via **Linkinator**.
   - **Visual/UX**: Routing, meta tags, console errors, and resource 404 checks.
   - **Adaptive**: Automatically detects Showcase vs. Blank template mode.
@@ -95,7 +95,7 @@ For a professional release, always follow this **deterministic order** — from 
 
 **Shortcut**: `pnpm verify:pipeline` executes this entire sequence automatically.
 
-**CI sequence**: `pnpm test:ci` runs `test → test:smoke → test:e2e` in series (requires a pre-existing build).
+**CI sequence**: `pnpm test:ci` runs `test → test:smoke → test:e2e` in series. It requires a pre-existing build artifact because smoke and E2E checks do not run `pnpm build` first.
 
 ---
 
