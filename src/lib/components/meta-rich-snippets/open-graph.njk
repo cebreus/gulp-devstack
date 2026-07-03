@@ -1,0 +1,30 @@
+{% if page.openGraph.use and page.openGraph.use %}
+  {% if page.openGraph.type %}
+    <meta property="og:type" content="{{ page.openGraph.type }}" />
+  {% endif %}
+  {% if page.openGraph.url %}
+    <meta property="og:url" content="{{ page.openGraph.url }}" />
+  {% endif %}
+  {% if site.openGraph.appId %}
+    <meta property="fb:app_id" content="{{ site.openGraph.appId }}" />
+  {% endif %}
+  {% if site.openGraph.siteName %}
+    <meta property="og:site_name" content="{{ site.openGraph.siteName | striptags }}" />
+  {% endif %}
+  {% if page.openGraph.title %}
+    <meta property="og:title" content="{{ page.openGraph.title | striptags }}" />
+  {% endif %}
+  {% if page.openGraph.description %}
+    <meta property="og:description" content="{{ page.openGraph.description | striptags }}" />
+  {% endif %}
+  {% if page.openGraph.image | length > 0 %}
+    {% for item in page.openGraph.image %}
+      {% if loop.index <= 9 %}
+        <meta property="og:image" content="{{ site.baseUrl }}{{ item }}" />
+        {# <meta property="og:image:type" content="png"> #}
+        {# <meta property="og:image:width" content="1200"> #}
+        {# <meta property="og:image:height" content="627"> #}
+      {% endif %}
+    {% endfor %}
+  {% endif %}
+{% endif %}

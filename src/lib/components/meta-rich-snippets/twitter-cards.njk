@@ -1,0 +1,25 @@
+{% if page.twitterCards and page.twitterCards.use %}
+  {% if page.twitterCards.type %}
+    <meta name="twitter:card" content="{{ page.twitterCards.type }}" />
+  {% endif %}
+  {% if page.twitterCards.url %}
+    <meta name="twitter:url" content="{{ page.twitterCards.url }}" />
+  {% endif %}
+  {% if page.twitterCards.title %}
+    <meta name="twitter:title" content="{{ page.twitterCards.title | striptags }}" />
+  {% endif %}
+  {% if page.twitterCards.description %}
+    <meta name="twitter:description" content="{{ page.twitterCards.description | striptags }}" />
+  {% endif %}
+  {% if page.twitterCards.site %}
+    <meta name="twitter:site" content="{{ page.twitterCards.site }}" />
+  {% endif %}
+  {% if page.twitterCards.creator %}
+    <meta name="twitter:creator" content="{{ page.twitterCards.creator }}" />
+  {% endif %}
+  {% if page.twitterCards.image and page.twitterCards.image | length > 0 %}
+    {% for item in page.twitterCards.image %}
+      <meta name="twitter:image" content="{{ site.baseUrl }}{{ item }}" />
+    {% endfor %}
+  {% endif %}
+{% endif %}
