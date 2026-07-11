@@ -2,7 +2,7 @@
 
 {% block content %}
   {# Flattened structure: container handles flex centering directly #}
-  <main class="container py-5 vh-100 d-flex align-items-center justify-content-center">
+  <main id="main" class="container py-5 min-vh-100 d-flex align-items-center justify-content-center">
     {% if page.hero %}
       <div class="p-5 bg-body-tertiary rounded-3 text-center">
         <h1 class="display-5 fw-bold">{{ page.hero.title }}</h1>
@@ -13,8 +13,7 @@
               <a
                 href="{{ btn.url }}"
                 class="btn {{ btn.class or 'btn-primary' }} btn-lg px-4"
-                target="_blank"
-                rel="noopener"
+                {% if btn.external %}target="_blank" rel="noopener"{% endif %}
               >
                 {{ btn.text }}
               </a>
