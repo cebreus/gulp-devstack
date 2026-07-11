@@ -1,3 +1,17 @@
+## Branch Model: gulp5 Is The Protected Template, showcase Carries Content
+
+- **Date Discovered:** 2026-07-11
+- **Category:** Architectural
+- **Context/Manifestation:** Cherry-pick from `showcase` into `gulp5` reverted. `gulp5` is duplicated as the starting point for new projects and intentionally ships placeholder SEO values as obvious test data.
+- **Rule:** Content, example components, and routes (`/about`, `/showcase`) belong on the `showcase` branch. Sync direction is rebase `showcase` onto `gulp5`, never merge showcase content into `gulp5`.
+
+## Menu Pipeline Is Intentional Infrastructure Without A Template Consumer
+
+- **Date Discovered:** 2026-07-11
+- **Category:** Architectural
+- **Context/Manifestation:** `route-data.js`/`process-data.js` build `menu.json` and inject `menu` into the Nunjucks global context, but no template consumes it yet. Looks like dead code; it is not.
+- **Rule:** Keep the menu pipeline in `gulp5`. Its consumer (navigation component) is planned for the `showcase` branch.
+
 ## Route Styles Cannot Depend On Global Sass Imports
 
 - **Date Discovered:** 2026-05-25 UNKNOWN

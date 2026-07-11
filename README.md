@@ -2,9 +2,22 @@
 
 High-control static web workflow with predictable output and zero-trust validation. Built on **Gulp 5**, **Nunjucks**, **Dart Sass**, **PostCSS**, **esbuild**, and **Sharp**.
 
-- **Project Website**: [gulp-devstack.cebre.us](https://gulp-devstack.cebre.us)
-- **Documentation**: [Technical Guides](https://gulp-devstack.cebre.us/about)
-- **Reference**: [Showcase & Components](https://gulp-devstack.cebre.us/showcase)
+- **Project Website**: [gulp-devstack.cebre.us](https://gulp-devstack.cebre.us) (currently serves the previous v4.x build)
+- **Documentation**: [Technical Guides](docs/)
+- **Reference**: Showcase & components live on the [`showcase` branch](https://github.com/cebreus/gulp-devstack/tree/showcase) (work in progress)
+
+---
+
+## Quickstart
+
+```bash
+git clone https://github.com/cebreus/gulp-devstack.git
+cd gulp-devstack
+pnpm install
+pnpm dev
+```
+
+Edit `src/routes/index.md` to change the homepage content, then open `http://localhost:3000`.
 
 ---
 
