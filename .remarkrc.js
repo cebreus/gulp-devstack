@@ -4,6 +4,7 @@ import remarkGfm from 'remark-gfm'
 import remarkLintCode from 'remark-lint-code'
 import remarkLintHeadingWhitespace from 'remark-lint-heading-whitespace'
 import remarkLintNoDuplicateHeadings from 'remark-lint-no-duplicate-headings'
+import remarkLintNoUndefinedReferences from 'remark-lint-no-undefined-references'
 import remarkPresetLintConsistent from 'remark-preset-lint-consistent'
 import remarkPresetLintRecommended from 'remark-preset-lint-recommended'
 
@@ -23,6 +24,10 @@ const config = {
     remarkPresetLintConsistent,
     remarkLintCode,
     remarkLintHeadingWhitespace,
+    // Extended task markers `[/]` (in progress) and `[-]` (cancelled) look
+    // like shortcut references to `/` and `-`; allow them so planning docs
+    // are not flagged.
+    [remarkLintNoUndefinedReferences, { allow: ['/', '-'] }],
   ],
   overrides: [
     {

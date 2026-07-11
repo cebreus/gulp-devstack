@@ -119,6 +119,7 @@
 		"remark-lint-code": "^2.0.0",
 		"remark-lint-heading-whitespace": "^1.0.0",
 		"remark-lint-no-duplicate-headings": "^4.0.1",
+		"remark-lint-no-undefined-references": "^5.0.2",
 		"remark-preset-lint-consistent": "^6.0.1",
 		"remark-preset-lint-recommended": "^7.0.1",
 		"sass": "^1.101.0",
