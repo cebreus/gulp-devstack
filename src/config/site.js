@@ -16,6 +16,5 @@ export const siteDefaults = {
     title: 'New Project SEO Title',
     description: 'New Project SEO Description',
     robots: 'index,follow',
-    include_to_sitemap: true,
   },
 }
