@@ -24,6 +24,38 @@ import {
 
 const logger = loggerLib.createLogger('ProcessHtml')
 
+const SEO_PLACEHOLDERS = [
+  'New Project SEO Title',
+  'New Project SEO Description',
+]
+
+/**
+ * Creates a transform that warns when placeholder SEO values from the
+ * template defaults leak into rendered HTML. Active outside dev mode only,
+ * so duplicated projects catch unedited `src/config/site.js` before deploy.
+ * @param {typeof import('node:stream').Transform} TransformCtor - Stream Transform constructor.
+ * @returns {import('node:stream').Transform} Object-mode transform stream.
+ */
+export function createPlaceholderSeoWarningTransform(TransformCtor) {
+  return new TransformCtor({
+    objectMode: true,
+    transform(file, _enc, callback) {
+      if (file.isBuffer()) {
+        const html = file.contents.toString()
+        const hit = SEO_PLACEHOLDERS.find((placeholder) =>
+          html.includes(placeholder)
+        )
+        if (hit) {
+          logger.warn(
+            `Placeholder SEO value "${hit}" found in ${getRelativePath(file.path)}. Update src/config/site.js or page frontmatter before publishing.`
+          )
+        }
+      }
+      callback(null, file)
+    },
+  })
+}
+
 function createRoutesPattern(config) {
   return [
     path.join(config.routesBase, '**/*.njk').replace(/\\/g, '/'),
@@ -126,6 +158,10 @@ async function createHtmlPipeline(config, globalContext) {
 
   if (config.formatCode) {
     pipeline = pipeline.pipe(beautify(config.htmlBeautify))
+  }
+
+  if (process.env.BUILD_MODE !== 'dev') {
+    pipeline = pipeline.pipe(createPlaceholderSeoWarningTransform(Transform))
   }
 
   pipeline = pipeline
