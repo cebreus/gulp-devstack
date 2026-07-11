@@ -44,6 +44,13 @@ export default function (plop) {
         template:
           '## Component List\n\n### {{dashCase name}}\n- **Path**: `src/lib/components/{{dashCase name}}`\n- **Status**: Boilerplate',
       },
+      {
+        type: 'modify',
+        path: 'src/scss/components.scss',
+        pattern: /\/\/ Add project-specific component imports below\n/,
+        template:
+          "// Add project-specific component imports below\n@import '../lib/components/{{dashCase name}}/{{dashCase name}}';\n",
+      },
     ],
   })
 }
