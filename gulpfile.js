@@ -136,7 +136,7 @@ function createPipelines(tasks) {
     ),
     servePipeline: gulp.series(
       clean,
-      gulp.parallel(images, dataset, fonts),
+      gulp.parallel(images, dataset, favicons, fonts),
       gulp.parallel(copy, js, css),
       html,
       debug,
@@ -295,7 +295,13 @@ export function favicons() {
   return faviconsTask(
     `${config.srcBase}/assets/icons/favicons-source.png`,
     config.paths.favicons,
-    config.faviconGen
+    config.faviconGen,
+    {
+      rootIconPath: config.paths.favicon,
+      manifestPath: config.paths.manifest,
+      faviconHtmlPath: config.paths.faviconHtml,
+      manifestHref: '/manifest.webmanifest',
+    }
   )
 }
 
@@ -442,6 +448,10 @@ async function watchFiles() {
 
     // Assets: Just process and reload browser
     gulp.watch(`${config.imagesBase}/**/*`, gulp.series(images, reload))
+    gulp.watch(
+      `${config.iconsBase}/favicons-source.png`,
+      gulp.series(favicons, html, reload)
+    )
     gulp.watch(
       `${config.iconsBase}/**/*.svg`,
       gulp.series(dataset, html, reload)

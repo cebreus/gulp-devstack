@@ -64,12 +64,18 @@ function createRoutesPattern(config) {
 }
 
 function createTemplatesPath(config) {
-  return [
+  const templatesPath = [
     config.routesBase,
     path.join(config.srcBase, 'lib'),
     config.imagesBase,
     config.iconsBase,
   ]
+
+  if (config.paths?.faviconHtml) {
+    templatesPath.push(path.dirname(config.paths.faviconHtml))
+  }
+
+  return templatesPath
 }
 
 function collectGlobalAssetPaths(config) {

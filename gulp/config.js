@@ -56,9 +56,17 @@ const FAVICON_CONFIG = {
   appDescription: pkg.description,
   developerName: pkg.author,
   background: '#000000',
+  theme_color: '#000000',
   path: '/assets/favicons/',
   display: 'standalone',
-  icons: { android: true, appleIcon: true, windows: true, favicons: true },
+  icons: {
+    android: ['android-chrome-192x192.png', 'android-chrome-512x512.png'],
+    appleIcon: ['apple-touch-icon-180x180.png'],
+    appleStartup: false,
+    favicons: ['favicon.ico'],
+    windows: false,
+    yandex: false,
+  },
 }
 
 // --- Mode Specific Settings ---
@@ -139,6 +147,9 @@ export function resolveConfig(mode) {
       js: `${assetsDest}/js`,
       images: `${assetsDest}/images`,
       favicons: `${assetsDest}/favicons`,
+      favicon: `${buildBase}/favicon.ico`,
+      manifest: `${buildBase}/manifest.webmanifest`,
+      faviconHtml: `${tempBase}/favicons/favicons.html`,
     },
     globalInjectAssets: [
       'assets/css/fonts*.css',

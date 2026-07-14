@@ -25,13 +25,19 @@ const logger = loggerLib.createLogger('GenerateFavicons')
  * @param {boolean} faviconConfig.icons.windows - Generate Windows-specific icons
  * @param {boolean} faviconConfig.icons.favicons - Generate standard favicons
  * @param {string} [faviconConfig.url] - URL to the application root
+ * @param {object} [options] - Output placement overrides
+ * @param {string} [options.rootIconPath] - Destination for root /favicon.ico
+ * @param {string} [options.manifestPath] - Destination for root /manifest.webmanifest
+ * @param {string} [options.faviconHtmlPath] - Destination for generated HTML snippet
+ * @param {string} [options.manifestHref] - Public href used for the web manifest link
  * @returns {Promise<void>} Resolves when all files are written
  * @throws {Error} If the source image is missing or generation fails
  */
 export default async function generateFavicons(
   sourcePath,
   outputDir,
-  faviconConfig
+  faviconConfig,
+  options = {}
 ) {
   if (!sourcePath || !outputDir) {
     throw new Error('Favicon task skipped: invalid source or destination.', {
@@ -53,20 +59,44 @@ export default async function generateFavicons(
     const result = await favicons(sourcePath, faviconConfig)
 
     const activeWrites = []
+    const snippetPath =
+      options.faviconHtmlPath || path.join(outputDir, 'favicons.html')
+
+    async function writeGeneratedFile(target, contents) {
+      await fs.mkdir(path.dirname(target), { recursive: true })
+      await fs.writeFile(target, contents)
+    }
 
     result.images.forEach((image) => {
-      const target = path.join(outputDir, image.name)
-      activeWrites.push(fs.writeFile(target, image.contents))
+      const target =
+        image.name === 'favicon.ico' && options.rootIconPath
+          ? options.rootIconPath
+          : path.join(outputDir, image.name)
+      activeWrites.push(writeGeneratedFile(target, image.contents))
     })
 
     result.files.forEach((file) => {
-      const target = path.join(outputDir, file.name)
-      activeWrites.push(fs.writeFile(target, file.contents))
+      const target =
+        file.name === 'manifest.webmanifest' && options.manifestPath
+          ? options.manifestPath
+          : path.join(outputDir, file.name)
+      activeWrites.push(writeGeneratedFile(target, file.contents))
     })
 
     if (result.html && result.html.length > 0) {
-      const snippetPath = path.join(outputDir, 'favicons.html')
-      activeWrites.push(fs.writeFile(snippetPath, result.html.join('\n')))
+      const faviconHtml = result.html
+        .filter((line) => !/href="[^"]*favicon\.ico"/.test(line))
+        .map((line) =>
+          options.manifestHref
+            ? line.replace(
+                /href="[^"]*manifest\.webmanifest"/,
+                `href="${options.manifestHref}"`
+              )
+            : line
+        )
+      activeWrites.push(
+        writeGeneratedFile(snippetPath, `${faviconHtml.join('\n')}\n`)
+      )
     }
 
     await Promise.all(activeWrites)
@@ -74,7 +104,7 @@ export default async function generateFavicons(
     logger.list(`Favicon generation successful`, [
       `${result.images.length} images created`,
       `${result.files.length} metadata files created`,
-      `HTML snippet generated: ${path.join(outputDir, 'favicons.html')}`,
+      `HTML snippet generated: ${snippetPath}`,
     ])
   } catch (error) {
     logger.error(`Favicon generation process failed. Cause: ${error.message}`)

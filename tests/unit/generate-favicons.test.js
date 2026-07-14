@@ -81,5 +81,63 @@ describe('Generate Favicons Task', () => {
         )
       })
     })
+
+    it('should write root assets and keep the HTML snippet temporary', async () => {
+      await runInSandbox('favicon-root', async (sandbox) => {
+        const sourcePath = path.join(sandbox, 'source.png')
+        const outputDir = path.join(sandbox, 'build', 'assets', 'favicons')
+        const rootIconPath = path.join(sandbox, 'build', 'favicon.ico')
+        const manifestPath = path.join(sandbox, 'build', 'manifest.webmanifest')
+        const faviconHtmlPath = path.join(
+          sandbox,
+          '.tmp',
+          'favicons',
+          'favicons.html'
+        )
+        const faviconConfig = {
+          appName: 'Test App',
+          appShortName: 'Test',
+          appDescription: 'Test Description',
+          developerName: 'Test Dev',
+          background: '#ffffff',
+          theme_color: '#000000',
+          path: '/assets/favicons/',
+          display: 'standalone',
+          icons: {
+            android: ['android-chrome-192x192.png'],
+            appleIcon: false,
+            appleStartup: false,
+            favicons: ['favicon.ico'],
+            windows: false,
+            yandex: false,
+          },
+        }
+
+        await fs.writeFile(sourcePath, MINIMAL_PNG)
+
+        await generateFavicons(sourcePath, outputDir, faviconConfig, {
+          rootIconPath,
+          manifestPath,
+          faviconHtmlPath,
+          manifestHref: '/manifest.webmanifest',
+        })
+
+        const snippet = await fs.readFile(faviconHtmlPath, 'utf8')
+
+        await fs.access(rootIconPath)
+        await fs.access(manifestPath)
+        await assert.rejects(() =>
+          fs.access(path.join(outputDir, 'favicon.ico'))
+        )
+        await assert.rejects(() =>
+          fs.access(path.join(outputDir, 'manifest.webmanifest'))
+        )
+        await assert.rejects(() =>
+          fs.access(path.join(outputDir, 'favicons.html'))
+        )
+        assert.ok(snippet.includes('/manifest.webmanifest'))
+        assert.ok(!snippet.includes('favicon.ico'))
+      })
+    })
   })
 })
