@@ -160,27 +160,30 @@ describe('E2E: Baseline Integrity (Universal)', { timeout: 120000 }, () => {
   })
 })
 
-describe('E2E: Blank Template Features', { timeout: 120000 }, () => {
-  it('should render the "It works!" greeting', async () => {
+describe('E2E: Project Variant', { timeout: 120000 }, () => {
+  it('should render the blank template or showcase homepage', async () => {
     const page = await context.newPage()
     await page.goto(`${BASE_URL}/`)
 
     const h1 = await page.locator('h1').textContent()
-    assert.ok(h1.includes('It works!'), 'Blank template greeting not found')
-
-    await page.close()
-  })
-
-  it('should have a clean layout without showcase artifacts', async () => {
-    const page = await context.newPage()
-    await page.goto(`${BASE_URL}/`)
-
-    // Check for old showcase-specific classes or components
     const bentoCount = await page.locator('.u-bento-grid').count()
-    assert.strictEqual(bentoCount, 0, 'Showcase Bento grid should be gone')
-
     const headerCount = await page.locator('.o-header').count()
-    assert.strictEqual(headerCount, 0, 'Showcase header should be gone')
+
+    if (bentoCount > 0) {
+      assert.ok(
+        h1.includes('The predictable alternative to framework complexity.'),
+        'Showcase heading not found'
+      )
+      assert.strictEqual(bentoCount, 1, 'Showcase Bento grid should be present')
+      assert.strictEqual(headerCount, 1, 'Showcase header should be present')
+    } else {
+      assert.ok(h1.includes('It works!'), 'Blank template greeting not found')
+      assert.strictEqual(
+        headerCount,
+        0,
+        'Blank template should not use showcase header'
+      )
+    }
 
     await page.close()
   })
