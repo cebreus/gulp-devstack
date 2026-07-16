@@ -5,7 +5,7 @@ function getDependencyManifestPath(cssPath) {
   return `${cssPath}.deps.json`
 }
 
-async function readDependencyManifest(dependencyManifestPath, sourceFile) {
+async function readDependencyManifest(dependencyManifestPath) {
   try {
     const manifest = JSON.parse(
       await fs.readFile(dependencyManifestPath, 'utf8')
@@ -15,7 +15,7 @@ async function readDependencyManifest(dependencyManifestPath, sourceFile) {
     }
   } catch {}
 
-  return [sourceFile]
+  return null
 }
 
 async function getNewestDependencyMtime(dependencyPaths) {
@@ -28,18 +28,15 @@ async function getNewestDependencyMtime(dependencyPaths) {
   return Math.max(...stats.map((stat) => stat.mtimeMs))
 }
 
-async function shouldSkipUnchangedFile({
-  sourceFile,
-  cssPath,
-  mapPath,
-  sourceMaps,
-}) {
+async function shouldSkipUnchangedFile({ cssPath, mapPath, sourceMaps }) {
   try {
     const cssStats = await fs.stat(cssPath)
     const dependencyPaths = await readDependencyManifest(
-      getDependencyManifestPath(cssPath),
-      sourceFile
+      getDependencyManifestPath(cssPath)
     )
+    if (!dependencyPaths) {
+      return false
+    }
     const newestDependencyMtime =
       await getNewestDependencyMtime(dependencyPaths)
 
@@ -53,11 +50,7 @@ async function shouldSkipUnchangedFile({
   }
 }
 
-async function writeDependencyManifest(cssPath, sassResult, skipNewer) {
-  if (!skipNewer) {
-    return
-  }
-
+async function writeDependencyManifest(cssPath, sassResult) {
   const dependencies = sassResult.loadedUrls
     .filter((url) => url.protocol === 'file:')
     .map((url) => fileURLToPath(url))

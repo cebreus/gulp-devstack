@@ -110,17 +110,17 @@ export default async function debugBuild(config, options = {}) {
 
   logger.info(`${pc.blue('---')} Build Diagnostic Report ${pc.blue('---')}`)
 
+  let foundRouteFiles = []
   if (!(await pathExists(activeRoutesBase))) {
     logger.warn(`Source directory missing: ${pc.red(activeRoutesBase)}`)
-    return
+  } else {
+    foundRouteFiles = await findRouteFiles(activeRoutesBase)
+    logger.debug(
+      `Found ${foundRouteFiles.length} source files in ${activeRoutesBase}`
+    )
+    await auditSourceFiles(foundRouteFiles)
+    await auditIndexTemplate(activeRoutesBase)
   }
-
-  const foundRouteFiles = await findRouteFiles(activeRoutesBase)
-  logger.debug(
-    `Found ${foundRouteFiles.length} source files in ${activeRoutesBase}`
-  )
-  await auditSourceFiles(foundRouteFiles)
-  await auditIndexTemplate(activeRoutesBase)
 
   if (!(await pathExists(buildDir))) {
     logger.warn(`Build directory missing: ${pc.red(buildDir)}`)

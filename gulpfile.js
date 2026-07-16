@@ -33,9 +33,10 @@ import { siteDefaults } from './src/config/site.js'
 
 const logger = loggerLib.createLogger('Gulpfile')
 const BUILD_MODE = process.env.BUILD_MODE
+const VALID_BUILD_MODES = new Set(['dev', 'build', 'export'])
 
-if (!BUILD_MODE) {
-  throw new Error('BUILD_MODE must be set.', {
+if (!VALID_BUILD_MODES.has(BUILD_MODE)) {
+  throw new Error(`Unsupported BUILD_MODE: ${BUILD_MODE ?? '<unset>'}.`, {
     cause: new Error('Pass BUILD_MODE=dev|build|export environment variable.'),
   })
 }
@@ -56,6 +57,19 @@ function normalizeWrittenFiles(writtenFiles) {
   }
 
   return writtenFiles.flat().filter(Boolean)
+}
+
+function runGulpTask(task) {
+  return new Promise(function waitForTask(resolve, reject) {
+    task(function complete(error) {
+      if (error) {
+        reject(error)
+        return
+      }
+
+      resolve()
+    })
+  })
 }
 
 function rememberCssReloadPaths(writtenFiles) {
@@ -172,25 +186,27 @@ export function clean() {
  */
 export async function copy() {
   try {
-    await gulp.parallel(
-      function copyPublicAssetsTask() {
-        return copyStatic(
-          [`${config.staticBase}/**/*`],
-          config.staticBase,
-          config.paths.build
-        )
-      },
-      function copyFontsTask() {
-        return copyStatic(
-          [
-            `${config.assetsBase}/fonts/**/*`,
-            `${config.assetsBase}/css/fonts*.css`,
-          ],
-          config.assetsBase,
-          `${config.paths.build}/assets`
-        )
-      }
-    )()
+    await runGulpTask(
+      gulp.parallel(
+        function copyPublicAssetsTask() {
+          return copyStatic(
+            [`${config.staticBase}/**/*`],
+            config.staticBase,
+            config.paths.build
+          )
+        },
+        function copyFontsTask() {
+          return copyStatic(
+            [
+              `${config.assetsBase}/fonts/**/*`,
+              `${config.assetsBase}/css/fonts*.css`,
+            ],
+            config.assetsBase,
+            `${config.paths.build}/assets`
+          )
+        }
+      )
+    )
   } catch (error) {
     logger.error(`Copy task failed: ${error.message}`)
     throw error

@@ -47,18 +47,29 @@ function dispatch(level, subLabel, ...data) {
   console.log(prefix, ...data)
 }
 
+function isEnabledFlag(value) {
+  return ['1', 'true', 'yes', 'on', 'enabled'].includes(
+    String(value || '')
+      .trim()
+      .toLowerCase()
+  )
+}
+
 function isDebugEnabled() {
   const envLevel = String(process.env.LOG_LEVEL || '').toLowerCase()
   return Boolean(
-    process.env.DEBUG ||
-    process.env.VERBOSE ||
+    isEnabledFlag(process.env.DEBUG) ||
+    isEnabledFlag(process.env.VERBOSE) ||
     ['debug', 'verbose', 'silly'].includes(envLevel)
   )
 }
 
 function isVerboseEnabled() {
   const envLevel = String(process.env.LOG_LEVEL || '').toLowerCase()
-  return Boolean(process.env.VERBOSE || ['verbose', 'silly'].includes(envLevel))
+  return (
+    isEnabledFlag(process.env.VERBOSE) ||
+    ['verbose', 'silly'].includes(envLevel)
+  )
 }
 
 function error(...args) {

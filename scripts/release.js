@@ -73,9 +73,11 @@ function runReleaseIt() {
     shell: true,
   })
 
-  if (result.status !== 0) {
-    process.exit(result.status ?? 1)
+  if (result.error) {
+    throw new Error('Failed to run release-it', { cause: result.error })
   }
+
+  return result.status ?? 1
 }
 
 function cleanupTemporaryConfig(configPath) {
@@ -88,20 +90,22 @@ function cleanupTemporaryConfig(configPath) {
 
 function main() {
   const configPath = join(process.cwd(), CONFIG_FILE)
+  let exitCode = 1
 
   try {
     console.log('🚀 Preparing release environment...')
     writeFileSync(configPath, JSON.stringify(config, null, 2))
-    runReleaseIt(configPath)
+    exitCode = runReleaseIt(configPath)
   } catch (error) {
     console.error(
       '❌ Release failed:',
       error instanceof Error ? error.message : String(error)
     )
-    process.exit(1)
   } finally {
     cleanupTemporaryConfig(configPath)
   }
+
+  process.exitCode = exitCode
 }
 
 main()

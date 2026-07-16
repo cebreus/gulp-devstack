@@ -14,6 +14,7 @@ import {
 } from '../test-helpers.js'
 
 const START_TIMEOUT_MS = 60000
+const REQUEST_TIMEOUT_MS = 5000
 const RELOAD_TIMEOUT_MS = 30000
 const SHOWCASE_HEADING = 'What this project offers.'
 const SHOWCASE_UPDATED_HEADING = 'What this project offers right now.'
@@ -56,7 +57,9 @@ async function waitForServer(url, childProcess, output) {
     }
 
     try {
-      const response = await fetch(url)
+      const response = await fetch(url, {
+        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+      })
       if (response.ok) {
         return
       }
@@ -69,19 +72,27 @@ async function waitForServer(url, childProcess, output) {
 }
 
 async function stopProcess(childProcess) {
-  if (!childProcess || childProcess.exitCode !== null) {
+  if (
+    !childProcess ||
+    childProcess.exitCode !== null ||
+    childProcess.signalCode !== null
+  ) {
     return
   }
 
+  const exitPromise = new Promise((resolve) => {
+    childProcess.once('exit', resolve)
+  })
   childProcess.kill('SIGTERM')
 
-  const deadline = Date.now() + 5000
-  while (childProcess.exitCode === null && Date.now() < deadline) {
-    await delay(100)
-  }
+  const didExit = await Promise.race([
+    exitPromise.then(() => true),
+    delay(5000).then(() => false),
+  ])
 
-  if (childProcess.exitCode === null) {
+  if (!didExit) {
     childProcess.kill('SIGKILL')
+    await exitPromise
   }
 }
 
@@ -168,9 +179,10 @@ describe('E2E: Dev Watch Reload', { timeout: 120000 }, () => {
       childOutput.push(String(chunk))
     })
 
-    const browser = await chromium.launch()
+    let browser
 
     try {
+      browser = await chromium.launch()
       await waitForServer(
         `${baseUrl}${watchTarget.urlPath}`,
         devProcess,
@@ -213,8 +225,13 @@ describe('E2E: Dev Watch Reload', { timeout: 120000 }, () => {
 
       await page.close()
     } finally {
-      await browser.close()
-      await stopProcess(devProcess)
+      try {
+        if (browser) {
+          await browser.close()
+        }
+      } finally {
+        await stopProcess(devProcess)
+      }
     }
   })
 })

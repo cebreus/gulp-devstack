@@ -62,6 +62,7 @@ async function optimizeRasterFile(file, options) {
   const savedBytes = original.length - optimized.length
   const percentSaved = Math.round((savedBytes / original.length) * 100)
   const shouldKeepOptimized =
+    detectType(original) !== targetType ||
     targetType === 'webp' ||
     targetType === 'avif' ||
     optimized.length < original.length
@@ -105,9 +106,13 @@ function createRasterOptimizationTransform(options) {
         markProcessedFile(processedFiles, optimizedFile.path, dest)
         cb(null, optimizedFile)
       } catch (error) {
+        const isConversion = targetType === 'webp' || targetType === 'avif'
         logger.error(
-          `Image optimization failed for ${path.basename(file.path)}. Cause: ${error.message}. Falling back to original.`
+          `Image optimization failed for ${path.basename(file.path)}. Cause: ${error.message}.`
         )
+        if (isConversion) {
+          return cb(error)
+        }
         markProcessedFile(processedFiles, file.path, dest)
         cb(null, file)
       }
@@ -125,6 +130,14 @@ async function executeRasterTask(options) {
     quality = 85,
   } = options
   const processedFiles = []
+  const rasterOptimization = createRasterOptimizationTransform({
+    targetType,
+    quality,
+    logger,
+    logPrefix,
+    processedFiles,
+    dest,
+  })
 
   const pipeline = gulp
     .src(src, { encoding: false })
@@ -134,17 +147,12 @@ async function executeRasterTask(options) {
       })
     )
     .pipe(createImageValidationTransform(logger))
-    .pipe(
-      createRasterOptimizationTransform({
-        targetType,
-        quality,
-        logger,
-        logPrefix,
-        processedFiles,
-        dest,
-      })
-    )
+    .pipe(rasterOptimization)
     .pipe(gulp.dest(dest))
+
+  rasterOptimization.on('error', function forwardRasterError(error) {
+    pipeline.destroy(error)
+  })
 
   attachPipelineLogging({
     stream: pipeline,

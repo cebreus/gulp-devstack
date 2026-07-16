@@ -8,17 +8,7 @@ describe('Documentation Synchronization', () => {
     const pkgContent = await fs.readFile('package.json', 'utf8')
     const packageJson = JSON.parse(pkgContent)
     const scripts = Object.keys(packageJson.scripts)
-    const standardCmds = new Set([
-      'install',
-      'add',
-      'i',
-      'exec',
-      'store',
-      '-',
-      'allowBuilds',
-      'Overrides',
-      'will',
-    ])
+    const standardCmds = new Set(['install', 'add', 'i', 'exec', 'store', '-'])
 
     // Find all markdown files, ignoring node_modules, build folders, and sandboxes
     const mdFiles = await glob('**/*.md', {
@@ -36,23 +26,28 @@ describe('Documentation Synchronization', () => {
 
     for (const file of mdFiles) {
       const content = await fs.readFile(file, 'utf8')
-      let match
+      const snippets =
+        content.match(/```[\s\S]*?```|~~~[\s\S]*?~~~|`[^`\n]+`/g) || []
 
-      while ((match = regex.exec(content)) !== null) {
-        const scriptName = match[1]
+      for (const snippet of snippets) {
+        let match
 
-        // Skip standard pnpm commands or placeholder text
-        if (standardCmds.has(scriptName) || /^\d+$/.test(scriptName)) {
-          continue
-        }
+        while ((match = regex.exec(snippet)) !== null) {
+          const scriptName = match[1]
 
-        const exists = scripts.includes(scriptName)
+          // Skip standard pnpm commands or placeholder text
+          if (standardCmds.has(scriptName) || /^\d+$/.test(scriptName)) {
+            continue
+          }
 
-        if (!exists) {
-          console.error(
-            `Documentation out of sync: File "${file}" mentions script "pnpm ${scriptName}" but "${scriptName}" is not defined in package.json.`
-          )
-          hasError = true
+          const exists = scripts.includes(scriptName)
+
+          if (!exists) {
+            console.error(
+              `Documentation out of sync: File "${file}" mentions script "pnpm ${scriptName}" but "${scriptName}" is not defined in package.json.`
+            )
+            hasError = true
+          }
         }
       }
     }

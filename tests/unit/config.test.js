@@ -47,17 +47,9 @@ describe('Configuration System (Approach B)', () => {
     })
 
     it('should expose only resolveConfig as named public API', () => {
-      assert.ok('resolveConfig' in configModule)
-      assert.ok(!('srcBase' in configModule))
-      assert.ok(!('routesBase' in configModule))
-      assert.ok(!('staticBase' in configModule))
-      assert.ok(!('tempBase' in configModule))
-      assert.ok(!('assetsBase' in configModule))
-      assert.ok(!('componentsPath' in configModule))
-      assert.ok(!('sassBase' in configModule))
-      assert.ok(!('sassBootstrap' in configModule))
-      assert.ok(!('sassCustom' in configModule))
-      assert.ok(!('sassComponents' in configModule))
+      assert.deepStrictEqual(Object.keys(configModule).sort(), [
+        'resolveConfig',
+      ])
     })
   })
 
@@ -91,7 +83,8 @@ describe('Configuration System (Approach B)', () => {
         const config = resolveConfig('dev')
         assert.strictEqual(config.faviconGen.url, 'http://test.local')
       } finally {
-        process.env.SITE_BASE_URL = oldUrl
+        if (oldUrl === undefined) delete process.env.SITE_BASE_URL
+        else process.env.SITE_BASE_URL = oldUrl
       }
     })
 
@@ -110,8 +103,10 @@ describe('Configuration System (Approach B)', () => {
         assert.strictEqual(config.paths.sass, 'build/prod/assets/css')
         assert.strictEqual(config.datasetPagesBuild, '.temp/pages/pages')
       } finally {
-        process.env.GULP_OUT_DIR = oldOutDir
-        process.env.GULP_TEMP_DIR = oldTempDir
+        if (oldOutDir === undefined) delete process.env.GULP_OUT_DIR
+        else process.env.GULP_OUT_DIR = oldOutDir
+        if (oldTempDir === undefined) delete process.env.GULP_TEMP_DIR
+        else process.env.GULP_TEMP_DIR = oldTempDir
       }
     })
   })

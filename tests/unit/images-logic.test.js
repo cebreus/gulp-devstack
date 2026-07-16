@@ -7,6 +7,11 @@ import {
   optimizeWithSharp,
 } from '../../gulp/utils/image-helpers.js'
 
+const MINIMAL_PNG = Buffer.from(
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
+  'base64'
+)
+
 describe('Image Processing Logic (Unit)', () => {
   describe('detectType', () => {
     it('should return null for short or empty buffers', () => {
@@ -123,21 +128,11 @@ describe('Image Processing Logic (Unit)', () => {
     })
 
     it('should accept valid matching content', () => {
-      return testValidateImage(
-        'png',
-        'valid.png',
-        Buffer.from([0x89, 0x50, 0x4e, 0x47]),
-        false
-      )
+      return testValidateImage('png', 'valid.png', MINIMAL_PNG, false)
     })
 
     it('should note mismatched extensions but not invalidate', () => {
-      return testValidateImage(
-        'jpg',
-        'actually-png.jpg',
-        Buffer.from([0x89, 0x50, 0x4e, 0x47]),
-        false
-      )
+      return testValidateImage('jpg', 'actually-png.jpg', MINIMAL_PNG, false)
     })
   })
 

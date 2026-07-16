@@ -23,6 +23,13 @@ export default async function generateSri(input, outputDir) {
   const { default: sri } = await import('gulp-sri-hash')
   const { Transform } = await import('node:stream')
 
+  const sriTransform = sri({
+    selector: 'script[src], link[rel="stylesheet"]',
+    root: path.resolve(outputDir),
+    onError: (error) => {
+      throw error
+    },
+  })
   const sriPipeline = src(input)
     .pipe(
       new Transform({
@@ -35,17 +42,7 @@ export default async function generateSri(input, outputDir) {
         },
       })
     )
-    .pipe(
-      sri({
-        selector: 'script[src], link[rel="stylesheet"]',
-        root: path.resolve(outputDir),
-        onError: (err) => {
-          logger.warn(
-            `SRI error for a file: ${err.message}. Skipping specific tag.`
-          )
-        },
-      })
-    )
+    .pipe(sriTransform)
     .pipe(
       new Transform({
         objectMode: true,
@@ -60,6 +57,10 @@ export default async function generateSri(input, outputDir) {
       })
     )
     .pipe(dest(outputDir))
+
+  sriTransform.on('error', function forwardSriError(error) {
+    sriPipeline.destroy(error)
+  })
 
   try {
     await streamToPromise(sriPipeline)

@@ -13,12 +13,10 @@ describe('Sass Nested Routes Preservation', () => {
   it('should preserve nested directory structure for route styles', async () => {
     await runInSandbox('sass-nesting', async (sandbox) => {
       const sassFixtures = {
-        'src/routes/index.scss':
-          'body { background: white; color: black; margin: 0; }',
-        'src/routes/about/index.scss':
-          'body { background: blue; color: white; padding: 20px; }',
+        'src/routes/index.scss': '.home-route { background: white; }',
+        'src/routes/about/index.scss': '.about-route { background: blue; }',
         'src/routes/deep/nested/style.scss':
-          'body { background: red; display: flex; align-items: center; }',
+          '.nested-route { background: red; }',
       }
       await writeFixtures(sandbox, sassFixtures)
 
@@ -37,9 +35,9 @@ describe('Sass Nested Routes Preservation', () => {
       )
 
       const expectedCssFiles = [
-        { path: 'index.css', expectedSelector: 'background' },
-        { path: 'about/index.css', expectedSelector: 'background' },
-        { path: 'deep/nested/style.css', expectedSelector: 'background' },
+        { path: 'index.css', expectedSelector: '.home-route' },
+        { path: 'about/index.css', expectedSelector: '.about-route' },
+        { path: 'deep/nested/style.css', expectedSelector: '.nested-route' },
       ]
 
       for (const { path: relativePath, expectedSelector } of expectedCssFiles) {

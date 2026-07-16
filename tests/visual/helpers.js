@@ -41,8 +41,13 @@ function resolveStaticFile(rootDir, requestPath) {
   const unsafePath = path.join(rootDir, decodedPath)
   const resolvedPath = path.resolve(unsafePath)
   const resolvedRoot = path.resolve(rootDir)
+  const relativePath = path.relative(resolvedRoot, resolvedPath)
 
-  if (!resolvedPath.startsWith(resolvedRoot)) {
+  if (
+    relativePath === '..' ||
+    relativePath.startsWith(`..${path.sep}`) ||
+    path.isAbsolute(relativePath)
+  ) {
     return null
   }
 

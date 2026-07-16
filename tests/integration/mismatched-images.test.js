@@ -101,13 +101,18 @@ describe('Image Mismatch Integration Tests', () => {
       )
       assert.strictEqual(
         imageBuffer[0],
-        0x89,
-        'Should still have PNG signature'
+        0xff,
+        'Output should have JPEG signature'
       )
       assert.strictEqual(
         imageBuffer[1],
-        0x50,
-        'Should still have PNG signature'
+        0xd8,
+        'Output should have JPEG signature'
+      )
+      assert.strictEqual(
+        imageBuffer[2],
+        0xff,
+        'Output should have JPEG signature'
       )
     })
   })

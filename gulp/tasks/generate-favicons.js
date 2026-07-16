@@ -6,6 +6,17 @@ import loggerLib from '../utils/index.js'
 
 const logger = loggerLib.createLogger('GenerateFavicons')
 
+function validateOutputOverrides(outputDir, options) {
+  const defaultManifestPath = path.join(outputDir, 'manifest.webmanifest')
+  if (
+    options.manifestPath &&
+    path.resolve(options.manifestPath) !== path.resolve(defaultManifestPath) &&
+    !options.manifestHref
+  ) {
+    throw new Error('manifestHref is required when manifestPath is relocated.')
+  }
+}
+
 /**
  * Gulp Task: Generates favicons and related metadata from a source image.
  * Uses the 'favicons' package to produce multiple formats (ico, png, webmanifest).
@@ -46,6 +57,8 @@ export default async function generateFavicons(
   }
 
   try {
+    validateOutputOverrides(outputDir, options)
+
     await fs.access(sourcePath).catch((error) => {
       throw new Error(`Favicon source image not found at: ${sourcePath}`, {
         cause: error,
@@ -85,7 +98,10 @@ export default async function generateFavicons(
 
     if (result.html && result.html.length > 0) {
       const faviconHtml = result.html
-        .filter((line) => !/href="[^"]*favicon\.ico"/.test(line))
+        .filter(
+          (line) =>
+            !options.rootIconPath || !/href="[^"]*favicon\.ico"/.test(line)
+        )
         .map((line) =>
           options.manifestHref
             ? line.replace(

@@ -29,11 +29,43 @@ async function hasAnyFontAsset(fontsDir) {
   try {
     const entries = await fs.readdir(fontsDir, { withFileTypes: true })
     return entries.some(function hasFontAsset(entry) {
-      return entry.isFile()
+      return entry.isFile() && !entry.name.startsWith('.')
     })
-  } catch {
-    return false
+  } catch (error) {
+    if (error.code === 'ENOENT') {
+      return false
+    }
+    throw error
   }
+}
+
+async function verifyReferencedFontAssets(cssFile, fontsDir) {
+  const css = await fs.readFile(cssFile, 'utf8')
+  const localUrls = [...css.matchAll(/url\(([^)]+)\)/gi)]
+    .map((match) => match[1].trim().replace(/^(['"])(.*)\1$/, '$2'))
+    .filter((url) => !/^(?:data:|https?:|\/\/|#)/i.test(url))
+    .map((url) => url.split(/[?#]/, 1)[0])
+
+  // URLs are resolved by the browser against the CSS location, but the
+  // fontload convention writes them relative to the assets root instead.
+  const baseDirs = [path.dirname(cssFile), path.dirname(path.resolve(fontsDir))]
+
+  await Promise.all(
+    localUrls.map(async (url) => {
+      const errors = []
+      for (const baseDir of baseDirs) {
+        try {
+          await fs.access(path.resolve(baseDir, url))
+          return
+        } catch (error) {
+          errors.push(error)
+        }
+      }
+      throw new Error(`Referenced font asset not found: ${url}`, {
+        cause: errors[0],
+      })
+    })
+  )
 }
 
 async function shouldSkipCachedFonts(input, cssFile, fontsDir) {
@@ -54,6 +86,7 @@ async function shouldSkipCachedFonts(input, cssFile, fontsDir) {
     }
 
     if (inputStats.mtime <= cssStats.mtime && hasFontFiles) {
+      await verifyReferencedFontAssets(cssFile, fontsDir)
       logger.debug(
         `Fonts are up to date, skipping local font asset verification for ${getRelativePath(cssFile)}.`
       )
@@ -122,6 +155,8 @@ export default async function processFonts(input, outputDir, options = {}) {
       )
       return
     }
+
+    await verifyReferencedFontAssets(cssFile, fontsDir)
 
     logger.verbose(
       `Using local font assets from ${getRelativePath(fontsDir)} and ${getRelativePath(cssFile)}.`

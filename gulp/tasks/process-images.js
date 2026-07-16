@@ -57,7 +57,10 @@ async function optimizeSvg(src, dest) {
       new Transform({
         objectMode: true,
         transform(file, _enc, cb) {
-          if (file._isInvalid || file.isNull()) {
+          if (file._isInvalid) {
+            return cb(null, null)
+          }
+          if (file.isNull()) {
             return cb(null, file)
           }
           if (file.isStream()) {

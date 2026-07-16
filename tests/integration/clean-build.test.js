@@ -18,12 +18,13 @@ describe('Clean Build Task', () => {
   })
 
   it('should delete existing files and directories', async () => {
-    const fileToDelete = path.join(testDir, 'to-delete.txt')
-    const dirToDelete = path.join(testDir, 'to-delete-dir')
+    const allowedRoot = path.join(testDir, 'project')
+    const fileToDelete = path.join(allowedRoot, 'to-delete.txt')
+    const dirToDelete = path.join(allowedRoot, 'to-delete-dir')
     const nestedFile = path.join(dirToDelete, 'nested.txt')
 
     // Create test structure
-    await fs.mkdir(testDir, { recursive: true })
+    await fs.mkdir(allowedRoot, { recursive: true })
     await fs.writeFile(fileToDelete, 'content')
     await fs.mkdir(dirToDelete, { recursive: true })
     await fs.writeFile(nestedFile, 'nested content')
@@ -45,7 +46,7 @@ describe('Clean Build Task', () => {
     )
 
     // Run clean
-    const deleted = await cleanBuild([fileToDelete, dirToDelete])
+    const deleted = await cleanBuild([fileToDelete, dirToDelete], allowedRoot)
 
     // Verify files are deleted
     assert.ok(
@@ -72,6 +73,19 @@ describe('Clean Build Task', () => {
     )
   })
 
+  it('should reject paths outside the allowed root', async () => {
+    const allowedRoot = path.join(testDir, 'project')
+    const outsideFile = path.join(testDir, 'outside.txt')
+    await fs.mkdir(allowedRoot, { recursive: true })
+    await fs.writeFile(outsideFile, 'content')
+
+    await assert.rejects(
+      cleanBuild(outsideFile, allowedRoot),
+      /Path is outside the allowed root/
+    )
+    await fs.access(outsideFile)
+  })
+
   it('should return empty array for empty paths', async () => {
     const deleted = await cleanBuild([])
     assert.deepStrictEqual(deleted, [])
@@ -82,7 +96,7 @@ describe('Clean Build Task', () => {
 
   it('should handle non-existent paths gracefully', async () => {
     const nonExistent = path.join(testDir, 'does-not-exist.txt')
-    const deleted = await cleanBuild(nonExistent)
+    const deleted = await cleanBuild(nonExistent, testDir)
     // deleteAsync should return empty array for non-existent paths
     assert.deepStrictEqual(deleted, [])
   })

@@ -3,7 +3,7 @@ import path from 'node:path'
 import { afterEach, beforeEach, describe, it, mock } from 'node:test'
 
 import validateHtml from '../../gulp/tasks/validate-html.js'
-import { runInSandbox, writeFixtures } from '../test-helpers.js'
+import { runInSandbox, toGlobPath, writeFixtures } from '../test-helpers.js'
 
 describe('Validate HTML Task', () => {
   let mockConsoleError
@@ -40,9 +40,7 @@ describe('Validate HTML Task', () => {
             '<!DOCTYPE html><html lang="en"><head><title>Test</title></head><body><h1>Private</h1></body></html>',
         })
 
-        const globPath = path
-          .join(sandboxPath, 'src/**/*.html')
-          .replace(/\\/g, '/')
+        const globPath = toGlobPath(sandboxPath, 'src/**/*.html')
         const stream = validateHtml(globPath)
         const processedFiles = []
 
@@ -76,9 +74,7 @@ describe('Validate HTML Task', () => {
             '<!DOCTYPE html><html lang="en"><head><title>Test</title></head><body><center>Invalid</center></body></html>',
         })
 
-        const globPath = path
-          .join(sandboxPath, 'src/**/*.html')
-          .replace(/\\/g, '/')
+        const globPath = toGlobPath(sandboxPath, 'src/**/*.html')
         const stream = validateHtml(globPath)
 
         await assert.rejects(
@@ -99,25 +95,23 @@ describe('Validate HTML Task', () => {
       })
     })
 
-    it('should ignore empty directories (null files)', async () => {
+    it('should ignore empty directory matches', async () => {
       await runInSandbox('validate-html-null', async (sandboxPath) => {
-        // Write just a directory, src() without allowEmpty will skip it or read it as null if dot/allowEmpty
         await writeFixtures(sandboxPath, {
           'src/empty_dir/.keep': '',
         })
 
-        // By targeting the directory itself with allowEmpty: true, or just letting src() read it.
-        // Actually, validateHtml uses `src(input)` with default options.
-        // It's easier to verify it doesn't crash on an empty directory match.
-        const globPath = path
-          .join(sandboxPath, 'src/empty_dir')
-          .replace(/\\/g, '/')
+        const globPath = toGlobPath(sandboxPath, 'src/empty_dir/**/*.html')
         const stream = validateHtml(globPath)
+        const processedFiles = []
+        stream.on('data', (file) => processedFiles.push(file.path))
 
         await new Promise((resolve, reject) => {
           stream.on('finish', resolve)
           stream.on('error', reject)
         })
+
+        assert.deepStrictEqual(processedFiles, [])
       })
     })
   })

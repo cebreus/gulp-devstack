@@ -194,7 +194,7 @@ export function handleEmptyPaths(target, logMessage) {
     (Array.isArray(target) && target.length === 0) ||
     (typeof target === 'string' && target.trim() === '')
   if (isEmpty) {
-    logger.verbose(logMessage)
+    logger.warn(logMessage)
     return true
   }
   return false

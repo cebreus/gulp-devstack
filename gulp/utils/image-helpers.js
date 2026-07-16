@@ -29,7 +29,7 @@ function isWebpBuffer(buffer) {
 
 function isSvgBuffer(buffer) {
   const start = buffer.slice(0, 100).toString()
-  return start.includes('<svg') || start.includes('<?xml')
+  return /^\s*(?:<\?xml[^>]*>\s*)?<svg\b/i.test(start)
 }
 
 /**

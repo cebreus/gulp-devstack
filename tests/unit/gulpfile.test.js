@@ -42,13 +42,26 @@ describe('Gulpfile (Boundary/Smoke)', () => {
   })
 
   it('should throw an error when BUILD_MODE is not set', () => {
+    const env = { ...process.env }
+    delete env.BUILD_MODE
+
     assert.throws(() => {
       execSync('node -e "import(\'./gulpfile.js\')"', {
         cwd: process.cwd(),
-        env: { ...process.env, BUILD_MODE: '' },
+        env,
         stdio: 'pipe',
       })
-    }, /BUILD_MODE must be set/)
+    }, /Unsupported BUILD_MODE: <unset>\./)
+  })
+
+  it('should throw an error when BUILD_MODE is invalid', () => {
+    assert.throws(() => {
+      execSync('node -e "import(\'./gulpfile.js\')"', {
+        cwd: process.cwd(),
+        env: { ...process.env, BUILD_MODE: 'bulid' },
+        stdio: 'pipe',
+      })
+    }, /Unsupported BUILD_MODE: bulid\./)
   })
 
   it('should export correct default pipeline based on BUILD_MODE', async () => {

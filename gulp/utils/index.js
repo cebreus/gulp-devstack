@@ -12,7 +12,9 @@ export {
   isPrivateFile,
   streamToPromise,
   suppressOutdatedBootstrapWarnings,
+  toBooleanFlag,
   toKebabCase,
+  toPosixPath,
 } from './core.js'
 export {
   cleanHtmlComments,

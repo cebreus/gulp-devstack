@@ -108,6 +108,7 @@ describe('Local image catalog', () => {
   it('enhances only explicitly filtered local legacy image markup', () => {
     const html = [
       '<img class="photo" src="/assets/images/photo.jpg" alt="Photo">',
+      '<img src="/assets/images/uncatalogued.jpg" alt="Uncatalogued">',
       '<img src="https://example.com/photo.jpg" alt="External">',
     ].join('')
     const catalog = {
@@ -125,6 +126,10 @@ describe('Local image catalog', () => {
     assert.match(
       output,
       /<img class="photo lqs-photo" src="\/assets\/images\/photo.jpg" alt="Photo" width="40" height="20">/
+    )
+    assert.match(
+      output,
+      /<img src="\/assets\/images\/uncatalogued.jpg" alt="Uncatalogued">/
     )
     assert.match(
       output,

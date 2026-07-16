@@ -18,32 +18,37 @@ import { cleanupSandbox, createTestSandbox } from '../test-helpers.js'
 
 describe('Helpers Utility - public API boundaries', () => {
   it('should expose only explicit shared seams from the utils barrel', () => {
-    assert.ok(!('applySeoDefaults' in utilsModule))
-    assert.ok(!('buildGlobalContext' in utilsModule))
-    assert.ok(!('buildMenuData' in utilsModule))
-    assert.ok(!('buildPageData' in utilsModule))
-    assert.ok(!('buildRouteExpressionContext' in utilsModule))
-    assert.ok(!('buildTemplateContext' in utilsModule))
-    assert.equal(typeof utilsModule.calculateReadingTime, 'function')
-    assert.equal(typeof utilsModule.cleanHtmlComments, 'function')
-    assert.equal(typeof utilsModule.createLogger, 'function')
-    assert.ok(!('deepTrimStrings' in utilsModule))
-    assert.ok(!('discoverRouteAssets' in utilsModule))
-    assert.equal(typeof utilsModule.discoverRouteScripts, 'function')
-    assert.equal(typeof utilsModule.discoverRouteStyles, 'function')
-    assert.equal(typeof utilsModule.detectType, 'function')
-    assert.ok(!('extractMenuEntry' in utilsModule))
-    assert.equal(typeof utilsModule.getLqsPlaceholder, 'function')
-    assert.ok(!('getMenuDataArtifactPath' in utilsModule))
-    assert.ok(!('getPageDataArtifactPath' in utilsModule))
-    assert.ok(!('getRouteDataArtifactsDir' in utilsModule))
-    assert.ok(!('getSiteDataArtifactPath' in utilsModule))
-    assert.equal(typeof utilsModule.optimizeWithSharp, 'function')
-    assert.equal(typeof utilsModule.resolveInjectionUrl, 'function')
-    assert.ok(!('resolveMetadataUrls' in utilsModule))
-    assert.ok(!('resolvePageLocation' in utilsModule))
-    assert.equal(typeof utilsModule.stripXhtmlSlashes, 'function')
-    assert.ok(!('toBooleanFlag' in utilsModule))
+    const expectedExports = [
+      'attachPipelineLogging',
+      'calculateReadingTime',
+      'cleanHtmlComments',
+      'cleanupDir',
+      'clearRouteAssetCache',
+      'createLogger',
+      'default',
+      'detectType',
+      'discoverRouteScripts',
+      'discoverRouteStyles',
+      'ensureDirectoryExists',
+      'ensureFileIntegrity',
+      'getDirFromGlob',
+      'getEnv',
+      'getLqsPlaceholder',
+      'getRelativePath',
+      'handleEmptyPaths',
+      'isPrivateFile',
+      'logger',
+      'optimizeWithSharp',
+      'resolveInjectionUrl',
+      'streamToPromise',
+      'stripXhtmlSlashes',
+      'suppressOutdatedBootstrapWarnings',
+      'toBooleanFlag',
+      'toKebabCase',
+      'toPosixPath',
+    ].sort()
+
+    assert.deepStrictEqual(Object.keys(utilsModule).sort(), expectedExports)
   })
 })
 
@@ -61,31 +66,32 @@ describe('Helpers Utility - getRelativePath', () => {
 describe('Helpers Utility - ensureDirectoryExists', () => {
   it('should create directory if it does not exist', async () => {
     const sandbox = await createTestSandbox()
-    const targetDir = path.join(sandbox, 'new/nested/dir')
-
-    await ensureDirectoryExists(targetDir)
-
-    const stats = await fs.promises.stat(targetDir)
-    assert.ok(stats.isDirectory())
-
-    await cleanupSandbox(sandbox)
+    try {
+      const targetDir = path.join(sandbox, 'new/nested/dir')
+      await ensureDirectoryExists(targetDir)
+      const stats = await fs.promises.stat(targetDir)
+      assert.ok(stats.isDirectory())
+    } finally {
+      await cleanupSandbox(sandbox)
+    }
   })
 
   it('should not throw if directory already exists', async () => {
     const sandbox = await createTestSandbox()
+    try {
+      await assert.doesNotReject(async () => {
+        await ensureDirectoryExists(sandbox)
+      })
 
-    await assert.doesNotReject(async () => {
-      await ensureDirectoryExists(sandbox)
-    })
-
-    // Verify directory still exists and was not altered
-    const stats = await fs.promises.stat(sandbox)
-    assert.ok(
-      stats.isDirectory(),
-      'Sandbox directory should still exist after no-op call'
-    )
-
-    await cleanupSandbox(sandbox)
+      // Verify directory still exists and was not altered
+      const stats = await fs.promises.stat(sandbox)
+      assert.ok(
+        stats.isDirectory(),
+        'Sandbox directory should still exist after no-op call'
+      )
+    } finally {
+      await cleanupSandbox(sandbox)
+    }
   })
 })
 
@@ -149,19 +155,21 @@ describe('Helpers Utility - handleEmptyPaths', () => {
 describe('Helpers Utility - ensureDirectoryExists (Array)', () => {
   it('should create multiple directories recursively', async () => {
     const sandbox = await createTestSandbox()
-    const targets = [
-      path.join(sandbox, 'multi/dir1'),
-      path.join(sandbox, 'multi/dir2'),
-    ]
+    try {
+      const targets = [
+        path.join(sandbox, 'multi/dir1'),
+        path.join(sandbox, 'multi/dir2'),
+      ]
 
-    await ensureDirectoryExists(targets)
+      await ensureDirectoryExists(targets)
 
-    for (const target of targets) {
-      const stats = await fs.promises.stat(target)
-      assert.ok(stats.isDirectory())
+      for (const target of targets) {
+        const stats = await fs.promises.stat(target)
+        assert.ok(stats.isDirectory())
+      }
+    } finally {
+      await cleanupSandbox(sandbox)
     }
-
-    await cleanupSandbox(sandbox)
   })
 })
 
@@ -190,6 +198,7 @@ describe('Helpers Utility - isPrivateFile', () => {
   it('should return true for files starting with _ or __', () => {
     assert.strictEqual(isPrivateFile('_private.njk'), true)
     assert.strictEqual(isPrivateFile('__hidden.js'), true)
+    assert.strictEqual(isPrivateFile('assets/css/_variables.scss'), true)
   })
 
   it('should return true if any parent directory starts with _ or __', () => {
@@ -201,7 +210,6 @@ describe('Helpers Utility - isPrivateFile', () => {
   it('should return false for standard files and paths', () => {
     assert.strictEqual(isPrivateFile('src/main.js'), false)
     assert.strictEqual(isPrivateFile('index.njk'), false)
-    assert.strictEqual(isPrivateFile('assets/css/_variables.scss'), true)
   })
 
   it('should return false for empty or null input', () => {

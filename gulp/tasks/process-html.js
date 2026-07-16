@@ -147,6 +147,19 @@ async function createHtmlPipeline(config, globalContext) {
 
   let pipeline = gulp
     .src(routesPattern, { allowEmpty: true })
+    .pipe(
+      new Transform({
+        objectMode: true,
+        transform(file, _enc, callback) {
+          if (isPrivateFile(file.path)) {
+            logger.verbose(`Skipping private route: ${file.path}`)
+            callback()
+            return
+          }
+          callback(null, file)
+        },
+      })
+    )
     .pipe(data((file) => loadTemplateData(file, config, globalContext)))
     .pipe(
       nunjucksRender(

@@ -5,6 +5,7 @@ import path from 'node:path'
 import { afterEach, beforeEach, describe, it } from 'node:test'
 
 import copyStatic from '../../gulp/tasks/copy-static.js'
+import { toGlobPath } from '../test-helpers.js'
 
 describe('Copy Static Task', () => {
   let srcDir
@@ -32,11 +33,7 @@ describe('Copy Static Task', () => {
     await fs.writeFile(nestedFile, 'Nested Content')
 
     // Run copy task
-    await copyStatic(
-      path.join(srcDir, '**/*').replace(/\\/g, '/'),
-      srcDir,
-      destDir
-    )
+    await copyStatic(toGlobPath(srcDir, '**/*'), srcDir, destDir)
 
     // Verify files were copied
     const copiedTestFile = path.join(destDir, 'test.txt')
@@ -82,11 +79,7 @@ describe('Copy Static Task', () => {
     )
 
     // Run copy task
-    await copyStatic(
-      path.join(srcDir, '**/*').replace(/\\/g, '/'),
-      srcDir,
-      destDir
-    )
+    await copyStatic(toGlobPath(srcDir, '**/*'), srcDir, destDir)
 
     // Verify only non-private files were copied
     const publicFile = path.join(destDir, 'public.txt')

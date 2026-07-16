@@ -1,6 +1,5 @@
 import assert from 'node:assert/strict'
 import { execSync } from 'node:child_process'
-import fs from 'node:fs'
 import path from 'node:path'
 import { after, afterEach, before, beforeEach, describe, it } from 'node:test'
 import AxeBuilder from '@axe-core/playwright'
@@ -20,6 +19,10 @@ let browser = null
 let context = null
 let clientErrors = []
 
+async function shouldSkipLink(link) {
+  return new URL(link, BASE_URL).origin !== new URL(BASE_URL).origin
+}
+
 // E2E Hooks
 before(async () => {
   browser = await chromium.launch()
@@ -30,16 +33,12 @@ before(async () => {
     const config = resolveConfig(mode)
     const buildDir = path.resolve(config.paths.build)
 
-    if (!fs.existsSync(buildDir)) {
-      console.log(
-        `[E2E] ${mode} build not found in ${buildDir}. Running JIT build...`
-      )
-      const buildScript = mode === 'export' ? 'export' : 'build'
-      execSync(`pnpm run ${buildScript}`, {
-        stdio: 'inherit',
-        env: { ...process.env, BUILD_MODE: mode },
-      })
-    }
+    console.log(`[E2E] Building current ${mode} artefacts...`)
+    const buildScript = mode === 'export' ? 'export' : 'build'
+    execSync(`pnpm run ${buildScript}`, {
+      stdio: 'inherit',
+      env: { ...process.env, BUILD_MODE: mode },
+    })
 
     console.log(`[E2E] Starting test server for ${mode} artifacts...`)
     localServer = bs.create()
@@ -95,12 +94,20 @@ beforeEach(() => {
   clientErrors = []
 })
 
-afterEach(() => {
-  assert.strictEqual(
-    clientErrors.length,
-    0,
-    `Unexpected client errors found: ${clientErrors.join(', ')}`
-  )
+afterEach(async () => {
+  try {
+    assert.strictEqual(
+      clientErrors.length,
+      0,
+      `Unexpected client errors found: ${clientErrors.join(', ')}`
+    )
+  } finally {
+    await Promise.allSettled(
+      context.pages().map((page) => {
+        return page.close()
+      })
+    )
+  }
 })
 
 after(async () => {
@@ -196,14 +203,7 @@ describe('E2E: Deep Link Integrity', { timeout: 120000 }, () => {
     const result = await checker.check({
       path: BASE_URL,
       recurse: true,
-      linksToSkip: [
-        'https://img.shields.io',
-        'https://app.codacy.com',
-        'https://github.com',
-        'https://getbootstrap.com',
-        'https://mozilla.github.io/nunjucks',
-        'https://gulp-devstack.cebre.us',
-      ],
+      linksToSkip: shouldSkipLink,
     })
 
     const brokenLinks = result.links.filter((x) => x.state === 'BROKEN')

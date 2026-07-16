@@ -122,7 +122,12 @@ async function processContentFile(file, routesRoot, dest, usedPageIds) {
 
   return {
     jsonData,
-    menuEntry: buildMenuEntry(frontmatter, fileName, pagePath, jsonData.pageId),
+    menuEntry: buildMenuEntry(
+      renderedFrontmatter,
+      fileName,
+      pagePath,
+      jsonData.pageId
+    ),
     outputFilePath: await writePageDataArtifact({
       pageData: jsonData,
       filePath: file.path,

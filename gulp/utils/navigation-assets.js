@@ -25,6 +25,7 @@ function getAssetCandidateNames(routeRelDir, routeBaseName, extensions) {
 
   return [
     ...extensions.map((ext) => `${routeBaseName}${ext}`),
+    ...extensions.map((ext) => `${pageAssetName}${ext}`),
     ...extensions.map((ext) => `${pageAssetName}/index${ext}`),
   ]
 }
@@ -39,8 +40,13 @@ async function getAssetManifest(assetDir) {
     const manifest = new Set(entries.map(normalizeAssetEntry))
     ASSET_MANIFEST_CACHE.set(assetDir, manifest)
     return manifest
-  } catch {
-    return null
+  } catch (error) {
+    if (error.code === 'ENOENT') {
+      return null
+    }
+    throw new Error(`Failed to read asset directory: ${assetDir}`, {
+      cause: error,
+    })
   }
 }
 

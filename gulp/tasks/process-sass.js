@@ -68,10 +68,12 @@ export function getSassCompilerOptions(
     ],
     outputStyle: minify ? 'compressed' : 'expanded',
     ...customSassOptions,
-    includePaths: buildSassIncludePaths(
-      customSassOptions.includePaths?.[0],
-      config
-    ),
+    includePaths: [
+      ...buildSassIncludePaths(null, config),
+      ...(customSassOptions.includePaths || []).map((entry) =>
+        path.resolve(entry)
+      ),
+    ],
     logger: {
       warn: (message, options) => {
         if (!suppressOutdatedBootstrapWarnings(message)) {
@@ -308,12 +310,13 @@ export async function processAllSass(config, mode) {
     const results = await Promise.all([
       compileBootstrapStyles(config, mode),
       compileProjectStyles(config, mode),
-      compileRouteStyles(config, [], {
-        skipNewer: mode === 'dev',
-      }),
+      compileRouteStyles(config, [], buildModeStyleOptions(config, mode)),
     ])
 
-    if (SHOULD_FAIL_ON_SASS_ERROR && hasSassCompilationErrors) {
+    if (
+      hasSassCompilationErrors &&
+      (mode !== 'dev' || SHOULD_FAIL_ON_SASS_ERROR)
+    ) {
       throw new Error(
         'Sass compilation failed. Enable logs to inspect root causes.'
       )

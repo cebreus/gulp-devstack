@@ -100,19 +100,27 @@ describe('Sass Pipeline Integration', () => {
 
   it('should support custom postcss plugins', async () => {
     await runInSandbox('sass-postcss', async (sandbox) => {
+      const markerPlugin = {
+        postcssPlugin: 'test-marker',
+        Rule(rule) {
+          rule.append({ prop: '--postcss-marker', value: 'applied' })
+        },
+      }
       const postcssFixtures = {
         'src/style.scss':
           'body { display: flex; color: blue; background: green; }',
       }
       await writeFixtures(sandbox, postcssFixtures)
-      const outputDir = await testProcessSass(sandbox, { minify: false })
+      const outputDir = await testProcessSass(sandbox, {
+        minify: false,
+        postcssPlugins: [markerPlugin],
+      })
 
       const generatedCss = await fs.readFile(
         path.join(outputDir, 'style.css'),
         'utf8'
       )
-      assert.ok(generatedCss.length > 0)
-      assert.ok(generatedCss.includes('display: flex'))
+      assert.ok(generatedCss.includes('--postcss-marker: applied'))
     })
   })
 

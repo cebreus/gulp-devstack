@@ -30,6 +30,21 @@ function getMenuDataArtifactPath(artifactsBase) {
   return path.join(artifactsBase, MENU_DATA_ARTIFACT_FILENAME)
 }
 
+function getRouteRelativePath(routesBase, filePath) {
+  const relativePath = path.relative(
+    path.resolve(toPosixPath(routesBase)),
+    path.resolve(toPosixPath(filePath))
+  )
+  if (
+    relativePath === '..' ||
+    relativePath.startsWith(`..${path.sep}`) ||
+    path.isAbsolute(relativePath)
+  ) {
+    throw new Error(`Route file is outside routesBase: ${filePath}`)
+  }
+  return relativePath
+}
+
 /**
  * Returns the path to a route page data artifact.
  * @param {object} options - Artifact parameters.
@@ -43,7 +58,7 @@ export function getPageDataArtifactPath({
   routesBase,
   filePath,
 }) {
-  const relativeFilePath = path.relative(routesBase, filePath)
+  const relativeFilePath = getRouteRelativePath(routesBase, filePath)
   const outputFileName = relativeFilePath.replace(
     path.extname(filePath),
     '.json'
@@ -159,15 +174,10 @@ export function resolvePageLocation(
   fileName,
   routesRoot = './src/routes'
 ) {
-  const absoluteRoutesRoot = toPosixPath(path.resolve(routesRoot))
-  const absoluteFilePath = toPosixPath(path.resolve(filePath))
-
-  const isRouteFile = absoluteFilePath.startsWith(absoluteRoutesRoot)
-  const relativeDir = isRouteFile
-    ? toPosixPath(
-        path.relative(absoluteRoutesRoot, path.dirname(absoluteFilePath))
-      )
-    : ''
+  const normalizedFilePath = toPosixPath(filePath)
+  const relativeDir = toPosixPath(
+    getRouteRelativePath(routesRoot, path.dirname(normalizedFilePath))
+  )
 
   let pagePath = relativeDir !== '' ? `/${relativeDir}/` : '/'
   if (fileName !== 'index') {
@@ -320,12 +330,13 @@ export function buildPageData({
       ? options.homePageId || 'home'
       : path.basename(pagePath) || fileName
 
+  const normalizedFrontmatter = deepTrimStrings(frontmatter)
   const jsonData = {
-    ...deepTrimStrings(frontmatter),
+    ...normalizedFrontmatter,
     content: deepTrimStrings(content),
     path: pagePath,
     fileName,
-    pageId: frontmatter.pageId || autoPageId,
+    pageId: normalizedFrontmatter.pageId || autoPageId,
   }
 
   return applySeoDefaults(jsonData, pagePath, siteConfig)

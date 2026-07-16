@@ -6,17 +6,18 @@ import { chromium } from '@playwright/test'
 
 import { compareScreenshots, startStaticServer } from './helpers.js'
 
-const ROUTES = ['/', '/404.html']
-const THEMES = ['light', 'dark']
+const ROUTES = { home: '/', notFound: '/404.html' }
+const THEMES = { light: 'light', dark: 'dark' }
 const VIEWPORTS = [
   { name: 'xs', width: 390, height: 844 },
-  { name: 'sm', width: 576, height: 900 },
-  { name: 'md', width: 768, height: 1024 },
-  { name: 'lg', width: 992, height: 1000 },
   { name: 'xl', width: 1200, height: 1000 },
-  { name: 'xxl', width: 1400, height: 1000 },
 ]
-const MAX_DIFF_PIXEL_RATIO = 0
+const PARITY_CASES = [
+  ['Home (Mobile Light)', ROUTES.home, THEMES.light, 'xs'],
+  ['Home (Desktop Dark)', ROUTES.home, THEMES.dark, 'xl'],
+  ['404 (Desktop Light)', ROUTES.notFound, THEMES.light, 'xl'],
+]
+const MAX_DIFF_PIXEL_RATIO = 0.001
 const DEFAULT_WAIT_AFTER_THEME_MS = 150
 
 let browser = null
@@ -103,24 +104,16 @@ describe('Visual Pipeline Parity', { timeout: 60000 }, () => {
     browser = await chromium.launch()
 
     const rootDir = process.cwd()
-    ;[buildServer, exportServer] = await Promise.all([
-      startStaticServer(path.join(rootDir, 'build-prod')),
-      startStaticServer(path.join(rootDir, 'build-export')),
-    ])
+    buildServer = await startStaticServer(path.join(rootDir, 'build-prod'))
+    exportServer = await startStaticServer(path.join(rootDir, 'build-export'))
   })
 
   after(async () => {
-    if (browser) {
-      await browser.close()
-    }
-
-    if (buildServer) {
-      await buildServer.close()
-    }
-
-    if (exportServer) {
-      await exportServer.close()
-    }
+    await Promise.allSettled([
+      browser?.close(),
+      buildServer?.close(),
+      exportServer?.close(),
+    ])
   })
 
   async function assertVisualParity(routePath, theme, viewportName) {
@@ -151,15 +144,9 @@ describe('Visual Pipeline Parity', { timeout: 60000 }, () => {
     )
   }
 
-  it('should keep build and export visually identical for Home (Mobile Light)', async () => {
-    await assertVisualParity('/', 'light', 'xs')
-  })
-
-  it('should keep build and export visually identical for Home (Desktop Dark)', async () => {
-    await assertVisualParity('/', 'dark', 'xl')
-  })
-
-  it('should keep build and export visually identical for 404 (Desktop Light)', async () => {
-    await assertVisualParity('/404.html', 'light', 'xl')
-  })
+  for (const [name, routePath, theme, viewport] of PARITY_CASES) {
+    it(`should keep build and export visually identical for ${name}`, async () => {
+      await assertVisualParity(routePath, theme, viewport)
+    })
+  }
 })

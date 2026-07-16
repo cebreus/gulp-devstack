@@ -34,15 +34,16 @@ describe('Route JS Integration', () => {
         }
       )
 
-      const expectedFiles = ['index.js', 'about/index.js', 'blog/post.js']
+      const expectedFiles = new Map([
+        ['index.js', 'home'],
+        ['about/index.js', 'about'],
+        ['blog/post.js', 'post'],
+      ])
 
-      for (const relativePath of expectedFiles) {
+      for (const [relativePath, expectedMarker] of expectedFiles) {
         const assetPath = path.join(outputDir, relativePath)
         const content = await fs.readFile(assetPath, 'utf8')
-        assert.ok(
-          content.length > 0,
-          `Expected non-empty JS file: ${relativePath}`
-        )
+        assert.ok(content.includes(expectedMarker))
       }
     })
   })

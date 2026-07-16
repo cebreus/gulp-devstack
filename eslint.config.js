@@ -16,12 +16,12 @@ const CONFIG_FILE_PATTERNS = [
 ]
 
 const TEST_FILE_PATTERNS = [
-  'tests/**/*.js',
-  '**/*.{spec,test}.js',
-  '**/__tests__/**/*.js',
+  'tests/**/*.{js,mjs,cjs}',
+  '**/*.{spec,test}.{js,mjs,cjs}',
+  '**/__tests__/**/*.{js,mjs,cjs}',
 ]
 
-const PRODUCTION_FILE_PATTERNS = ['**/*.js']
+const PRODUCTION_FILE_PATTERNS = ['**/*.{js,mjs,cjs}']
 
 export default [
   {
@@ -116,7 +116,7 @@ export default [
 
   {
     files: PRODUCTION_FILE_PATTERNS,
-    ignores: ['tests/**/*.js'],
+    ignores: TEST_FILE_PATTERNS,
     plugins: {
       jsdoc,
     },
@@ -169,6 +169,10 @@ export default [
     files: ['src/**/*.js'],
     languageOptions: { globals: globals.browser },
     rules: { 'no-console': 'warn' },
+  },
+  {
+    files: ['**/*.cjs'],
+    languageOptions: { sourceType: 'commonjs' },
   },
   {
     files: TEST_FILE_PATTERNS,

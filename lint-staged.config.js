@@ -1,7 +1,7 @@
 export default {
-  '*.js': ['eslint --fix'],
-  '*.scss': ['stylelint --fix --allow-empty-input'],
+  '*.{js,mjs,cjs}': ['eslint --fix', 'prettier --write'],
+  '*.scss': ['stylelint --fix --allow-empty-input', 'prettier --write'],
   '*.md': ['remark --quiet --frail'],
-  '*.njk': ['njklint --fix'],
-  '*.{css,scss,js,json,njk}': ['prettier --write'],
+  '*.njk': ['njklint --fix', 'prettier --write'],
+  '*.{css,json}': ['prettier --write'],
 }

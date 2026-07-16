@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import { createHash } from 'node:crypto'
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import { afterEach, beforeEach, describe, it, mock } from 'node:test'
@@ -6,7 +7,12 @@ import { afterEach, beforeEach, describe, it, mock } from 'node:test'
 import generateRevision from '../../gulp/tasks/generate-revision.js'
 import generateSri from '../../gulp/tasks/generate-sri.js'
 import { streamToPromise } from '../../gulp/utils/index.js'
-import { runInSandbox, silenceConsole, writeFixtures } from '../test-helpers.js'
+import {
+  runInSandbox,
+  silenceConsole,
+  toGlobPath,
+  writeFixtures,
+} from '../test-helpers.js'
 
 silenceConsole(beforeEach, afterEach, mock)
 
@@ -25,8 +31,8 @@ describe('Asset Pipeline Integration', () => {
       await writeFixtures(testDir, assetFixtures)
 
       const results = await generateRevision({
-        inputAssets: [path.join(buildBase, '**/*.css').replace(/\\/g, '/')],
-        inputHtml: [path.join(buildBase, '**/*.html').replace(/\\/g, '/')],
+        inputAssets: [toGlobPath(buildBase, '**/*.css')],
+        inputHtml: [toGlobPath(buildBase, '**/*.html')],
         buildBase,
         manifestPath,
       })
@@ -35,6 +41,10 @@ describe('Asset Pipeline Integration', () => {
       const manifest = JSON.parse(manifestContent)
       const revisionedName = manifest['assets/css/style.css']
       assert.ok(revisionedName.includes('style-'))
+      assert.strictEqual(
+        await fs.readFile(path.join(buildBase, revisionedName), 'utf8'),
+        'body { color: red; }'
+      )
 
       await assert.rejects(
         async () => {
@@ -63,7 +73,7 @@ describe('Asset Pipeline Integration', () => {
       await writeFixtures(testDir, sriFixtures)
 
       const stream = await generateSri(
-        path.join(buildBase, '**/*.html').replace(/\\/g, '/'),
+        toGlobPath(buildBase, '**/*.html'),
         buildBase
       )
       await streamToPromise(stream)
@@ -72,7 +82,10 @@ describe('Asset Pipeline Integration', () => {
         path.join(buildBase, 'index.html'),
         'utf8'
       )
-      assert.ok(updatedHtmlContent.includes('integrity="sha384-'))
+      const digest = createHash('sha384')
+        .update(sriFixtures['build/assets/js/app.js'])
+        .digest('base64')
+      assert.ok(updatedHtmlContent.includes(`integrity="sha384-${digest}"`))
     })
   })
 })

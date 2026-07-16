@@ -8,20 +8,31 @@ export async function createTestSandbox(prefix = 'test-run') {
     await fs.promises.mkdir(rootDir, { recursive: true })
   }
 
-  const timestamp = Date.now()
-  const random = Math.floor(Math.random() * 1000)
-  const tempDir = path.join(rootDir, `${prefix}-${timestamp}-${random}`)
-
-  await fs.promises.mkdir(tempDir, { recursive: true })
+  const safePrefix = String(prefix).replace(/[^a-zA-Z0-9_-]/g, '-')
+  const tempDir = await fs.promises.mkdtemp(
+    path.join(rootDir, `${safePrefix}-`)
+  )
   return tempDir
 }
 
 export async function cleanupSandbox(sandboxPath) {
-  if (!sandboxPath || sandboxPath === '/') {
-    return
+  const rootDir = path.resolve(process.cwd(), 'tests/.sandboxes')
+  const resolvedSandboxPath = path.resolve(sandboxPath)
+  const relativePath = path.relative(rootDir, resolvedSandboxPath)
+  const sandboxStats = await fs.promises.lstat(resolvedSandboxPath)
+
+  if (
+    !relativePath ||
+    relativePath === '..' ||
+    relativePath.startsWith(`..${path.sep}`) ||
+    path.isAbsolute(relativePath) ||
+    !sandboxStats.isDirectory() ||
+    sandboxStats.isSymbolicLink()
+  ) {
+    throw new Error(`Refusing to clean invalid sandbox: ${sandboxPath}`)
   }
 
-  const nodeModulesPath = path.join(sandboxPath, 'node_modules')
+  const nodeModulesPath = path.join(resolvedSandboxPath, 'node_modules')
 
   try {
     const stats = await fs.promises.lstat(nodeModulesPath)
@@ -31,22 +42,36 @@ export async function cleanupSandbox(sandboxPath) {
   } catch {}
 
   try {
-    await fs.promises.rm(sandboxPath, { recursive: true, force: true })
+    await fs.promises.rm(resolvedSandboxPath, { recursive: true, force: true })
   } catch (error) {
     if (error.code !== 'ENOTEMPTY') {
       throw error
     }
 
-    await fs.promises.rm(sandboxPath, { recursive: true, force: true })
+    await fs.promises.rm(resolvedSandboxPath, { recursive: true, force: true })
   }
 }
 
 export async function runInSandbox(prefix, testFunction) {
   const sandboxPath = await createTestSandbox(prefix)
+  let testError
   try {
     await testFunction(sandboxPath)
+  } catch (error) {
+    testError = error
+    throw error
   } finally {
-    await cleanupSandbox(sandboxPath)
+    try {
+      await cleanupSandbox(sandboxPath)
+    } catch (cleanupError) {
+      if (testError) {
+        throw new AggregateError(
+          [testError, cleanupError],
+          'Test and sandbox cleanup both failed'
+        )
+      }
+      throw cleanupError
+    }
   }
 }
 
@@ -58,9 +83,21 @@ export function createMockEnvironment(overrides = {}) {
   }
 }
 
+export function toGlobPath(...segments) {
+  return path.join(...segments).replace(/\\/g, '/')
+}
+
 export async function writeFixtures(sandboxPath, files) {
   for (const [filePath, content] of Object.entries(files)) {
-    const fullPath = path.join(sandboxPath, filePath)
+    const fullPath = path.resolve(sandboxPath, filePath)
+    const relativePath = path.relative(path.resolve(sandboxPath), fullPath)
+    if (
+      relativePath === '..' ||
+      relativePath.startsWith(`..${path.sep}`) ||
+      path.isAbsolute(relativePath)
+    ) {
+      throw new Error(`Fixture path escapes sandbox: ${filePath}`)
+    }
     await fs.promises.mkdir(path.dirname(fullPath), { recursive: true })
     await fs.promises.writeFile(fullPath, content)
   }
@@ -68,26 +105,32 @@ export async function writeFixtures(sandboxPath, files) {
 
 export async function linkNodeModulesIntoSandbox(sandboxPath) {
   const linkType = process.platform === 'win32' ? 'junction' : 'dir'
+  const targetPath = path.resolve('node_modules')
+  const linkPath = path.join(sandboxPath, 'node_modules')
 
   try {
-    await fs.promises.symlink(
-      path.resolve('node_modules'),
-      path.join(sandboxPath, 'node_modules'),
-      linkType
-    )
+    await fs.promises.symlink(targetPath, linkPath, linkType)
   } catch (error) {
     if (error.code !== 'EEXIST') {
       throw error
+    }
+
+    const [existingTarget, expectedTarget] = await Promise.all([
+      fs.promises.realpath(linkPath),
+      fs.promises.realpath(targetPath),
+    ])
+    if (existingTarget !== expectedTarget) {
+      throw new Error(`Unexpected node_modules entry: ${linkPath}`)
     }
   }
 }
 
 export function silenceConsole(beforeEachFn, afterEachFn, mockObj) {
-  let mockLog
-  beforeEachFn(() => {
-    mockLog = mockObj.method(console, 'log', () => {})
+  const mockLog = Symbol('mockLog')
+  beforeEachFn((context) => {
+    context[mockLog] = mockObj.method(console, 'log', () => {})
   })
-  afterEachFn(() => {
-    mockLog.mock.restore()
+  afterEachFn((context) => {
+    context[mockLog]?.mock.restore()
   })
 }

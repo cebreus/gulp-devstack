@@ -85,7 +85,6 @@ async function renderCssOutput(options) {
     postcssPlugins,
     sourceMaps,
     minify,
-    skipNewer,
     sassCompilerOptions,
     autoprefixer,
     cssnano,
@@ -118,11 +117,7 @@ async function renderCssOutput(options) {
     sourceMap: postcssResult.map ? postcssResult.map.toJSON() : null,
     sourceMaps,
   })
-  await sassDependencyCache.writeDependencyManifest(
-    cssPath,
-    sassResult,
-    skipNewer
-  )
+  await sassDependencyCache.writeDependencyManifest(cssPath, sassResult)
 }
 
 async function verifyCssIntegrity(cssPath, skipIntegrity) {
@@ -174,7 +169,6 @@ async function compileSourceFile(options) {
   if (
     skipNewer &&
     (await sassDependencyCache.shouldSkipUnchangedFile({
-      sourceFile,
       cssPath,
       mapPath,
       sourceMaps,
@@ -190,7 +184,6 @@ async function compileSourceFile(options) {
       postcssPlugins,
       sourceMaps,
       minify,
-      skipNewer,
       sassCompilerOptions,
       autoprefixer,
       cssnano,
@@ -214,6 +207,12 @@ async function compileSourceFile(options) {
 
 async function createSassPipeline(options) {
   const sourceFiles = Array.isArray(options.src) ? options.src : [options.src]
+  if (options.outputFilename && sourceFiles.length > 1) {
+    throw new Error(
+      'outputFilename cannot be used with multiple Sass source files'
+    )
+  }
+
   const writtenFiles = await Promise.all(
     sourceFiles.map(function compileCurrentSourceFile(sourceFile) {
       return compileSourceFile({
