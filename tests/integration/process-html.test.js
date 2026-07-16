@@ -98,4 +98,52 @@ describe('Process HTML Task (Integration)', () => {
       })
     }
   )
+
+  it('exposes the required image catalog through the shared site context', async () => {
+    await runInSandbox('process-html-image-catalog', async (sandbox) => {
+      const config = {
+        routesBase: path.join(sandbox, 'src/routes'),
+        srcBase: path.join(sandbox, 'src'),
+        imagesBase: path.join(sandbox, 'src/assets/images'),
+        iconsBase: path.join(sandbox, 'src/assets/icons'),
+        tempBase: path.join(sandbox, '.tmp'),
+        paths: {
+          build: path.join(sandbox, 'build'),
+          imageCatalog: path.join(sandbox, '.tmp/images/catalog.json'),
+        },
+        globalInjectAssets: ['css/*.css'],
+        formatCode: false,
+      }
+
+      await writeFixtures(sandbox, {
+        'src/routes/index.njk': `
+          <!DOCTYPE html><html><head><title>Images</title></head><body>
+          <img src="{{ site.localImages.photo.src }}" width="{{ site.localImages.photo.width }}" height="{{ site.localImages.photo.height }}" class="{{ site.localImages.photo.placeholderClass }}" alt="">
+          <p>This is enough padding to exceed the integrity minimum in processHtml.</p>
+          </body></html>`,
+        '.tmp/pages/index.json': JSON.stringify({ title: 'Images' }),
+        '.tmp/images/catalog.json': JSON.stringify({
+          photo: {
+            src: '/assets/images/photo.jpg',
+            sources: [],
+            width: 40,
+            height: 20,
+            placeholderClass: 'lqs-a1b2c3d4e5',
+          },
+        }),
+        'build/css/dummy.css': 'body {}',
+      })
+
+      await processHtml(config)
+
+      const html = await fs.readFile(
+        path.join(config.paths.build, 'index.html'),
+        'utf8'
+      )
+      assert.match(
+        html,
+        /<img src="\/assets\/images\/photo.jpg" width="40" height="20" class="lqs-a1b2c3d4e5" alt="">/
+      )
+    })
+  })
 })

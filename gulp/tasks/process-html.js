@@ -4,6 +4,7 @@ import gulp from 'gulp'
 
 import { sortGlobalAssetPaths } from '../utils/html-output.js'
 import htmlRendering from '../utils/html-rendering.js'
+import { loadLocalImageCatalog } from '../utils/image-catalog.js'
 import loggerLib, {
   attachPipelineLogging,
   ensureFileIntegrity,
@@ -191,10 +192,16 @@ async function createHtmlPipeline(config, globalContext) {
  */
 export default async function processHtml(config) {
   clearRouteAssetCache()
-  const { siteData, menuData } = await loadRouteArtifactsContext(
-    config.tempBase
-  )
-  const globalContext = htmlRendering.buildGlobalContext({ siteData, menuData })
+  const [{ siteData, menuData }, localImages] = await Promise.all([
+    loadRouteArtifactsContext(config.tempBase),
+    config.paths.imageCatalog
+      ? loadLocalImageCatalog(config.paths.imageCatalog)
+      : Promise.resolve({}),
+  ])
+  const globalContext = htmlRendering.buildGlobalContext({
+    siteData: { ...siteData, localImages },
+    menuData,
+  })
   const { htmlPipeline, processedFiles } = await createHtmlPipeline(
     config,
     globalContext

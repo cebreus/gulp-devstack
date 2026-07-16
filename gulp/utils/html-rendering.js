@@ -4,6 +4,7 @@ import {
   stripTrailingLineWhitespace,
   stripXhtmlSlashes,
 } from './html-output.js'
+import { applyLocalImageMetadata } from './image-catalog.js'
 
 const DEFAULT_DATE_LOCALE = 'en'
 const DEFAULT_DATE_TIMEZONE = 'UTC'
@@ -88,6 +89,7 @@ function createNunjucksOptions(config, templatesPath, markdown) {
       })
 
       env.addFilter('date', formatTemplateDate)
+      env.addFilter('localImages', applyLocalImageMetadata)
     },
   }
 }

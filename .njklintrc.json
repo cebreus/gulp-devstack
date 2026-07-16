@@ -1,5 +1,5 @@
 {
-	"customFilters": ["md", "mdInline", "date"],
+	"customFilters": ["md", "mdInline", "date", "localImages"],
 	"rules": {
 		"checkFilters": true
 	}

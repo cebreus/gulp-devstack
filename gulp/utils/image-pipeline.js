@@ -3,11 +3,7 @@ import { Transform } from 'node:stream'
 import gulp from 'gulp'
 
 import createChangedFilter from './changed-filter.js'
-import {
-  detectType,
-  getLqsPlaceholder,
-  optimizeWithSharp,
-} from './image-helpers.js'
+import { detectType, optimizeWithSharp } from './image-helpers.js'
 import {
   attachPipelineLogging,
   getRelativePath,
@@ -59,15 +55,8 @@ function createImageValidationTransform(logger) {
 }
 
 async function optimizeRasterFile(file, options) {
-  const { targetType, quality, lqs, logger, logPrefix } = options
+  const { targetType, quality, logger, logPrefix } = options
   const original = file.contents
-
-  if (lqs) {
-    const placeholder = await getLqsPlaceholder(original)
-    logger.info(
-      `[LQS] ${path.basename(file.path)}: ${placeholder.slice(0, 50)}...`
-    )
-  }
 
   const optimized = await optimizeWithSharp(original, targetType, quality)
   const savedBytes = original.length - optimized.length
@@ -96,7 +85,7 @@ async function optimizeRasterFile(file, options) {
 }
 
 function createRasterOptimizationTransform(options) {
-  const { targetType, quality, lqs, logger, logPrefix, processedFiles, dest } =
+  const { targetType, quality, logger, logPrefix, processedFiles, dest } =
     options
 
   return new Transform({
@@ -110,7 +99,6 @@ function createRasterOptimizationTransform(options) {
         const optimizedFile = await optimizeRasterFile(file, {
           targetType,
           quality,
-          lqs,
           logger,
           logPrefix,
         })
@@ -135,7 +123,6 @@ async function executeRasterTask(options) {
     logger,
     logPrefix = 'Images',
     quality = 85,
-    lqs = false,
   } = options
   const processedFiles = []
 
@@ -151,7 +138,6 @@ async function executeRasterTask(options) {
       createRasterOptimizationTransform({
         targetType,
         quality,
-        lqs,
         logger,
         logPrefix,
         processedFiles,

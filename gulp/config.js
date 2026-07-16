@@ -44,7 +44,7 @@ const WATCH_CONFIG = {
 
 // --- Tool Defaults ---
 const IMAGE_OPTIMIZATION = {
-  jpg: { quality: 85, mozjpeg: true, progressive: true, lqs: false },
+  jpg: { quality: 85, mozjpeg: true, progressive: true },
   webp: { quality: 80 },
   avif: { quality: 50, speed: 5 },
   png: { compressionLevel: 9, palette: true },
@@ -150,20 +150,20 @@ export function resolveConfig(mode) {
       favicon: `${buildBase}/favicon.ico`,
       manifest: `${buildBase}/manifest.webmanifest`,
       faviconHtml: `${tempBase}/favicons/favicons.html`,
+      imageCatalog: `${tempBase}/images/catalog.json`,
+      imagePlaceholderCss: `${assetsDest}/css/lqs.css`,
     },
     globalInjectAssets: [
       'assets/css/fonts*.css',
       'assets/css/bootstrap*.css',
       'assets/css/custom*.css',
       'assets/css/components*.css',
+      'assets/css/lqs.css',
       'assets/js/bootstrap*.js',
       'assets/js/custom*.js',
       'assets/js/main*.js',
     ],
-    imageOptimization: {
-      ...IMAGE_OPTIMIZATION,
-      jpg: { ...IMAGE_OPTIMIZATION.jpg, lqs: mode !== 'dev' },
-    },
+    imageOptimization: { ...IMAGE_OPTIMIZATION },
     faviconGen: { ...FAVICON_CONFIG, url: process.env.SITE_BASE_URL },
     htmlBeautify: {
       indent_size: 2,

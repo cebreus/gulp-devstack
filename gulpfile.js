@@ -26,6 +26,7 @@ import {
 import purgeCss from './gulp/tasks/purge-css.js'
 import serveSite from './gulp/tasks/serve-site.js'
 import validateHtml from './gulp/tasks/validate-html.js'
+import { writeLocalImageCatalog } from './gulp/utils/image-catalog.js'
 import loggerLib, { cleanupDir } from './gulp/utils/index.js'
 import { getSiteDataArtifactPath } from './gulp/utils/route-data.js'
 import { siteDefaults } from './src/config/site.js'
@@ -285,6 +286,11 @@ export async function images() {
   ].filter(Boolean)
 
   await Promise.all(tasks)
+  await writeLocalImageCatalog({
+    imagesDest: config.paths.images,
+    catalogPath: config.paths.imageCatalog,
+    cssPath: config.paths.imagePlaceholderCss,
+  })
 }
 
 /**
@@ -446,8 +452,8 @@ async function watchFiles() {
     routeJsWatcher.on('add', gulp.series(js, html, reload))
     routeJsWatcher.on('unlink', gulp.series(js, html, reload))
 
-    // Assets: Just process and reload browser
-    gulp.watch(`${config.imagesBase}/**/*`, gulp.series(images, reload))
+    // Image metadata and LQS classes are rendered into HTML.
+    gulp.watch(`${config.imagesBase}/**/*`, gulp.series(images, html, reload))
     gulp.watch(
       `${config.iconsBase}/favicons-source.png`,
       gulp.series(favicons, html, reload)
