@@ -57,9 +57,14 @@ The `verify:pipeline` command ensures the project never regresses:
 
 - **WCAG Audits**: Automated accessibility checks via Playwright and Axe-core.
 - **Link Integrity**: Exhaustive validation of all internal links and anchors.
+
 - **Visual Parity**: Automated screenshot comparison between Build and Export modes to ensure visual consistency across pipelines.
 - **Strict Validation**: HTML5 structure verification via `html-validate`.
 - **Graph Awareness**: `graphify update .` refreshes `graphify-out/graph.json`, `graphify-out/graph.html`, and `graphify-out/GRAPH_REPORT.md` after code changes.
+
+### Local Bitmap Placeholders
+
+The image task catalogs the bitmap files it actually emitted, including their oriented intrinsic dimensions and available formats. Opaque local images also receive a generated 20px WebP LQS class backed by cacheable `/assets/css/lqs.css`; transparent images receive dimensions but no placeholder. Templates opt in explicitly through the shared `responsiveImage` macro and `site.localImages` descriptors. External/CDN images and SVG remain unchanged.
 
 ---
 

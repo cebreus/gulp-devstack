@@ -75,6 +75,10 @@ When using macros, use the Nunjucks `call` block to pass complex HTML structures
 ## 4. Implementation Best Practices
 
 - **Framework-First Strategy**: BEM is recommended for complex UI blocks, but it's not a strict requirement. You are encouraged to combine BEM with **Bootstrap 5 utility classes** (`d-flex`, `mt-3`, etc.) to avoid writing redundant CSS.
+- **Where BEM vs. utilities (project convention)**:
+  - **Component internals** (`src/lib/components/`, shared `c-*` blocks in routes): BEM classes own the look and behavior of the block. Utilities are fine inside components for spacing and typography tweaks (`mb-3`, `small`, `text-muted`), but core visual identity (colors, borders, layout of the block itself) belongs in the component's `.scss`.
+  - **Page layout and one-off composition** (grids, gaps, alignment in route templates): plain Bootstrap utilities, no new BEM classes.
+  - **Never restyle Bootstrap's own classes** (`.card`, `.btn`, …) inside a component's SCSS — wrap them in a `c-*` block instead, or use Sass variables/tokens.
 - **Don't Over-Engineer**: If a piece of UI is unique to a single page, keep it in the page template. Only extract to `src/lib/components/` if it will be reused.
 - **Strict Defaults**: Use Nunjucks `default` filters (`{{ title | default("No Title") }}`) inside reusable macros when the missing-data fallback is intentional. Let required data fail loudly when a broken page should stop the build.
 - **CMS Readiness**: When you isolate UI into components, you can easily map complex data from a Headless CMS (via `.md` frontmatter) straight into your Macros. This decoupling of data and presentation is what makes the project enterprise-ready.
