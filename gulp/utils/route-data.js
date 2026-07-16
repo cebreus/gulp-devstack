@@ -26,12 +26,7 @@ export function getSiteDataArtifactPath(tempBase) {
   return path.join(tempBase, SITE_DATA_ARTIFACT_FILENAME)
 }
 
-/**
- * Returns the path to the route menu artifact.
- * @param {string} artifactsBase - Route data artifacts directory.
- * @returns {string} Menu artifact path.
- */
-export function getMenuDataArtifactPath(artifactsBase) {
+function getMenuDataArtifactPath(artifactsBase) {
   return path.join(artifactsBase, MENU_DATA_ARTIFACT_FILENAME)
 }
 
@@ -287,12 +282,7 @@ export function applySeoDefaults(
   }
 }
 
-/**
- * Builds the menu artifact payload from route menu entries.
- * @param {object[]} menuEntries - Raw menu entries.
- * @returns {{ menu: object[] }} Menu artifact payload.
- */
-export function buildMenuData(menuEntries) {
+function buildMenuData(menuEntries) {
   return {
     menu: [...menuEntries].sort(function compareMenuOrder(left, right) {
       return left.order - right.order

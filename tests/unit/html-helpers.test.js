@@ -8,7 +8,6 @@ import {
   discoverRouteStyles,
 } from '../../gulp/utils/navigation-assets.js'
 import {
-  getMenuDataArtifactPath,
   getPageDataArtifactPath,
   getRouteDataArtifactsDir,
   getSiteDataArtifactPath,
@@ -28,16 +27,10 @@ describe('HTML Helpers (Unit)', () => {
       )
     })
 
-    it('should resolve the site and menu artifact paths', () => {
-      const artifactsBase = path.join('/tmp/build-data', 'pages')
-
+    it('should resolve the site artifact path', () => {
       assert.strictEqual(
         getSiteDataArtifactPath('/tmp/build-data'),
         path.join('/tmp/build-data', 'site.json')
-      )
-      assert.strictEqual(
-        getMenuDataArtifactPath(artifactsBase),
-        path.join(artifactsBase, 'menu.json')
       )
     })
 
@@ -68,9 +61,11 @@ describe('HTML Helpers (Unit)', () => {
           filePath,
           pageData,
         })
-        await writeMenuDataArtifact(artifactsBase, [
+        const menuPath = await writeMenuDataArtifact(artifactsBase, [
           { name: 'About', order: 2, path: '/about/' },
+          { name: 'Home', order: 1, path: '/' },
         ])
+        assert.strictEqual(menuPath, path.join(artifactsBase, 'menu.json'))
         await fs.mkdir(tempBase, { recursive: true })
         await fs.writeFile(
           getSiteDataArtifactPath(tempBase),
@@ -88,7 +83,10 @@ describe('HTML Helpers (Unit)', () => {
         assert.deepStrictEqual(loadedContext, {
           siteData: { title: 'Sandbox Site' },
           menuData: {
-            menu: [{ name: 'About', order: 2, path: '/about/' }],
+            menu: [
+              { name: 'Home', order: 1, path: '/' },
+              { name: 'About', order: 2, path: '/about/' },
+            ],
           },
         })
       })

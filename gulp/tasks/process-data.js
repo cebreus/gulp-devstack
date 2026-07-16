@@ -35,19 +35,17 @@ function renderExpression(value, context) {
   }
 }
 
-/**
- * Recursively resolves Nunjucks expressions within a data structure.
- * @param {unknown} data - The data to process (string, object, or array).
- * @param {Record<string, unknown>} context - The context for rendering.
- * @returns {unknown} Data with resolved expressions.
- */
-export function resolveDataExpressions(data, context) {
+function resolveDataExpressions(data, context) {
   if (typeof data === 'string') {
     return renderExpression(data, context)
   }
 
   if (Array.isArray(data)) {
     return data.map((item) => resolveDataExpressions(item, context))
+  }
+
+  if (data instanceof Date) {
+    return data
   }
 
   if (data !== null && typeof data === 'object') {

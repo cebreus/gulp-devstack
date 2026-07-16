@@ -2,77 +2,17 @@ import assert from 'node:assert/strict'
 import path from 'node:path'
 import { describe, it } from 'node:test'
 
-import { resolveDataExpressions } from '../../gulp/tasks/process-data.js'
+import * as processDataModule from '../../gulp/tasks/process-data.js'
 import {
   applySeoDefaults,
-  buildMenuData,
   buildPageData,
   buildRouteExpressionContext,
   resolvePageLocation,
 } from '../../gulp/utils/route-data.js'
 
-describe('Process Data Pure Logic - resolveDataExpressions', () => {
-  const context = {
-    site: { version: '4.5.0' },
-    page: { title: 'Home' },
-  }
-
-  it('should leave plain strings untouched', () => {
-    const input = 'Hello World'
-    const result = resolveDataExpressions(input, context)
-    assert.strictEqual(result, 'Hello World')
-  })
-
-  it('should resolve simple Nunjucks expressions', () => {
-    const input = 'Version {{ site.version }}'
-    const result = resolveDataExpressions(input, context)
-    assert.strictEqual(result, 'Version 4.5.0')
-  })
-
-  it('should resolve expressions in nested objects', () => {
-    const input = {
-      hero: {
-        badge: 'v{{ site.version }}',
-        text: 'Welcome to {{ page.title }}',
-      },
-    }
-    const expected = {
-      hero: {
-        badge: 'v4.5.0',
-        text: 'Welcome to Home',
-      },
-    }
-    const result = resolveDataExpressions(input, context)
-    assert.deepStrictEqual(result, expected)
-  })
-
-  it('should resolve expressions in arrays', () => {
-    const input = ['{{ site.version }}', 'other']
-    const expected = ['4.5.0', 'other']
-    const result = resolveDataExpressions(input, context)
-    assert.deepStrictEqual(result, expected)
-  })
-
-  it('should handle invalid expressions gracefully by returning original string', () => {
-    const input = '{{ site.invalid.path }}'
-    let result
-    assert.doesNotThrow(() => {
-      result = resolveDataExpressions(input, context)
-    })
-    // Graceful degradation: must return a string (either empty or original)
-    assert.strictEqual(
-      typeof result,
-      'string',
-      'Result must be a string on invalid expression'
-    )
-  })
-
-  it('should throw an error for malformed nunjucks syntax', () => {
-    const input = '{% if true %}' // Missing endif causes a Nunjucks compile error
-    assert.throws(
-      () => resolveDataExpressions(input, context),
-      /\[ProcessData\] Failed to render expression/
-    )
+describe('Process Data public API', () => {
+  it('should expose only the Gulp task', () => {
+    assert.deepStrictEqual(Object.keys(processDataModule), ['default'])
   })
 })
 
@@ -158,21 +98,5 @@ describe('Process Data Pure Logic - buildPageData', () => {
       pagePath: '/',
     })
     assert.strictEqual(result.pageId, 'home')
-  })
-})
-
-describe('Process Data Pure Logic - buildMenuData', () => {
-  it('should sort menu entries by order', () => {
-    const result = buildMenuData([
-      { name: 'Second', order: 2 },
-      { name: 'First', order: 1 },
-    ])
-
-    assert.deepStrictEqual(result, {
-      menu: [
-        { name: 'First', order: 1 },
-        { name: 'Second', order: 2 },
-      ],
-    })
   })
 })
