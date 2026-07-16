@@ -13,6 +13,7 @@ describe('Documentation Synchronization', () => {
       'add',
       'i',
       'exec',
+      'store',
       '-',
       'allowBuilds',
       'Overrides',
@@ -41,7 +42,7 @@ describe('Documentation Synchronization', () => {
         const scriptName = match[1]
 
         // Skip standard pnpm commands or placeholder text
-        if (standardCmds.has(scriptName)) {
+        if (standardCmds.has(scriptName) || /^\d+$/.test(scriptName)) {
           continue
         }
 

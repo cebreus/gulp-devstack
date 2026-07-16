@@ -38,13 +38,14 @@ Gulp DevStack follows a **"Zero-Trust" Continuous Validation** model. We treat o
 
 - **Scope**: Markdown → JSON pipeline, asset revisioning, SRI hash generation, SASS compilation.
 - **Mechanism**: Uses `createTestSandbox()` to write mock files and verify output on disk.
+- **Boundary**: Integration tests do not invoke the root full build. The master gate owns `build`, followed by artifact-only smoke tests.
 - **Command**: `pnpm test:integration`
 
 ### Level 3: Smoke Tests (`tests/smoke/`)
 
 **Target**: Verify that a real production build artifact is structurally valid.
 
-- **Scope**: Presence of `index.html`, fingerprinted assets, SRI hashes in HTML, rev-manifest.
+- **Scope**: Presence of `index.html`, fingerprinted assets, SRI hashes in HTML, and the web manifest.
 - **Requires**: A completed `pnpm build` before running — smoke tests do NOT trigger a build.
 - **Command**: `pnpm test:smoke`
 
