@@ -1,7 +1,10 @@
 import path from 'node:path'
 import { dest, src } from 'gulp'
 
-import { stripTrailingLineWhitespace } from '../utils/html-output.js'
+import {
+  stripBooleanAttributeValues,
+  stripTrailingLineWhitespace,
+} from '../utils/html-output.js'
 import loggerLib, { isPrivateFile, streamToPromise } from '../utils/index.js'
 
 const logger = loggerLib.createLogger('GenerateSri')
@@ -49,7 +52,9 @@ export default async function generateSri(input, outputDir) {
         transform(file, _enc, cb) {
           if (file?.contents) {
             file.contents = Buffer.from(
-              stripTrailingLineWhitespace(file.contents.toString())
+              stripTrailingLineWhitespace(
+                stripBooleanAttributeValues(file.contents.toString())
+              )
             )
           }
           cb(null, file)

@@ -1,6 +1,7 @@
 import {
   cleanHtmlComments,
   resolveInjectionUrl,
+  stripBooleanAttributeValues,
   stripTrailingLineWhitespace,
   stripXhtmlSlashes,
 } from './html-output.js'
@@ -112,7 +113,9 @@ function createHtmlNormalizationTransform(Transform) {
       const content = file.contents.toString()
       file.contents = Buffer.from(
         stripTrailingLineWhitespace(
-          cleanHtmlComments(stripXhtmlSlashes(content))
+          stripBooleanAttributeValues(
+            cleanHtmlComments(stripXhtmlSlashes(content))
+          )
         )
       )
       cb(null, file)

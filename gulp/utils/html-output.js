@@ -41,6 +41,32 @@ export function stripXhtmlSlashes(html) {
     .replace(closingPattern, '')
 }
 
+/**
+ * Removes explicit empty values from HTML boolean attributes.
+ * @param {string} html - Input HTML string.
+ * @returns {string} HTML with boolean attributes written without values.
+ */
+export function stripBooleanAttributeValues(html) {
+  const attributes = [
+    'allowfullscreen',
+    'async',
+    'autofocus',
+    'checked',
+    'defer',
+    'disabled',
+    'hidden',
+    'itemscope',
+    'multiple',
+    'muted',
+    'readonly',
+    'required',
+    'selected',
+  ].join('|')
+  const pattern = new RegExp(`\\s(${attributes})=""`, 'gi')
+
+  return html.replace(pattern, ' $1')
+}
+
 function findProtectedCommentRanges(html) {
   const ranges = []
   const tagPattern = /<\/?(script|style)\b[^>]*>/gi

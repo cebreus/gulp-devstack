@@ -2,7 +2,10 @@ import fs from 'node:fs/promises'
 import path from 'node:path'
 import gulp from 'gulp'
 
-import { stripTrailingLineWhitespace } from '../utils/html-output.js'
+import {
+  stripBooleanAttributeValues,
+  stripTrailingLineWhitespace,
+} from '../utils/html-output.js'
 import loggerLib, {
   attachPipelineLogging,
   getRelativePath,
@@ -92,7 +95,9 @@ async function runHtmlRewritePipeline({
         transform(file, _enc, cb) {
           if (file?.contents) {
             file.contents = Buffer.from(
-              stripTrailingLineWhitespace(file.contents.toString())
+              stripTrailingLineWhitespace(
+                stripBooleanAttributeValues(file.contents.toString())
+              )
             )
           }
           cb(null, file)
