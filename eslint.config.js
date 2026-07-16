@@ -29,6 +29,7 @@ export default [
       'node_modules/',
       'build*/',
       '.temp/',
+      '.tmp/',
       'dist/',
       'static/',
       'tests/.sandboxes/',
