@@ -1,0 +1,43 @@
+{% macro imageTag(image, alt, imageClass, loading, decoding, fetchpriority) %}
+  {% if image.width and image.height %}
+    <img
+      class="{{ imageClass }}"
+      loading="{{ loading or 'eager' }}"
+      decoding="{{ decoding or 'auto' }}"
+      fetchpriority="{{ fetchpriority or 'auto' }}"
+      src="{{ image.src }}"
+      srcset="{{ image.srcset or image.src }}"
+      sizes="{{ image.sizes or '100vw' }}"
+      width="{{ image.width }}"
+      height="{{ image.height }}"
+      alt="{{ alt }}"
+    />
+  {% else %}
+    <img
+      class="{{ imageClass }}"
+      loading="{{ loading or 'eager' }}"
+      decoding="{{ decoding or 'auto' }}"
+      fetchpriority="{{ fetchpriority or 'auto' }}"
+      src="{{ image.src }}"
+      srcset="{{ image.srcset or image.src }}"
+      sizes="{{ image.sizes or '100vw' }}"
+      alt="{{ alt }}"
+    />
+  {% endif %}
+{% endmacro %}
+
+{% macro responsiveImage(image, alt='', className='', pictureClassName='', loading='', decoding='', fetchpriority='') %}
+  {% if image and image.src %}
+    {% set imageClass = className ~ (' ' ~ image.placeholderClass if image.placeholderClass else '') %}
+    {% if image.sources and image.sources | length %}
+      <picture class="{{ pictureClassName }}">
+        {% for source in image.sources %}
+          <source type="{{ source.type }}" srcset="{{ source.srcset }}" sizes="{{ image.sizes or '100vw' }}" />
+        {% endfor %}
+        {{ imageTag(image, alt, imageClass, loading, decoding, fetchpriority) }}
+      </picture>
+    {% else %}
+      {{ imageTag(image, alt, imageClass, loading, decoding, fetchpriority) }}
+    {% endif %}
+  {% endif %}
+{% endmacro %}
