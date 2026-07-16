@@ -83,11 +83,6 @@ When using macros, use the Nunjucks `call` block to pass complex HTML structures
 
 *(This section is automatically updated by `pnpm run component`. Do not remove the heading below.)*
 
-### favicons
-
-- **Path**: `src/lib/components/favicons`
-- **Status**: System
-
 ### meta-rich-snippets
 
 - **Path**: `src/lib/components/meta-rich-snippets`

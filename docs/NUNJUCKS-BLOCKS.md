@@ -28,7 +28,7 @@ These blocks are the most frequent targets for customization in your `.njk` temp
   - `css`: Global and page styles.
   - `head_custom`: Generic hook for custom scripts/styles.
   - `meta_seo`: SEO metadata (via `seo.njk`).
-  - `favicons`: Favicons (via `favicons.njk`).
+  - `favicons`: Generated favicon links (via `.temp/favicons/favicons.html`).
 - `body`: Entire `<body>` container.
   - `header`: Optional page/header component.
   - `main`: Wrapper for the central content.
