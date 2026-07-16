@@ -30,6 +30,7 @@ const PURGECSS_SAFELIST = {
     'header-search__result',
   ],
   greedy: [
+    /^href$/,
     /tooltip/,
     /popover/,
     /^bs-/,
