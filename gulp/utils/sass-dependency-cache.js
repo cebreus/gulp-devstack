@@ -10,8 +10,11 @@ async function readDependencyManifest(dependencyManifestPath) {
     const manifest = JSON.parse(
       await fs.readFile(dependencyManifestPath, 'utf8')
     )
-    if (Array.isArray(manifest.dependencies)) {
-      return manifest.dependencies
+    if (
+      Array.isArray(manifest.dependencies) &&
+      typeof manifest.fingerprint === 'string'
+    ) {
+      return manifest
     }
   } catch {}
 
@@ -28,17 +31,23 @@ async function getNewestDependencyMtime(dependencyPaths) {
   return Math.max(...stats.map((stat) => stat.mtimeMs))
 }
 
-async function shouldSkipUnchangedFile({ cssPath, mapPath, sourceMaps }) {
+async function shouldSkipUnchangedFile({
+  cssPath,
+  mapPath,
+  sourceMaps,
+  fingerprint,
+}) {
   try {
     const cssStats = await fs.stat(cssPath)
-    const dependencyPaths = await readDependencyManifest(
+    const manifest = await readDependencyManifest(
       getDependencyManifestPath(cssPath)
     )
-    if (!dependencyPaths) {
+    if (!manifest || manifest.fingerprint !== fingerprint) {
       return false
     }
-    const newestDependencyMtime =
-      await getNewestDependencyMtime(dependencyPaths)
+    const newestDependencyMtime = await getNewestDependencyMtime(
+      manifest.dependencies
+    )
 
     if (sourceMaps) {
       await fs.access(mapPath)
@@ -50,14 +59,14 @@ async function shouldSkipUnchangedFile({ cssPath, mapPath, sourceMaps }) {
   }
 }
 
-async function writeDependencyManifest(cssPath, sassResult) {
+async function writeDependencyManifest(cssPath, sassResult, fingerprint) {
   const dependencies = sassResult.loadedUrls
     .filter((url) => url.protocol === 'file:')
     .map((url) => fileURLToPath(url))
 
   await fs.writeFile(
     getDependencyManifestPath(cssPath),
-    JSON.stringify({ dependencies }, null, 2)
+    JSON.stringify({ dependencies, fingerprint }, null, 2)
   )
 }
 

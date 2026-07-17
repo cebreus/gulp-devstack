@@ -6,8 +6,8 @@
  * @returns {{minutes: number, words: number}} An object containing minutes and word count.
  */
 export function calculateReadingTime(content, { wordsPerMinute = 200 } = {}) {
-  if (wordsPerMinute <= 0) {
-    throw new Error('wordsPerMinute must be positive.')
+  if (!Number.isFinite(wordsPerMinute) || wordsPerMinute <= 0) {
+    throw new Error('wordsPerMinute must be a finite positive number.')
   }
 
   if (!content || typeof content !== 'string') {

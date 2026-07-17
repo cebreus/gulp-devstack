@@ -1,6 +1,16 @@
 import assert from 'node:assert/strict'
 import { execSync } from 'node:child_process'
-import { describe, it } from 'node:test'
+import { afterEach, describe, it } from 'node:test'
+
+const originalBuildMode = process.env.BUILD_MODE
+
+afterEach(() => {
+  if (originalBuildMode === undefined) {
+    delete process.env.BUILD_MODE
+  } else {
+    process.env.BUILD_MODE = originalBuildMode
+  }
+})
 
 describe('Gulpfile (Boundary/Smoke)', () => {
   it('should successfully parse and export public pipeline tasks', async () => {
@@ -96,10 +106,14 @@ describe('Gulpfile (Boundary/Smoke)', () => {
     const gulpfile = await import('../../gulpfile.js?watchers=templates')
     const handlers = new Map()
     const watchedPaths = []
+    const seriesCalls = []
     const gulpApi = {
       series(...taskList) {
-        return () => {
-          return taskList
+        seriesCalls.push(taskList)
+        return async function () {
+          for (const task of taskList) {
+            await task()
+          }
         }
       },
       watch(paths) {
@@ -111,11 +125,20 @@ describe('Gulpfile (Boundary/Smoke)', () => {
         }
       },
     }
+    const taskCalls = []
     const tasks = {
-      lintTemplates: () => {},
-      dataset: () => {},
-      html: () => {},
-      reload: () => {},
+      lintTemplates() {
+        taskCalls.push('lintTemplates')
+      },
+      dataset() {
+        taskCalls.push('dataset')
+      },
+      html() {
+        taskCalls.push('html')
+      },
+      reload() {
+        taskCalls.push('reload')
+      },
     }
     const config = {
       templateWatchPaths: ['src/**/*.njk', 'src/**/*.md'],
@@ -124,6 +147,9 @@ describe('Gulpfile (Boundary/Smoke)', () => {
     gulpfile.registerTemplateWatcher({ config, tasks, gulpApi })
 
     assert.deepStrictEqual(watchedPaths, [config.templateWatchPaths])
+    assert.deepStrictEqual(seriesCalls, [
+      [tasks.lintTemplates, tasks.dataset, tasks.html, tasks.reload],
+    ])
     assert.deepStrictEqual([...handlers.keys()], ['change', 'add', 'unlink'])
     for (const eventName of ['change', 'add', 'unlink']) {
       assert.equal(
@@ -132,6 +158,13 @@ describe('Gulpfile (Boundary/Smoke)', () => {
         `${eventName} should run a template rebuild task`
       )
     }
+    await handlers.get('change')()
+    assert.deepStrictEqual(taskCalls, [
+      'lintTemplates',
+      'dataset',
+      'html',
+      'reload',
+    ])
   })
 
   it('should resolve BrowserSync CSS reload paths from written files', async () => {

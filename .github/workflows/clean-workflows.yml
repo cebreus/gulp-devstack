@@ -11,6 +11,8 @@ on:
 jobs:
   clean-logs:
     runs-on: ubuntu-latest
+    permissions:
+      actions: write
     steps:
       - uses: igorjs/gh-actions-clean-workflow@aaadbc9070ae5f7fed327d8c87c41daab39b25f3 # v3
         with:

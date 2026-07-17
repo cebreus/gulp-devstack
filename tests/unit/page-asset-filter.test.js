@@ -28,5 +28,8 @@ describe('E2E page asset filter', () => {
       ),
       false
     )
+    assert.strictEqual(isCriticalPageAsset('/docs?source=main.js'), false)
+    assert.strictEqual(isCriticalPageAsset('/docs#main.js'), false)
+    assert.strictEqual(isCriticalPageAsset('http://[invalid'), false)
   })
 })

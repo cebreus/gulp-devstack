@@ -73,8 +73,8 @@ async function auditBuildArtifacts(buildDir) {
   const indexOutputExists = await pathExists(indexOutputPath)
 
   if (!indexOutputExists) {
-    logger.error(
-      `Critical build failure: ${pc.bold(indexOutputPath)} was NOT generated.`
+    throw new Error(
+      `Critical build failure: ${indexOutputPath} was NOT generated.`
     )
   }
 
@@ -123,8 +123,7 @@ export default async function debugBuild(config, options = {}) {
   }
 
   if (!(await pathExists(buildDir))) {
-    logger.warn(`Build directory missing: ${pc.red(buildDir)}`)
-    return
+    throw new Error(`Build directory missing: ${buildDir}`)
   }
 
   const { foundHtmlFiles, indexOutputExists } =

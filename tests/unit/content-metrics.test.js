@@ -47,15 +47,18 @@ describe('Content Metrics Utility - calculateReadingTime', () => {
     assert.strictEqual(result.words, 9)
   })
 
-  it('should throw or handle non-positive wordsPerMinute', () => {
+  it('should reject invalid wordsPerMinute values', () => {
     const content = 'Test'
-    assert.throws(
-      () => calculateReadingTime(content, { wordsPerMinute: 0 }),
-      /wordsPerMinute must be positive/
-    )
-    assert.throws(
-      () => calculateReadingTime(content, { wordsPerMinute: -1 }),
-      /wordsPerMinute must be positive/
-    )
+    for (const wordsPerMinute of [
+      0,
+      -1,
+      Number.NaN,
+      Number.POSITIVE_INFINITY,
+    ]) {
+      assert.throws(
+        () => calculateReadingTime(content, { wordsPerMinute }),
+        /wordsPerMinute must be a finite positive number/
+      )
+    }
   })
 })

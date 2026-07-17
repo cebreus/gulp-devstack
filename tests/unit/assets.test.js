@@ -86,17 +86,11 @@ describe('Asset Pipeline Utilities', () => {
       )
     })
 
-    it('purgeCss should return an empty readable stream for invalid parameters', async () => {
-      const stream = await purgeCss('', '', '')
-      const chunks = []
-
-      await assert.doesNotReject(async () => {
-        for await (const chunk of stream) {
-          chunks.push(chunk)
-        }
-      })
-
-      assert.strictEqual(chunks.length, 0)
+    it('purgeCss should reject invalid parameters', async () => {
+      await assert.rejects(
+        () => purgeCss('', '', ''),
+        /CSS input, HTML content sources, and an output directory/
+      )
     })
   })
 

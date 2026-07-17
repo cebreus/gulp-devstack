@@ -42,10 +42,12 @@ function buildTemplateContext({
 }
 
 function formatTemplateDate(input, format) {
-  const date = input === 'now' || !input ? new Date() : new Date(input)
+  const useCurrentDate =
+    input === 'now' || input === null || input === undefined || input === ''
+  const date = useCurrentDate ? new Date() : new Date(input)
 
-  if (isNaN(date.getTime())) {
-    return new Date().getFullYear()
+  if (Number.isNaN(date.getTime())) {
+    throw new Error(`Invalid template date: ${String(input)}`)
   }
 
   if (format === 'YYYY') {

@@ -22,7 +22,7 @@ function isCorruptedUtf8Replacement(buffer) {
   return buffer[0] === 0xef && buffer[1] === 0xbf && buffer[2] === 0xbd
 }
 
-function createImageValidationTransform(logger) {
+function createImageValidationTransform() {
   return new Transform({
     objectMode: true,
     transform(file, _enc, cb) {
@@ -32,21 +32,16 @@ function createImageValidationTransform(logger) {
 
       const fileName = path.basename(file.path)
       if (file.contents.length === 0) {
-        logger.warn(`Skipping empty file: ${fileName}`)
-        file._isInvalid = true
-        return cb(null, file)
+        return cb(new Error(`Image source is empty: ${fileName}`))
       }
 
       if (isCorruptedUtf8Replacement(file.contents)) {
-        logger.error(`${fileName} is BINARY CORRUPTED. Dropping.`)
-        file._isInvalid = true
-        return cb(null, file)
+        return cb(new Error(`${fileName} is binary corrupted.`))
       }
 
       const actualType = detectType(file.contents)
       if (!actualType) {
-        logger.warn(`Skipping ${fileName}: Unknown signature.`)
-        file._isInvalid = true
+        return cb(new Error(`Unknown image signature: ${fileName}`))
       }
 
       cb(null, file)
@@ -57,6 +52,7 @@ function createImageValidationTransform(logger) {
 async function optimizeRasterFile(file, options) {
   const { targetType, quality, logger, logPrefix } = options
   const original = file.contents
+  file.path = file.path.replace(path.extname(file.path), `.${targetType}`)
 
   const optimized = await optimizeWithSharp(original, targetType, quality)
   const savedBytes = original.length - optimized.length
@@ -75,7 +71,6 @@ async function optimizeRasterFile(file, options) {
   }
 
   file.contents = optimized
-  file.path = file.path.replace(path.extname(file.path), `.${targetType}`)
   if (percentSaved > 10) {
     logger.verbose(
       `[${logPrefix}] ${path.basename(file.path)} optimized: -${percentSaved}% (${(savedBytes / 1024).toFixed(1)} KB saved)`
@@ -106,7 +101,7 @@ function createRasterOptimizationTransform(options) {
         markProcessedFile(processedFiles, optimizedFile.path, dest)
         cb(null, optimizedFile)
       } catch (error) {
-        const isConversion = targetType === 'webp' || targetType === 'avif'
+        const isConversion = detectType(file.contents) !== targetType
         logger.error(
           `Image optimization failed for ${path.basename(file.path)}. Cause: ${error.message}.`
         )
@@ -130,6 +125,7 @@ async function executeRasterTask(options) {
     quality = 85,
   } = options
   const processedFiles = []
+  const imageValidation = createImageValidationTransform()
   const rasterOptimization = createRasterOptimizationTransform({
     targetType,
     quality,
@@ -146,9 +142,13 @@ async function executeRasterTask(options) {
         extension: `.${targetType}`,
       })
     )
-    .pipe(createImageValidationTransform(logger))
+    .pipe(imageValidation)
     .pipe(rasterOptimization)
     .pipe(gulp.dest(dest))
+
+  imageValidation.on('error', function forwardValidationError(error) {
+    pipeline.destroy(error)
+  })
 
   rasterOptimization.on('error', function forwardRasterError(error) {
     pipeline.destroy(error)

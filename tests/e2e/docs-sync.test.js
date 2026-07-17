@@ -21,7 +21,7 @@ describe('Documentation Synchronization', () => {
       ],
     })
 
-    const regex = /pnpm\s+(?:run\s+)?([a-zA-Z0-9:-]+)/g
+    const regex = /pnpm\s+(?:(run)\s+)?([a-zA-Z0-9:-]+)/g
     let hasError = false
 
     for (const file of mdFiles) {
@@ -33,10 +33,14 @@ describe('Documentation Synchronization', () => {
         let match
 
         while ((match = regex.exec(snippet)) !== null) {
-          const scriptName = match[1]
+          const usedRun = Boolean(match[1])
+          const scriptName = match[2]
 
           // Skip standard pnpm commands or placeholder text
-          if (standardCmds.has(scriptName) || /^\d+$/.test(scriptName)) {
+          if (
+            (!usedRun && standardCmds.has(scriptName)) ||
+            /^\d+$/.test(scriptName)
+          ) {
             continue
           }
 

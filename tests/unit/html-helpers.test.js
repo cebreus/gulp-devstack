@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import fs from 'node:fs/promises'
 import path from 'node:path'
-import { describe, it } from 'node:test'
+import { afterEach, describe, it } from 'node:test'
 
 import {
   clearRouteAssetCache,
@@ -17,6 +17,8 @@ import {
   writePageDataArtifact,
 } from '../../gulp/utils/route-data.js'
 import { runInSandbox } from '../test-helpers.js'
+
+afterEach(clearRouteAssetCache)
 
 describe('HTML Helpers (Unit)', () => {
   describe('route content artifacts', () => {

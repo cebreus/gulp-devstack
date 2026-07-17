@@ -20,6 +20,13 @@ export function resolveInjectionUrl(filepath, buildOutputPath) {
   const buildRoot = path.resolve(buildOutputPath)
   const absoluteAssetPath = path.resolve(filepath)
   const relativeToBuild = path.relative(buildRoot, absoluteAssetPath)
+  if (
+    relativeToBuild === '..' ||
+    relativeToBuild.startsWith(`..${path.sep}`) ||
+    path.isAbsolute(relativeToBuild)
+  ) {
+    throw new Error(`Asset is outside the build output: ${filepath}`)
+  }
   const urlPath = `/${relativeToBuild.replace(/\\/g, '/')}`
   return urlPath.replace(/\/+/g, '/')
 }
@@ -69,23 +76,11 @@ export function stripBooleanAttributeValues(html) {
 
 function findProtectedCommentRanges(html) {
   const ranges = []
-  const tagPattern = /<\/?(script|style)\b[^>]*>/gi
-  const stack = []
+  const tagPattern = /<(script|style)\b[^>]*>[\s\S]*?<\/\1\s*>/gi
   let match
 
   while ((match = tagPattern.exec(html)) !== null) {
-    const [tagText, tagName] = match
-    const isClosingTag = tagText.startsWith('</')
-
-    if (!isClosingTag) {
-      stack.push({ name: tagName.toLowerCase(), start: match.index })
-      continue
-    }
-
-    const openTag = stack.pop()
-    if (openTag && openTag.name === tagName.toLowerCase()) {
-      ranges.push({ start: openTag.start, end: tagPattern.lastIndex })
-    }
+    ranges.push({ start: match.index, end: tagPattern.lastIndex })
   }
 
   return ranges

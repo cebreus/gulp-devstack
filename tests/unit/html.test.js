@@ -9,6 +9,7 @@ import {
   stripTrailingLineWhitespace,
   stripXhtmlSlashes,
 } from '../../gulp/utils/html-output.js'
+import htmlRendering from '../../gulp/utils/html-rendering.js'
 
 describe('HTML Pipeline Utilities', () => {
   describe('stripXhtmlSlashes', () => {
@@ -54,6 +55,17 @@ describe('HTML Pipeline Utilities', () => {
     it('should not remove comments inside scripts or styles', () => {
       const input = '<script><!-- var x = 1; --></script>'
       assert.strictEqual(cleanHtmlComments(input), input)
+
+      const styleInput = '<style><!-- .example { color: red; } --></style>'
+      assert.strictEqual(cleanHtmlComments(styleInput), styleInput)
+    })
+
+    it('should treat tag-like script strings as raw text', () => {
+      const input =
+        '<script>const value = "<script>"; <!-- keep --></script><!-- remove -->'
+      const expected =
+        '<script>const value = "<script>"; <!-- keep --></script>'
+      assert.strictEqual(cleanHtmlComments(input), expected)
     })
 
     it('should preserve comments inside scripts after comparison operators', () => {
@@ -96,6 +108,27 @@ describe('HTML Pipeline Utilities', () => {
       assert.strictEqual(
         resolveInjectionUrl(assetPath, buildOutput),
         '/assets/js/app.js'
+      )
+    })
+
+    it('should reject assets outside the build output', () => {
+      assert.throws(
+        () =>
+          resolveInjectionUrl('/abs/path/to/main.css', '/abs/path/to/build'),
+        /Asset is outside the build output/
+      )
+    })
+  })
+
+  describe('formatTemplateDate', () => {
+    it('should preserve epoch zero and reject invalid dates', () => {
+      assert.strictEqual(
+        htmlRendering.formatTemplateDate(0),
+        '1970-01-01T00:00:00.000Z'
+      )
+      assert.throws(
+        () => htmlRendering.formatTemplateDate('invalid'),
+        /Invalid template date/
       )
     })
   })

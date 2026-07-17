@@ -19,16 +19,27 @@ export async function cleanupSandbox(sandboxPath) {
   const rootDir = path.resolve(process.cwd(), 'tests/.sandboxes')
   const resolvedSandboxPath = path.resolve(sandboxPath)
   const relativePath = path.relative(rootDir, resolvedSandboxPath)
-  const sandboxStats = await fs.promises.lstat(resolvedSandboxPath)
 
   if (
     !relativePath ||
     relativePath === '..' ||
     relativePath.startsWith(`..${path.sep}`) ||
-    path.isAbsolute(relativePath) ||
-    !sandboxStats.isDirectory() ||
-    sandboxStats.isSymbolicLink()
+    path.isAbsolute(relativePath)
   ) {
+    throw new Error(`Refusing to clean invalid sandbox: ${sandboxPath}`)
+  }
+
+  let sandboxStats
+  try {
+    sandboxStats = await fs.promises.lstat(resolvedSandboxPath)
+  } catch (error) {
+    if (error.code === 'ENOENT') {
+      return
+    }
+    throw error
+  }
+
+  if (!sandboxStats.isDirectory() || sandboxStats.isSymbolicLink()) {
     throw new Error(`Refusing to clean invalid sandbox: ${sandboxPath}`)
   }
 
@@ -41,15 +52,12 @@ export async function cleanupSandbox(sandboxPath) {
     }
   } catch {}
 
-  try {
-    await fs.promises.rm(resolvedSandboxPath, { recursive: true, force: true })
-  } catch (error) {
-    if (error.code !== 'ENOTEMPTY') {
-      throw error
-    }
-
-    await fs.promises.rm(resolvedSandboxPath, { recursive: true, force: true })
-  }
+  await fs.promises.rm(resolvedSandboxPath, {
+    recursive: true,
+    force: true,
+    maxRetries: 3,
+    retryDelay: 100,
+  })
 }
 
 export async function runInSandbox(prefix, testFunction) {
@@ -89,8 +97,9 @@ export function toGlobPath(...segments) {
 
 export async function writeFixtures(sandboxPath, files) {
   for (const [filePath, content] of Object.entries(files)) {
-    const fullPath = path.resolve(sandboxPath, filePath)
-    const relativePath = path.relative(path.resolve(sandboxPath), fullPath)
+    const resolvedSandboxPath = path.resolve(sandboxPath)
+    const fullPath = path.resolve(resolvedSandboxPath, filePath)
+    const relativePath = path.relative(resolvedSandboxPath, fullPath)
     if (
       relativePath === '..' ||
       relativePath.startsWith(`..${path.sep}`) ||
@@ -98,7 +107,34 @@ export async function writeFixtures(sandboxPath, files) {
     ) {
       throw new Error(`Fixture path escapes sandbox: ${filePath}`)
     }
+
+    let currentPath = resolvedSandboxPath
+    for (const segment of relativePath.split(path.sep).slice(0, -1)) {
+      currentPath = path.join(currentPath, segment)
+      try {
+        const stats = await fs.promises.lstat(currentPath)
+        if (stats.isSymbolicLink() || !stats.isDirectory()) {
+          throw new Error(`Unsafe fixture path component: ${filePath}`)
+        }
+      } catch (error) {
+        if (error.code === 'ENOENT') {
+          break
+        }
+        throw error
+      }
+    }
+
     await fs.promises.mkdir(path.dirname(fullPath), { recursive: true })
+    try {
+      const stats = await fs.promises.lstat(fullPath)
+      if (stats.isSymbolicLink()) {
+        throw new Error(`Unsafe fixture path target: ${filePath}`)
+      }
+    } catch (error) {
+      if (error.code !== 'ENOENT') {
+        throw error
+      }
+    }
     await fs.promises.writeFile(fullPath, content)
   }
 }

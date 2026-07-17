@@ -59,6 +59,16 @@ function buildSourceMapComment(mapPath) {
   return `/*# sourceMappingURL=${path.basename(mapPath)} */`
 }
 
+function buildCacheFingerprint(options) {
+  const { sourceMaps, minify, sassCompilerOptions, postcssPlugins } = options
+  return JSON.stringify({
+    sourceMaps,
+    minify,
+    sassCompilerOptions,
+    postcssPlugins: postcssPlugins.map((plugin) => plugin.postcssPlugin || ''),
+  })
+}
+
 async function writeCompiledCssArtifact({
   cssPath,
   cssContent,
@@ -91,6 +101,7 @@ async function renderCssOutput(options) {
     postcss,
     sass,
   } = options
+  const fingerprint = buildCacheFingerprint(options)
   const sassResult = await sass.compileAsync(
     sourceFile,
     normalizeSassOptions(sassCompilerOptions, sourceMaps, cssPath)
@@ -117,7 +128,11 @@ async function renderCssOutput(options) {
     sourceMap: postcssResult.map ? postcssResult.map.toJSON() : null,
     sourceMaps,
   })
-  await sassDependencyCache.writeDependencyManifest(cssPath, sassResult)
+  await sassDependencyCache.writeDependencyManifest(
+    cssPath,
+    sassResult,
+    fingerprint
+  )
 }
 
 async function verifyCssIntegrity(cssPath, skipIntegrity) {
@@ -126,7 +141,7 @@ async function verifyCssIntegrity(cssPath, skipIntegrity) {
   }
 
   const buffer = await fs.readFile(cssPath)
-  if (buffer.length < 10) {
+  if (buffer.length === 0) {
     throw new Error(
       `[Sass] Integrity check failed: ${path.basename(cssPath)} is empty (${buffer.length} bytes).`
     )
@@ -165,6 +180,7 @@ async function compileSourceFile(options) {
     minify,
   })
   const mapPath = `${cssPath}.map`
+  const fingerprint = buildCacheFingerprint(options)
 
   if (
     skipNewer &&
@@ -172,6 +188,7 @@ async function compileSourceFile(options) {
       cssPath,
       mapPath,
       sourceMaps,
+      fingerprint,
     }))
   ) {
     return null

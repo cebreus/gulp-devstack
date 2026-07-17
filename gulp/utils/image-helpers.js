@@ -28,8 +28,10 @@ function isWebpBuffer(buffer) {
 }
 
 function isSvgBuffer(buffer) {
-  const start = buffer.slice(0, 100).toString()
-  return /^\s*(?:<\?xml[^>]*>\s*)?<svg\b/i.test(start)
+  const content = buffer.toString('utf8')
+  return /^\s*(?:(?:<\?xml[\s\S]*?\?>|<!--[\s\S]*?-->|<!DOCTYPE[\s\S]*?>)\s*)*<svg\b/i.test(
+    content
+  )
 }
 
 /**
@@ -102,6 +104,6 @@ export async function optimizeWithSharp(buffer, targetType, quality) {
     case 'png':
       return instance.png({ compressionLevel: 9, effort: 10 }).toBuffer()
     default:
-      return buffer
+      throw new RangeError(`Unsupported image target type: ${targetType}`)
   }
 }

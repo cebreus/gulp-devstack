@@ -18,9 +18,7 @@ const logger = loggerLib.createLogger('GenerateSri')
  */
 export default async function generateSri(input, outputDir) {
   if (!input || !outputDir) {
-    logger.warn('SRI task skipped: invalid input or output parameters.')
-    const { Readable } = await import('node:stream')
-    return Readable.from([])
+    throw new Error('SRI generation requires input and outputDir.')
   }
 
   const { default: sri } = await import('gulp-sri-hash')

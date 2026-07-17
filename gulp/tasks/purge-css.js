@@ -1,4 +1,4 @@
-import { Readable, Transform } from 'node:stream'
+import { Transform } from 'node:stream'
 import gulp from 'gulp'
 
 import loggerLib, {
@@ -61,10 +61,9 @@ const PURGECSS_SAFELIST = {
  */
 export default async function purgeCss(inputCss, inputHtml, outputDir) {
   if (!inputCss || !inputHtml || !outputDir) {
-    logger.warn(
-      'PurgeCSS task skipped: invalid input/output parameters. Provide CSS input, HTML content sources, and an output directory.'
+    throw new Error(
+      'PurgeCSS requires CSS input, HTML content sources, and an output directory.'
     )
-    return Readable.from([])
   }
 
   const { default: purgecss } = await import('gulp-purgecss')

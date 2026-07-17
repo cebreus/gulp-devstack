@@ -46,13 +46,14 @@ async function optimizePng(src, dest, options = {}) {
 
 async function optimizeSvg(src, dest) {
   const processedFiles = []
+  const imageValidation = validateImage()
 
   const { optimize } = await import('svgo')
 
   const pipeline = gulp
     .src(src, { encoding: false })
     .pipe(createPrivateFileFilter(isPrivateFile))
-    .pipe(validateImage())
+    .pipe(imageValidation)
     .pipe(
       new Transform({
         objectMode: true,
@@ -89,6 +90,10 @@ async function optimizeSvg(src, dest) {
       })
     )
     .pipe(gulp.dest(dest))
+
+  imageValidation.on('error', function forwardValidationError(error) {
+    pipeline.destroy(error)
+  })
 
   pipeline.on('data', (file) => {
     processedFiles.push(getRelativePath(file.path))

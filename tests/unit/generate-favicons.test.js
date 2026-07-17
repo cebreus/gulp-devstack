@@ -14,37 +14,35 @@ const MINIMAL_PNG = Buffer.from(
 describe('Generate Favicons Task', () => {
   describe('generateFavicons', () => {
     it('should throw error when sourcePath is invalid', async () => {
-      const mockError = mock.method(console, 'error', () => {})
-      const sourcePath = './nonexistent.png'
-      const outputDir = './output'
-      const faviconConfig = {
-        appName: 'Test App',
-        appShortName: 'Test',
-        appDescription: 'Test Description',
-        developerName: 'Test Dev',
-        background: '#000000',
-        path: '/',
-        display: 'standalone',
-        icons: {
-          android: true,
-          appleIcon: true,
-          windows: true,
-          favicons: true,
-        },
-      }
-
-      try {
-        await assert.rejects(
-          async () => {
-            await generateFavicons(sourcePath, outputDir, faviconConfig)
+      await runInSandbox('favicon-missing', async (sandbox) => {
+        const mockError = mock.method(console, 'error', () => {})
+        const sourcePath = path.join(sandbox, 'nonexistent.png')
+        const outputDir = path.join(sandbox, 'output')
+        const faviconConfig = {
+          appName: 'Test App',
+          appShortName: 'Test',
+          appDescription: 'Test Description',
+          developerName: 'Test Dev',
+          background: '#000000',
+          path: '/',
+          display: 'standalone',
+          icons: {
+            android: true,
+            appleIcon: true,
+            windows: true,
+            favicons: true,
           },
-          (err) => {
-            return err.message.includes('Favicon source image not found')
-          }
-        )
-      } finally {
-        mockError.mock.restore()
-      }
+        }
+
+        try {
+          await assert.rejects(
+            () => generateFavicons(sourcePath, outputDir, faviconConfig),
+            /Favicon source image not found/
+          )
+        } finally {
+          mockError.mock.restore()
+        }
+      })
     })
 
     it('should throw error when outputDir is invalid', async () => {

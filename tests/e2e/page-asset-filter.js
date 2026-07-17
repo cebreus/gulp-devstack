@@ -3,5 +3,9 @@ export function isCriticalPageAsset(url) {
     return false
   }
 
-  return /\.(css|js)(?:[?#]|$)/u.test(url)
+  try {
+    return /\.(?:css|js)$/u.test(new URL(url, 'http://localhost').pathname)
+  } catch {
+    return false
+  }
 }

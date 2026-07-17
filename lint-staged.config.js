@@ -3,5 +3,6 @@ export default {
   '*.scss': ['stylelint --fix --allow-empty-input', 'prettier --write'],
   '*.md': ['remark --quiet --frail'],
   '*.njk': ['njklint --fix', 'prettier --write'],
+  '*.hbs': ['prettier --write'],
   '*.{css,json}': ['prettier --write'],
 }

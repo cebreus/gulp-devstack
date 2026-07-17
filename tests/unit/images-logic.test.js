@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import { finished } from 'node:stream/promises'
 import { afterEach, beforeEach, describe, it, mock } from 'node:test'
 
 import { validateImage } from '../../gulp/tasks/process-images.js'
@@ -42,6 +43,14 @@ describe('Image Processing Logic (Unit)', () => {
         detectType(Buffer.from('   <?xml version="1.0" ?>\n<svg')),
         'svg'
       )
+      assert.strictEqual(
+        detectType(
+          Buffer.from(
+            `<!--${'long preamble '.repeat(20)}--><!DOCTYPE svg><svg></svg>`
+          )
+        ),
+        'svg'
+      )
     })
 
     it('should return null for unknown signatures', () => {
@@ -79,37 +88,35 @@ describe('Image Processing Logic (Unit)', () => {
       }
     }
 
-    function testValidateImage(format, fileName, content, expectedIsInvalid) {
-      return new Promise((resolve) => {
-        const stream = validateImage(format)
-        const file = createMockImageFile(fileName, content)
+    async function testValidateImage(format, fileName, content, shouldReject) {
+      const stream = validateImage(format)
+      const output = []
+      stream.on('data', (file) => output.push(file))
+      stream.end(createMockImageFile(fileName, content))
 
-        stream.on('data', (f) => {
-          if (expectedIsInvalid) {
-            assert.strictEqual(f._isInvalid, true)
-          } else {
-            assert.ok(!f._isInvalid)
-          }
-          resolve()
-        })
-        stream.write(file)
-      })
+      if (shouldReject) {
+        await assert.rejects(finished(stream))
+        assert.strictEqual(output.length, 0)
+        return
+      }
+
+      await finished(stream)
+      assert.strictEqual(output.length, 1)
+      assert.ok(!output[0]._isInvalid)
     }
 
-    it('should pass through non-buffer files', () => {
-      return new Promise((resolve) => {
-        const stream = validateImage('jpg')
-        const file = createMockImageFile('test.jpg', null)
+    it('should pass through non-buffer files', async () => {
+      const stream = validateImage('jpg')
+      const output = []
+      stream.on('data', (file) => output.push(file))
+      stream.end(createMockImageFile('test.jpg', null))
+      await finished(stream)
 
-        stream.on('data', (f) => {
-          assert.strictEqual(f.contents, null)
-          resolve()
-        })
-        stream.write(file)
-      })
+      assert.strictEqual(output.length, 1)
+      assert.strictEqual(output[0].contents, null)
     })
 
-    it('should flag UTF-8 corrupted files', () => {
+    it('should reject UTF-8 corrupted files', () => {
       return testValidateImage(
         'png',
         'corrupted.png',
@@ -118,7 +125,7 @@ describe('Image Processing Logic (Unit)', () => {
       )
     })
 
-    it('should flag unknown content as invalid', () => {
+    it('should reject unknown content', () => {
       return testValidateImage(
         'jpg',
         'text.jpg',
@@ -131,12 +138,19 @@ describe('Image Processing Logic (Unit)', () => {
       return testValidateImage('png', 'valid.png', MINIMAL_PNG, false)
     })
 
-    it('should note mismatched extensions but not invalidate', () => {
+    it('should accept valid content despite an extension mismatch', () => {
       return testValidateImage('jpg', 'actually-png.jpg', MINIMAL_PNG, false)
     })
   })
 
   describe('optimizeWithSharp (failure state)', () => {
+    it('should reject unsupported target formats', async () => {
+      await assert.rejects(
+        optimizeWithSharp(MINIMAL_PNG, 'gif', 80),
+        RangeError
+      )
+    })
+
     it('should throw an error when given an unsupported image buffer', async () => {
       const inputBuffer = Buffer.from('not a valid image buffer')
       await assert.rejects(

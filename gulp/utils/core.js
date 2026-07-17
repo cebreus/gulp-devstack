@@ -330,5 +330,6 @@ export async function cleanupDir(dir, regex, label, loggerInstance) {
     }
   } catch (err) {
     loggerInstance.warn(`Failed to clean up ${label} in ${dir}:`, err)
+    throw new Error(`Failed to clean up ${label} in ${dir}`, { cause: err })
   }
 }

@@ -55,7 +55,7 @@ describe('Debug Task (Integration)', () => {
     })
   })
 
-  it('should warn when build directory is present but index.html is missing', async () => {
+  it('should fail when build directory is present but index.html is missing', async () => {
     await runInSandbox('debug-missing-index', async (sandbox) => {
       const routesDir = path.join(sandbox, 'src/routes')
       const buildDir = path.join(sandbox, 'build-dev')
@@ -65,15 +65,16 @@ describe('Debug Task (Integration)', () => {
       // routes dir has a file, but build has no index.html
       fs.writeFileSync(path.join(routesDir, 'index.njk'), '<html></html>')
 
-      await debugBuild(resolveConfig('dev'), {
-        routesBaseOverride: routesDir,
-        buildBaseOverride: buildDir,
-      })
-
-      // debugBuild calls logger.error when index.html is missing in build dir
-      assert.ok(
-        mockConsoleError.mock.calls.length > 0,
-        'Should emit a console.error when index.html is missing from build dir'
+      await assert.rejects(
+        () =>
+          debugBuild(resolveConfig('dev'), {
+            routesBaseOverride: routesDir,
+            buildBaseOverride: buildDir,
+          }),
+        (error) => {
+          assert.ok(error.message.includes(path.join(buildDir, 'index.html')))
+          return true
+        }
       )
     })
   })
@@ -84,6 +85,7 @@ describe('Debug Task (Integration)', () => {
       const buildDir = path.join(sandbox, 'build-dev')
 
       fs.mkdirSync(buildDir, { recursive: true })
+      fs.writeFileSync(path.join(buildDir, 'index.html'), '<html></html>')
 
       await debugBuild(resolveConfig('dev'), {
         routesBaseOverride: routesDir,
@@ -92,8 +94,13 @@ describe('Debug Task (Integration)', () => {
 
       // debugBuild calls logger.warn when routes base is missing
       assert.ok(
-        mockConsoleWarn.mock.calls.length > 0,
-        'Should emit a console.warn when routes directory does not exist'
+        mockConsoleWarn.mock.calls.some((call) =>
+          call.arguments.some(
+            (argument) =>
+              typeof argument === 'string' && argument.includes(routesDir)
+          )
+        ),
+        'Should identify the missing routes directory'
       )
     })
   })

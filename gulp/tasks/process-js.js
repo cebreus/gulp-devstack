@@ -104,13 +104,15 @@ export default async function processJs(
   )
 
   const processedFiles = []
-  const jsPipeline = gulp
-    .src(filePaths, srcOptions)
-    .pipe(
+  let jsPipeline = gulp.src(filePaths, srcOptions)
+  if (!esbuildConfig.bundle) {
+    jsPipeline = jsPipeline.pipe(
       createChangedFilter(outputDir, {
         extension: esbuildConfig.minify ? '.min.js' : '.js',
       })
     )
+  }
+  jsPipeline = jsPipeline
     .pipe(
       new Transform({
         objectMode: true,

@@ -39,7 +39,9 @@ async function assertArtifactsExist() {
   const rootDir = process.cwd()
   await Promise.all([
     fs.access(path.join(rootDir, 'build-prod', 'index.html')),
+    fs.access(path.join(rootDir, 'build-prod', '404.html')),
     fs.access(path.join(rootDir, 'build-export', 'index.html')),
+    fs.access(path.join(rootDir, 'build-export', '404.html')),
   ])
 }
 
@@ -109,7 +111,7 @@ describe('Visual Pipeline Parity', { timeout: 60000 }, () => {
   })
 
   after(async () => {
-    await Promise.allSettled([
+    await Promise.all([
       browser?.close(),
       buildServer?.close(),
       exportServer?.close(),

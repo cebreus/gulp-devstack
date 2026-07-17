@@ -18,15 +18,21 @@ describe('Fonts Task (Integration)', () => {
   afterEach(() => {
     mockConsoleWarn.mock.restore()
   })
-  it('should skip processing if input or outputDir are missing', async () => {
-    await assert.doesNotReject(async () => {
-      await processFonts(null, null)
+  it('should fail if input or outputDir are missing', async () => {
+    await runInSandbox('fonts-arguments', async (sandbox) => {
+      const input = path.join(sandbox, 'fonts.list')
+      const output = path.join(sandbox, 'dist')
+      fs.writeFileSync(input, 'Inter:400')
+
+      await assert.rejects(
+        () => processFonts(input, null),
+        /input and outputDir/
+      )
+      await assert.rejects(
+        () => processFonts(null, output),
+        /input and outputDir/
+      )
     })
-    // Guard-clause path: warn must have been emitted and no output directory created
-    assert.ok(
-      mockConsoleWarn.mock.calls.length > 0,
-      'processFonts should emit a warn when called with null parameters'
-    )
   })
 
   it('should skip processing if font definition file is empty', async () => {
@@ -59,11 +65,33 @@ describe('Fonts Task (Integration)', () => {
       const past = new Date(now.getTime() - 10000)
       fs.utimesSync(inputPath, past, past)
       fs.utimesSync(cssOutputPath, now, now)
+      const cachedMtimeMs = fs.statSync(cssOutputPath).mtimeMs
 
       await processFonts(inputPath, outputDir)
 
       const cachedContent = fs.readFileSync(cssOutputPath, 'utf8')
       assert.strictEqual(cachedContent, '/* cached css */')
+      assert.strictEqual(fs.statSync(cssOutputPath).mtimeMs, cachedMtimeMs)
+    })
+  })
+
+  it('should resolve root-relative font URLs from the build root', async () => {
+    await runInSandbox('fonts-root-url', async (sandbox) => {
+      const inputPath = path.join(sandbox, 'fonts.list')
+      const outputDir = path.join(sandbox, 'dist')
+      const fontsOutputDir = path.join(outputDir, 'assets/fonts')
+      const cssOutputPath = path.join(outputDir, 'assets/css/fonts.css')
+
+      fs.mkdirSync(fontsOutputDir, { recursive: true })
+      fs.mkdirSync(path.dirname(cssOutputPath), { recursive: true })
+      fs.writeFileSync(inputPath, 'Inter:400')
+      fs.writeFileSync(
+        cssOutputPath,
+        '@font-face { src: url("/assets/fonts/inter.woff2"); }'
+      )
+      fs.writeFileSync(path.join(fontsOutputDir, 'inter.woff2'), 'binary')
+
+      await assert.doesNotReject(() => processFonts(inputPath, outputDir))
     })
   })
 })

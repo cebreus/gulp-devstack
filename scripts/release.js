@@ -91,10 +91,12 @@ function cleanupTemporaryConfig(configPath) {
 function main() {
   const configPath = join(process.cwd(), CONFIG_FILE)
   let exitCode = 1
+  let configCreated = false
 
   try {
     console.log('🚀 Preparing release environment...')
-    writeFileSync(configPath, JSON.stringify(config, null, 2))
+    writeFileSync(configPath, JSON.stringify(config, null, 2), { flag: 'wx' })
+    configCreated = true
     exitCode = runReleaseIt(configPath)
   } catch (error) {
     console.error(
@@ -102,7 +104,9 @@ function main() {
       error instanceof Error ? error.message : String(error)
     )
   } finally {
-    cleanupTemporaryConfig(configPath)
+    if (configCreated) {
+      cleanupTemporaryConfig(configPath)
+    }
   }
 
   process.exitCode = exitCode

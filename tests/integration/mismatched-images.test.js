@@ -20,13 +20,16 @@ describe('Image Mismatch Integration Tests', () => {
     mockConsoleWarn.mock.restore()
   })
 
-  it('should skip non-image files named as PNG', async () => {
+  it('should reject non-image files named as PNG', async () => {
     await runInSandbox('mismatch-non-image', async (sandbox) => {
       const srcPath = path.join(imagesFixturesDir, 'synt-not-png.png')
       const outputDir = path.join(sandbox, 'output')
       await fs.mkdir(outputDir, { recursive: true })
 
-      await imageTasks.png(srcPath, outputDir)
+      await assert.rejects(
+        () => imageTasks.png(srcPath, outputDir),
+        /Unknown image signature/
+      )
 
       const outputExists = await fs
         .access(path.join(outputDir, 'synt-not-png.png'))
@@ -45,7 +48,7 @@ describe('Image Mismatch Integration Tests', () => {
     })
   })
 
-  it('should skip corrupted signature PNG files', async () => {
+  it('should reject corrupted signature PNG files', async () => {
     await runInSandbox('mismatch-corrupted', async (sandbox) => {
       const srcPath = path.join(
         imagesFixturesDir,
@@ -54,7 +57,10 @@ describe('Image Mismatch Integration Tests', () => {
       const outputDir = path.join(sandbox, 'output')
       await fs.mkdir(outputDir, { recursive: true })
 
-      await imageTasks.png(srcPath, outputDir)
+      await assert.rejects(
+        () => imageTasks.png(srcPath, outputDir),
+        /Unknown image signature/
+      )
 
       const outputExists = await fs
         .access(path.join(outputDir, 'synt-corrupted-signature.png'))

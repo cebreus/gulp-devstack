@@ -71,7 +71,6 @@ async function runAssetRevisionPipeline({
   })
 
   await streamToPromise(assetPipeline)
-  await removeOriginalRevisionSources(buildBase, manifestPath)
 }
 
 async function runHtmlRewritePipeline({
@@ -150,6 +149,7 @@ export default async function generateRevision(options) {
       manifestPath,
       revRewrite,
     })
+    await removeOriginalRevisionSources(buildBase, manifestPath)
 
     logger.verbose('Asset fingerprinting and HTML reference updates finished.')
   } catch (error) {

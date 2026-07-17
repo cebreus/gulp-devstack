@@ -87,6 +87,26 @@ before(async () => {
         clientErrors.push(`[ConsoleError] ${msg.text()}`)
       }
     })
+    page.on('response', (response) => {
+      const request = response.request()
+      if (
+        request.resourceType() !== 'document' &&
+        new URL(response.url()).origin === new URL(BASE_URL).origin &&
+        response.status() >= 400
+      ) {
+        clientErrors.push(
+          `[ResourceError] ${response.status()} ${response.url()}`
+        )
+      }
+    })
+    page.on('requestfailed', (request) => {
+      if (
+        request.resourceType() !== 'document' &&
+        new URL(request.url()).origin === new URL(BASE_URL).origin
+      ) {
+        clientErrors.push(`[RequestFailed] ${request.url()}`)
+      }
+    })
   })
 })
 

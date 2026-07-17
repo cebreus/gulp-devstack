@@ -189,11 +189,15 @@ describe('Sass Pipeline Integration', () => {
       const routeCssPath = path.join(devConfig.paths.sass, 'index.css')
       const initialCss = await fs.readFile(routeCssPath, 'utf8')
       assert.ok(initialCss.includes('color: red'))
+      const routeCssStats = await fs.stat(routeCssPath)
 
-      await fs.writeFile(
-        path.join(sandbox, 'src/scss/_route-abstracts.scss'),
-        '$route-color: blue;'
+      const dependencyPath = path.join(
+        sandbox,
+        'src/scss/_route-abstracts.scss'
       )
+      await fs.writeFile(dependencyPath, '$route-color: blue;')
+      const advancedMtime = new Date(routeCssStats.mtimeMs + 1000)
+      await fs.utimes(dependencyPath, advancedMtime, advancedMtime)
       await compileRouteStyles(devConfig, [], { skipNewer: true })
 
       const updatedCss = await fs.readFile(routeCssPath, 'utf8')
@@ -225,15 +229,44 @@ describe('Sass Pipeline Integration', () => {
       assert.deepStrictEqual(firstRun, [routeCssPath])
       assert.strictEqual(secondStats.mtimeMs, firstStats.mtimeMs)
 
-      await fs.writeFile(
-        path.join(sandbox, 'src/scss/_route-abstracts.scss'),
-        '$route-color: blue;'
+      const dependencyPath = path.join(
+        sandbox,
+        'src/scss/_route-abstracts.scss'
       )
+      await fs.writeFile(dependencyPath, '$route-color: blue;')
+      const advancedMtime = new Date(secondStats.mtimeMs + 1000)
+      await fs.utimes(dependencyPath, advancedMtime, advancedMtime)
       const thirdRun = await compileRouteStyles(devConfig, [], {
         skipNewer: true,
       })
 
       assert.deepStrictEqual(thirdRun, [routeCssPath])
+    })
+  })
+
+  it('should invalidate route cache when source-map mode changes', async () => {
+    await runInSandbox('sass-route-cache-config', async (sandbox) => {
+      await writeFixtures(sandbox, {
+        'src/routes/index.scss': '.route { color: red; }',
+      })
+      const devConfig = buildSandboxSassConfig(sandbox)
+      const routeCssPath = path.join(devConfig.paths.sass, 'index.css')
+
+      await compileRouteStyles(devConfig, [], {
+        skipNewer: true,
+        sourceMaps: true,
+      })
+      assert.match(await fs.readFile(routeCssPath, 'utf8'), /sourceMappingURL/)
+
+      const result = await compileRouteStyles(devConfig, [], {
+        skipNewer: true,
+        sourceMaps: false,
+      })
+      assert.deepStrictEqual(result, [routeCssPath])
+      assert.doesNotMatch(
+        await fs.readFile(routeCssPath, 'utf8'),
+        /sourceMappingURL/
+      )
     })
   })
 })

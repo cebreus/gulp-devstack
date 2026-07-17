@@ -39,7 +39,7 @@ async function hasAnyFontAsset(fontsDir) {
   }
 }
 
-async function verifyReferencedFontAssets(cssFile, fontsDir) {
+async function verifyReferencedFontAssets(cssFile, fontsDir, outputDir) {
   const css = await fs.readFile(cssFile, 'utf8')
   const localUrls = [...css.matchAll(/url\(([^)]+)\)/gi)]
     .map((match) => match[1].trim().replace(/^(['"])(.*)\1$/, '$2'))
@@ -53,9 +53,12 @@ async function verifyReferencedFontAssets(cssFile, fontsDir) {
   await Promise.all(
     localUrls.map(async (url) => {
       const errors = []
-      for (const baseDir of baseDirs) {
+      const candidatePaths = url.startsWith('/')
+        ? [path.resolve(outputDir, url.slice(1))]
+        : baseDirs.map((baseDir) => path.resolve(baseDir, url))
+      for (const candidatePath of candidatePaths) {
         try {
-          await fs.access(path.resolve(baseDir, url))
+          await fs.access(candidatePath)
           return
         } catch (error) {
           errors.push(error)
@@ -68,7 +71,7 @@ async function verifyReferencedFontAssets(cssFile, fontsDir) {
   )
 }
 
-async function shouldSkipCachedFonts(input, cssFile, fontsDir) {
+async function shouldSkipCachedFonts(input, cssFile, fontsDir, outputDir) {
   try {
     await fs.access(cssFile)
     await fs.access(fontsDir)
@@ -86,7 +89,7 @@ async function shouldSkipCachedFonts(input, cssFile, fontsDir) {
     }
 
     if (inputStats.mtime <= cssStats.mtime && hasFontFiles) {
-      await verifyReferencedFontAssets(cssFile, fontsDir)
+      await verifyReferencedFontAssets(cssFile, fontsDir, outputDir)
       logger.debug(
         `Fonts are up to date, skipping local font asset verification for ${getRelativePath(cssFile)}.`
       )
@@ -123,8 +126,7 @@ async function ensureFontDefinitionIsNotEmpty(input) {
  */
 export default async function processFonts(input, outputDir, options = {}) {
   if (!input || !outputDir) {
-    logger.warn('Font task skipped: invalid input or output parameters.')
-    return
+    throw new Error('Font task requires input and outputDir.')
   }
 
   const fontDefinitionPath = path.resolve(input)
@@ -142,7 +144,14 @@ export default async function processFonts(input, outputDir, options = {}) {
       minify
     )
 
-    if (await shouldSkipCachedFonts(fontDefinitionPath, cssFile, fontsDir)) {
+    if (
+      await shouldSkipCachedFonts(
+        fontDefinitionPath,
+        cssFile,
+        fontsDir,
+        outputDir
+      )
+    ) {
       return
     }
 
@@ -150,13 +159,12 @@ export default async function processFonts(input, outputDir, options = {}) {
 
     const hasFontFiles = await hasAnyFontAsset(fontsDir)
     if (!hasFontFiles) {
-      logger.warn(
+      throw new Error(
         `No local font binaries found in ${getRelativePath(fontsDir)}.`
       )
-      return
     }
 
-    await verifyReferencedFontAssets(cssFile, fontsDir)
+    await verifyReferencedFontAssets(cssFile, fontsDir, outputDir)
 
     logger.verbose(
       `Using local font assets from ${getRelativePath(fontsDir)} and ${getRelativePath(cssFile)}.`

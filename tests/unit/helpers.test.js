@@ -1,10 +1,11 @@
 import assert from 'node:assert/strict'
 import fs from 'node:fs'
 import path from 'node:path'
-import { describe, it } from 'node:test'
+import { describe, it, mock } from 'node:test'
 
 import * as utilsModule from '../../gulp/utils/index.js'
 import {
+  cleanupDir,
   ensureDirectoryExists,
   getDirFromGlob,
   getRelativePath,
@@ -14,7 +15,12 @@ import {
   suppressOutdatedBootstrapWarnings,
   toKebabCase,
 } from '../../gulp/utils/index.js'
-import { cleanupSandbox, createTestSandbox } from '../test-helpers.js'
+import {
+  cleanupSandbox,
+  createTestSandbox,
+  runInSandbox,
+  writeFixtures,
+} from '../test-helpers.js'
 
 describe('Helpers Utility - public API boundaries', () => {
   it('should expose only explicit shared seams from the utils barrel', () => {
@@ -138,7 +144,17 @@ describe('Helpers Utility - getDirFromGlob', () => {
 
 describe('Helpers Utility - handleEmptyPaths', () => {
   it('should return true and log for empty array', () => {
-    assert.strictEqual(handleEmptyPaths([], 'Empty list'), true)
+    const consoleWarn = mock.method(console, 'warn', () => {})
+    try {
+      assert.strictEqual(handleEmptyPaths([], 'Empty list'), true)
+      assert.ok(
+        consoleWarn.mock.calls.some((call) =>
+          call.arguments.includes('Empty list')
+        )
+      )
+    } finally {
+      consoleWarn.mock.restore()
+    }
   })
 
   it('should return true for null or undefined', () => {
@@ -149,6 +165,47 @@ describe('Helpers Utility - handleEmptyPaths', () => {
   it('should return false for valid paths', () => {
     assert.strictEqual(handleEmptyPaths(['src/main.js'], 'Valid list'), false)
     assert.strictEqual(handleEmptyPaths('src/style.css', 'Valid string'), false)
+  })
+})
+
+describe('Helpers Utility - cleanupDir', () => {
+  it('should propagate cleanup failures', async () => {
+    await runInSandbox('cleanup-dir-failure', async (sandbox) => {
+      const logger = { info() {}, warn() {} }
+      await assert.rejects(
+        () => cleanupDir(path.join(sandbox, 'missing'), /.*/u, 'asset', logger),
+        /Failed to clean up asset/
+      )
+    })
+  })
+})
+
+describe('Test fixture path safety', () => {
+  it('should reject symlinked fixture path components', async () => {
+    await runInSandbox('fixture-symlink', async (sandbox) => {
+      const outside = await createTestSandbox('fixture-outside')
+      try {
+        await fs.promises.symlink(outside, path.join(sandbox, 'escape'))
+        await assert.rejects(
+          () => writeFixtures(sandbox, { 'escape/file.txt': 'unsafe' }),
+          /Unsafe fixture path component/
+        )
+        await assert.rejects(
+          fs.promises.access(path.join(outside, 'file.txt')),
+          {
+            code: 'ENOENT',
+          }
+        )
+      } finally {
+        await cleanupSandbox(outside)
+      }
+    })
+  })
+
+  it('should clean an already removed sandbox idempotently', async () => {
+    const sandbox = await createTestSandbox('cleanup-idempotent')
+    await fs.promises.rm(sandbox, { recursive: true })
+    await assert.doesNotReject(() => cleanupSandbox(sandbox))
   })
 })
 

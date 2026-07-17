@@ -8,7 +8,8 @@ if (!filePath) {
 const MAX_WIDTH = 100
 
 const content = fs.readFileSync(filePath, 'utf8')
-const lines = content.split('\n')
+const lineEnding = content.includes('\r\n') ? '\r\n' : '\n'
+const lines = content.split(lineEnding)
 
 function wrapLine(line, maxWidth) {
   if (line.length <= maxWidth) {
@@ -44,4 +45,4 @@ function wrapLine(line, maxWidth) {
 }
 
 const wrappedLines = lines.flatMap((line) => wrapLine(line, MAX_WIDTH))
-fs.writeFileSync(filePath, wrappedLines.join('\n'))
+fs.writeFileSync(filePath, wrappedLines.join(lineEnding))

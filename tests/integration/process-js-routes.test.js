@@ -85,4 +85,27 @@ describe('Route JS Integration', () => {
       assert.ok(routeScript.includes('about'))
     })
   })
+
+  it('should rebuild bundles when an imported dependency changes', async () => {
+    await runInSandbox('process-js-bundle-cache', async (sandbox) => {
+      await writeFixtures(sandbox, {
+        'src/main.js': "import { value } from './value.js'; console.log(value)",
+        'src/value.js': "export const value = 'first'",
+      })
+      const config = resolveConfig('dev')
+      const entryPath = path.join(sandbox, 'src/main.js')
+      const dependencyPath = path.join(sandbox, 'src/value.js')
+      const outputDir = path.join(sandbox, 'dist')
+      const options = { bundle: true, minify: false, sourceMaps: false }
+
+      await processJs(config, entryPath, outputDir, options)
+      await fs.writeFile(dependencyPath, "export const value = 'second'")
+      await processJs(config, entryPath, outputDir, options)
+
+      assert.match(
+        await fs.readFile(path.join(outputDir, 'main.js'), 'utf8'),
+        /second/
+      )
+    })
+  })
 })
