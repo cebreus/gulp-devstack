@@ -101,15 +101,10 @@ function createRasterOptimizationTransform(options) {
         markProcessedFile(processedFiles, optimizedFile.path, dest)
         cb(null, optimizedFile)
       } catch (error) {
-        const isConversion = detectType(file.contents) !== targetType
         logger.error(
           `Image optimization failed for ${path.basename(file.path)}. Cause: ${error.message}.`
         )
-        if (isConversion) {
-          return cb(error)
-        }
-        markProcessedFile(processedFiles, file.path, dest)
-        cb(null, file)
+        cb(error)
       }
     },
   })

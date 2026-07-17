@@ -27,6 +27,7 @@ const WATCH_CONFIG = {
     `${sassBase}/variables-dark.scss`,
   ],
   projectSassWatch: [
+    `${sassBase}/**/*.scss`,
     SASS_ENTRYPOINTS.custom,
     SASS_ENTRYPOINTS.components,
     `${componentsPath}/**/*.scss`,

@@ -41,11 +41,17 @@ export function stripXhtmlSlashes(html) {
     'area|base|br|col|embed|hr|img|input|link|meta|param|source|track|wbr'
   const pattern = new RegExp(`<(${voids})\\b([^>]*)/>`, 'gi')
   const closingPattern = new RegExp(`</(?:${voids})>`, 'gi')
+  const protectedRanges = findProtectedCommentRanges(html)
   return html
-    .replace(pattern, function replaceVoidTags(_, tag, attrs) {
+    .replace(pattern, function replaceVoidTags(match, tag, attrs, offset) {
+      if (isInsideRange(offset, protectedRanges)) {
+        return match
+      }
       return `<${tag}${attrs.trimEnd()}>`
     })
-    .replace(closingPattern, '')
+    .replace(closingPattern, function removeVoidClosingTag(match, offset) {
+      return isInsideRange(offset, protectedRanges) ? match : ''
+    })
 }
 
 /**
@@ -70,8 +76,14 @@ export function stripBooleanAttributeValues(html) {
     'selected',
   ].join('|')
   const pattern = new RegExp(`\\s(${attributes})=""`, 'gi')
+  const protectedRanges = findProtectedCommentRanges(html)
 
-  return html.replace(pattern, ' $1')
+  return html.replace(
+    pattern,
+    function removeBooleanAttributeValue(match, attribute, offset) {
+      return isInsideRange(offset, protectedRanges) ? match : ` ${attribute}`
+    }
+  )
 }
 
 function findProtectedCommentRanges(html) {

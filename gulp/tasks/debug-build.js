@@ -30,8 +30,8 @@ async function auditSourceFiles(foundRouteFiles) {
   for (const filePath of foundRouteFiles) {
     try {
       await fs.access(filePath)
-    } catch {
-      logger.warn(`Source file missing: ${pc.red(filePath)}`)
+    } catch (error) {
+      throw new Error(`Source file missing: ${filePath}`, { cause: error })
     }
   }
 }
@@ -41,8 +41,7 @@ async function auditIndexTemplate(activeRoutesBase) {
 
   try {
     if (!(await pathExists(indexTemplatePath))) {
-      logger.warn(`Critical missing template: ${pc.bold(indexTemplatePath)}`)
-      return
+      throw new Error(`Critical missing template: ${indexTemplatePath}`)
     }
 
     const templateSnippet = await fs.readFile(indexTemplatePath, 'utf8')
@@ -53,7 +52,7 @@ async function auditIndexTemplate(activeRoutesBase) {
       `Main template (index.njk) prefix: ${pc.dim(sanitizedSnippet)}...`
     )
   } catch (error) {
-    logger.error(`Failed to audit index.njk template. Cause: ${error.message}`)
+    throw new Error('Failed to audit index.njk template.', { cause: error })
   }
 }
 
@@ -112,7 +111,7 @@ export default async function debugBuild(config, options = {}) {
 
   let foundRouteFiles = []
   if (!(await pathExists(activeRoutesBase))) {
-    logger.warn(`Source directory missing: ${pc.red(activeRoutesBase)}`)
+    throw new Error(`Source directory missing: ${activeRoutesBase}`)
   } else {
     foundRouteFiles = await findRouteFiles(activeRoutesBase)
     logger.debug(

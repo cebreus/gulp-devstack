@@ -75,7 +75,8 @@ export async function runInSandbox(prefix, testFunction) {
       if (testError) {
         throw new AggregateError(
           [testError, cleanupError],
-          'Test and sandbox cleanup both failed'
+          'Test and sandbox cleanup both failed',
+          { cause: testError }
         )
       }
       throw cleanupError

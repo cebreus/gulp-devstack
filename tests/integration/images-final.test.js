@@ -30,7 +30,7 @@ describe('Image Pipeline Final Integration', () => {
     mockConsoleError.mock.restore()
   })
 
-  it('should preserve JPG input when Sharp fails', async () => {
+  it('should fail JPG conversion when Sharp cannot decode the input', async () => {
     await runInSandbox('images-jpg', async (sandbox) => {
       const invalidJpg = Buffer.from([0xff, 0xd8, 0xff])
       const srcPath = await writeImageToSandbox(
@@ -40,18 +40,14 @@ describe('Image Pipeline Final Integration', () => {
       )
       const destDir = path.join(sandbox, 'build')
 
-      await images.jpg(srcPath, destDir)
+      await assert.rejects(images.jpg(srcPath, destDir))
 
       const optimizedPath = path.join(destDir, 'test.jpg')
-      const outputBuffer = await fs.readFile(optimizedPath)
-      assert.deepStrictEqual(outputBuffer, invalidJpg)
-      await assert.rejects(fs.access(path.join(destDir, 'test.jpeg')), {
-        code: 'ENOENT',
-      })
+      await assert.rejects(fs.access(optimizedPath), { code: 'ENOENT' })
     })
   })
 
-  it('should preserve PNG input when Sharp fails', async () => {
+  it('should fail PNG conversion when Sharp cannot decode the input', async () => {
     await runInSandbox('images-png', async (sandbox) => {
       const pngContent = Buffer.from([0x89, 0x50, 0x4e, 0x47])
       const srcPath = path.join(sandbox, 'src/test.png')
@@ -60,11 +56,10 @@ describe('Image Pipeline Final Integration', () => {
 
       const destDir = path.join(sandbox, 'build')
 
-      await images.png(srcPath, destDir)
+      await assert.rejects(images.png(srcPath, destDir))
 
       const optimizedPath = path.join(destDir, 'test.png')
-      const outputBuffer = await fs.readFile(optimizedPath)
-      assert.deepStrictEqual(outputBuffer, pngContent)
+      await assert.rejects(fs.access(optimizedPath), { code: 'ENOENT' })
     })
   })
 

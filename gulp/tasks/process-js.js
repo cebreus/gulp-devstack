@@ -76,7 +76,7 @@ export default async function processJs(
   options = {}
 ) {
   if (!filePaths || (Array.isArray(filePaths) && filePaths.length === 0)) {
-    logger.warn(
+    logger.debug(
       'Skipping JS processing: no valid input files provided. Check task globs or route-level script entries.'
     )
     return

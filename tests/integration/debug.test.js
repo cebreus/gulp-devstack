@@ -79,7 +79,7 @@ describe('Debug Task (Integration)', () => {
     })
   })
 
-  it('should warn when source routes directory is missing', async () => {
+  it('should throw when source routes directory is missing', async () => {
     await runInSandbox('debug-missing-routes', async (sandbox) => {
       const routesDir = path.join(sandbox, 'nonexistent-routes')
       const buildDir = path.join(sandbox, 'build-dev')
@@ -87,20 +87,15 @@ describe('Debug Task (Integration)', () => {
       fs.mkdirSync(buildDir, { recursive: true })
       fs.writeFileSync(path.join(buildDir, 'index.html'), '<html></html>')
 
-      await debugBuild(resolveConfig('dev'), {
-        routesBaseOverride: routesDir,
-        buildBaseOverride: buildDir,
-      })
-
-      // debugBuild calls logger.warn when routes base is missing
-      assert.ok(
-        mockConsoleWarn.mock.calls.some((call) =>
-          call.arguments.some(
-            (argument) =>
-              typeof argument === 'string' && argument.includes(routesDir)
-          )
-        ),
-        'Should identify the missing routes directory'
+      await assert.rejects(
+        debugBuild(resolveConfig('dev'), {
+          routesBaseOverride: routesDir,
+          buildBaseOverride: buildDir,
+        }),
+        (error) => {
+          assert.ok(error.message.includes(routesDir))
+          return true
+        }
       )
     })
   })

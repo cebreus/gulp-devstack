@@ -4,7 +4,7 @@
   font-weight: 400;
   font-display: auto;
   font-stretch: normal;
-  src: url(fonts/Outfit-normal-400.woff) format('woff');
+  src: url(../fonts/Outfit-normal-400.woff) format('woff');
   unicode-range: U+0-10FFFF;
 }
 
@@ -14,7 +14,7 @@
   font-weight: 600;
   font-display: auto;
   font-stretch: normal;
-  src: url(fonts/Outfit-normal-600.woff) format('woff');
+  src: url(../fonts/Outfit-normal-600.woff) format('woff');
   unicode-range: U+0-10FFFF;
 }
 
@@ -24,6 +24,6 @@
   font-weight: 800;
   font-display: auto;
   font-stretch: normal;
-  src: url(fonts/Outfit-normal-800.woff) format('woff');
+  src: url(../fonts/Outfit-normal-800.woff) format('woff');
   unicode-range: U+0-10FFFF;
 }

@@ -79,10 +79,11 @@ describe('Asset Pipeline Utilities', () => {
       await assert.doesNotReject(async () => {
         await processJs(resolveConfig('dev'), [], 'build-dev/assets/js')
       })
-      // Guard-clause path: warn should have been emitted, no file created
-      assert.ok(
-        mockConsoleWarn.mock.calls.length > 0,
-        'processJs should emit a warn when file list is empty'
+      // Guard-clause path is expected and logs at debug level, not warn
+      assert.strictEqual(
+        mockConsoleWarn.mock.calls.length,
+        0,
+        'processJs should not warn when file list is empty'
       )
     })
 

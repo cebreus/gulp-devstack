@@ -110,7 +110,7 @@ async function renderCssOutput(options) {
     buildPostcssPlugins(autoprefixer, cssnano, postcssPlugins, minify)
   )
   const postcssResult = await processor.process(sassResult.css, {
-    from: cssPath,
+    from: sourceFile,
     to: cssPath,
     map: sourceMaps
       ? {

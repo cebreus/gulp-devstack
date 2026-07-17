@@ -54,8 +54,8 @@ describe('JS Pipeline (Unit)', () => {
       )
       assert.strictEqual(
         mockConsoleWarn.mock.calls.length,
-        2,
-        'Should emit exactly one warn per empty call'
+        0,
+        'Expected no-op guard clause to log at debug level, not warn'
       )
     })
   })

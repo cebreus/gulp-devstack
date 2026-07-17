@@ -12,7 +12,9 @@ const lineEnding = content.includes('\r\n') ? '\r\n' : '\n'
 const lines = content.split(lineEnding)
 
 function wrapLine(line, maxWidth) {
-  if (line.length <= maxWidth) {
+  const isTrailer = /^(?:BREAKING CHANGE|[A-Za-z0-9-]+):\s+\S/u.test(line)
+
+  if (line.length <= maxWidth || isTrailer) {
     return [line]
   }
 

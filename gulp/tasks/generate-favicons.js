@@ -6,7 +6,7 @@ import loggerLib from '../utils/index.js'
 
 const logger = loggerLib.createLogger('GenerateFavicons')
 
-function validateOutputOverrides(outputDir, options) {
+function assertOutputOverrides(outputDir, options) {
   const defaultManifestPath = path.join(outputDir, 'manifest.webmanifest')
   if (
     options.manifestPath &&
@@ -57,7 +57,7 @@ export default async function generateFavicons(
   }
 
   try {
-    validateOutputOverrides(outputDir, options)
+    assertOutputOverrides(outputDir, options)
 
     await fs.access(sourcePath).catch((error) => {
       throw new Error(`Favicon source image not found at: ${sourcePath}`, {

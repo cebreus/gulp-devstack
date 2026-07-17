@@ -72,6 +72,29 @@ function runGulpTask(task) {
   })
 }
 
+/**
+ * Converts a failing development task into a visible server error state.
+ * @param {import('gulp').TaskFunction} task - Build task to run.
+ * @param {import('gulp').TaskFunction} successTask - Reload task after success.
+ * @param {{fail: function(Error): void, ready: function(): void}} server - Development server state API.
+ * @returns {function(): Promise<void>} Recoverable task.
+ */
+export function createRecoverableDevTask(
+  task,
+  successTask,
+  server = serveSite
+) {
+  return async function runRecoverableDevTask() {
+    try {
+      await runGulpTask(task)
+      server.ready()
+      await runGulpTask(successTask)
+    } catch (error) {
+      server.fail(error)
+    }
+  }
+}
+
 function rememberCssReloadPaths(writtenFiles) {
   pendingCssReloadPaths = resolveCssReloadPaths(
     config.paths.build,
@@ -126,6 +149,7 @@ function createPipelines(tasks) {
     finalCleanup,
     validate,
     debug,
+    startServer,
     watchFiles,
   } = tasks
 
@@ -150,11 +174,17 @@ function createPipelines(tasks) {
       gulp.parallel(validate, debug)
     ),
     servePipeline: gulp.series(
-      clean,
-      gulp.parallel(images, dataset, favicons, fonts),
-      gulp.parallel(copy, js, css),
-      html,
-      debug,
+      startServer,
+      createRecoverableDevTask(
+        gulp.series(
+          clean,
+          gulp.parallel(images, dataset, favicons, fonts),
+          gulp.parallel(copy, js, css),
+          html,
+          debug
+        ),
+        reload
+      ),
       watchFiles
     ),
   }
@@ -428,10 +458,8 @@ export function refreshCss(done) {
  * @returns {import('chokidar').FSWatcher} Template file watcher.
  */
 export function registerTemplateWatcher({ config, tasks, gulpApi = gulp }) {
-  const rebuildTemplates = gulpApi.series(
-    tasks.lintTemplates,
-    tasks.dataset,
-    tasks.html,
+  const rebuildTemplates = createRecoverableDevTask(
+    gulpApi.series(tasks.lintTemplates, tasks.dataset, tasks.html),
     tasks.reload
   )
   const templateWatcher = gulpApi.watch(config.templateWatchPaths)
@@ -443,10 +471,13 @@ export function registerTemplateWatcher({ config, tasks, gulpApi = gulp }) {
   return templateWatcher
 }
 
+async function startServer() {
+  serveSite.fail(new Error('Development build is running.'))
+  await serveSite.init(config)
+}
+
 async function watchFiles() {
   try {
-    await serveSite.init(config)
-
     // Templates & Data: Rebuild JSON and HTML, then FULL RELOAD
     registerTemplateWatcher({
       config,
@@ -454,29 +485,59 @@ async function watchFiles() {
     })
 
     // Styles: Rebuild only the affected CSS layer, then inject CSS.
-    gulp.watch(config.bootstrapWatch, gulp.series(cssBootstrap, refreshCss))
-    gulp.watch(config.projectSassWatch, gulp.series(cssProject, refreshCss))
+    gulp.watch(
+      config.bootstrapWatch,
+      createRecoverableDevTask(gulp.series(cssBootstrap), refreshCss)
+    )
+    gulp.watch(
+      config.projectSassWatch,
+      createRecoverableDevTask(gulp.series(cssProject), refreshCss)
+    )
     const routeStyleWatcher = gulp.watch(config.routeSassWatch)
-    routeStyleWatcher.on('change', gulp.series(cssRoutes, refreshCss))
-    routeStyleWatcher.on('add', gulp.series(cssRoutes, html, reload))
-    routeStyleWatcher.on('unlink', gulp.series(cssRoutes, html, reload))
+    routeStyleWatcher.on(
+      'change',
+      createRecoverableDevTask(gulp.series(cssRoutes), refreshCss)
+    )
+    routeStyleWatcher.on(
+      'add',
+      createRecoverableDevTask(gulp.series(cssRoutes, html), reload)
+    )
+    routeStyleWatcher.on(
+      'unlink',
+      createRecoverableDevTask(gulp.series(cssRoutes, html), reload)
+    )
 
     // Scripts: Rebuild JS and FULL RELOAD (JS usually requires fresh state)
-    gulp.watch(config.jsFiles, gulp.series(js, reload))
+    gulp.watch(
+      config.jsFiles,
+      createRecoverableDevTask(gulp.series(js), reload)
+    )
     const routeJsWatcher = gulp.watch(config.routeJsWatch)
-    routeJsWatcher.on('change', gulp.series(js, reload))
-    routeJsWatcher.on('add', gulp.series(js, html, reload))
-    routeJsWatcher.on('unlink', gulp.series(js, html, reload))
+    routeJsWatcher.on(
+      'change',
+      createRecoverableDevTask(gulp.series(js), reload)
+    )
+    routeJsWatcher.on(
+      'add',
+      createRecoverableDevTask(gulp.series(js, html), reload)
+    )
+    routeJsWatcher.on(
+      'unlink',
+      createRecoverableDevTask(gulp.series(js, html), reload)
+    )
 
     // Image metadata and LQS classes are rendered into HTML.
-    gulp.watch(`${config.imagesBase}/**/*`, gulp.series(images, html, reload))
+    gulp.watch(
+      `${config.imagesBase}/**/*`,
+      createRecoverableDevTask(gulp.series(images, html), reload)
+    )
     gulp.watch(
       `${config.iconsBase}/favicons-source.png`,
-      gulp.series(favicons, html, reload)
+      createRecoverableDevTask(gulp.series(favicons, html), reload)
     )
     gulp.watch(
       `${config.iconsBase}/**/*.svg`,
-      gulp.series(dataset, html, reload)
+      createRecoverableDevTask(gulp.series(dataset, html), reload)
     )
   } catch (error) {
     logger.error('Failed to start development server or watchers:', error)
@@ -515,6 +576,7 @@ const { buildPipeline, exportPipeline, servePipeline } = createPipelines({
   finalCleanup,
   validate,
   debug,
+  startServer,
   watchFiles,
 })
 

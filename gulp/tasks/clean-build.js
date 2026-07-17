@@ -5,7 +5,7 @@ import loggerLib, { getRelativePath, handleEmptyPaths } from '../utils/index.js'
 
 const logger = loggerLib.createLogger('Clean')
 
-function validatePaths(paths, allowedRoot) {
+function assertPathsWithinRoot(paths, allowedRoot) {
   const root = path.resolve(allowedRoot)
 
   for (const target of Array.isArray(paths) ? paths : [paths]) {
@@ -36,7 +36,7 @@ export default async function cleanBuild(paths, allowedRoot = process.cwd()) {
 
   logger.list('Cleaning paths', Array.isArray(paths) ? paths : [paths])
   try {
-    validatePaths(paths, allowedRoot)
+    assertPathsWithinRoot(paths, allowedRoot)
     const deletedPaths = await deleteAsync(paths, { force: true })
 
     if (deletedPaths.length > 0) {

@@ -39,23 +39,21 @@ async function hasAnyFontAsset(fontsDir) {
   }
 }
 
-async function verifyReferencedFontAssets(cssFile, fontsDir, outputDir) {
+async function verifyReferencedFontAssets(cssFile, outputDir) {
   const css = await fs.readFile(cssFile, 'utf8')
   const localUrls = [...css.matchAll(/url\(([^)]+)\)/gi)]
     .map((match) => match[1].trim().replace(/^(['"])(.*)\1$/, '$2'))
     .filter((url) => !/^(?:data:|https?:|\/\/|#)/i.test(url))
     .map((url) => url.split(/[?#]/, 1)[0])
 
-  // URLs are resolved by the browser against the CSS location, but the
-  // fontload convention writes them relative to the assets root instead.
-  const baseDirs = [path.dirname(cssFile), path.dirname(path.resolve(fontsDir))]
+  const cssBaseDir = path.dirname(cssFile)
 
   await Promise.all(
     localUrls.map(async (url) => {
       const errors = []
       const candidatePaths = url.startsWith('/')
         ? [path.resolve(outputDir, url.slice(1))]
-        : baseDirs.map((baseDir) => path.resolve(baseDir, url))
+        : [path.resolve(cssBaseDir, url)]
       for (const candidatePath of candidatePaths) {
         try {
           await fs.access(candidatePath)
@@ -89,7 +87,7 @@ async function shouldSkipCachedFonts(input, cssFile, fontsDir, outputDir) {
     }
 
     if (inputStats.mtime <= cssStats.mtime && hasFontFiles) {
-      await verifyReferencedFontAssets(cssFile, fontsDir, outputDir)
+      await verifyReferencedFontAssets(cssFile, outputDir)
       logger.debug(
         `Fonts are up to date, skipping local font asset verification for ${getRelativePath(cssFile)}.`
       )
@@ -164,7 +162,7 @@ export default async function processFonts(input, outputDir, options = {}) {
       )
     }
 
-    await verifyReferencedFontAssets(cssFile, fontsDir, outputDir)
+    await verifyReferencedFontAssets(cssFile, outputDir)
 
     logger.verbose(
       `Using local font assets from ${getRelativePath(fontsDir)} and ${getRelativePath(cssFile)}.`

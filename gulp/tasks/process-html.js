@@ -47,9 +47,12 @@ export function createPlaceholderSeoWarningTransform(TransformCtor) {
           html.includes(placeholder)
         )
         if (hit) {
-          logger.warn(
-            `Placeholder SEO value "${hit}" found in ${getRelativePath(file.path)}. Update src/config/site.js or page frontmatter before publishing.`
+          callback(
+            new Error(
+              `Placeholder SEO value "${hit}" found in ${getRelativePath(file.path)}.`
+            )
           )
+          return
         }
       }
       callback(null, file)

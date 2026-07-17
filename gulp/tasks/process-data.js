@@ -60,14 +60,17 @@ function resolveDataExpressions(data, context) {
   return data
 }
 
-function logDuplicatePageId(usedPageIds, jsonData, filePath) {
-  if (usedPageIds.has(jsonData.pageId)) {
-    logger.warn(
-      `Duplicate pageId '${jsonData.pageId}' in ${filePath}. This may cause routing conflicts.`
+function assertUniquePageId(usedPageIds, jsonData, filePath) {
+  const language = jsonData.language || 'en'
+  const scopedPageId = `${language}:${jsonData.pageId}`
+
+  if (usedPageIds.has(scopedPageId)) {
+    throw new Error(
+      `Duplicate pageId '${jsonData.pageId}' (language '${language}') in ${filePath}.`
     )
   }
 
-  usedPageIds.add(jsonData.pageId)
+  usedPageIds.add(scopedPageId)
 }
 
 function buildMenuEntry(frontmatter, fileName, pagePath, pageId) {
@@ -118,7 +121,7 @@ async function processContentFile(file, routesRoot, dest, usedPageIds) {
 
   jsonData.readingTime = calculateReadingTime(content)
 
-  logDuplicatePageId(usedPageIds, jsonData, file.path)
+  assertUniquePageId(usedPageIds, jsonData, file.path)
 
   return {
     jsonData,

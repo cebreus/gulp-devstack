@@ -71,6 +71,7 @@ export function detectType(buffer) {
  */
 export async function getLqsPlaceholder(buffer) {
   const lqsBuffer = await sharp(buffer)
+    .rotate()
     .resize(20)
     .blur(1)
     .webp({ quality: 10 })

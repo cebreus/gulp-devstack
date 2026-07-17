@@ -22,10 +22,9 @@ function runTransform(file) {
 }
 
 describe('createPlaceholderSeoWarningTransform', () => {
-  it('passes files through unchanged when placeholder is present', async () => {
+  it('rejects the stream when a placeholder SEO value is present', async () => {
     const file = createFakeFile('<title>New Project SEO Title</title>')
-    const result = await runTransform(file)
-    assert.strictEqual(result, file)
+    await assert.rejects(runTransform(file), /Placeholder SEO value/)
   })
 
   it('passes clean files through unchanged', async () => {

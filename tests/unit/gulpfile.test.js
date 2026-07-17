@@ -37,6 +37,7 @@ describe('Gulpfile (Boundary/Smoke)', () => {
       'reload',
       'refreshCss',
       'resolveCssReloadPaths',
+      'createRecoverableDevTask',
       'dev',
       'build',
       'export',
@@ -110,10 +111,11 @@ describe('Gulpfile (Boundary/Smoke)', () => {
     const gulpApi = {
       series(...taskList) {
         seriesCalls.push(taskList)
-        return async function () {
+        return async (done) => {
           for (const task of taskList) {
             await task()
           }
+          if (typeof done === 'function') done()
         }
       },
       watch(paths) {
@@ -136,8 +138,9 @@ describe('Gulpfile (Boundary/Smoke)', () => {
       html() {
         taskCalls.push('html')
       },
-      reload() {
+      reload(done) {
         taskCalls.push('reload')
+        done()
       },
     }
     const config = {
@@ -148,7 +151,7 @@ describe('Gulpfile (Boundary/Smoke)', () => {
 
     assert.deepStrictEqual(watchedPaths, [config.templateWatchPaths])
     assert.deepStrictEqual(seriesCalls, [
-      [tasks.lintTemplates, tasks.dataset, tasks.html, tasks.reload],
+      [tasks.lintTemplates, tasks.dataset, tasks.html],
     ])
     assert.deepStrictEqual([...handlers.keys()], ['change', 'add', 'unlink'])
     for (const eventName of ['change', 'add', 'unlink']) {
@@ -181,5 +184,45 @@ describe('Gulpfile (Boundary/Smoke)', () => {
       ]),
       ['assets/css/custom.css', 'assets/css/about/index.css']
     )
+  })
+
+  it('should convert a dev task failure into server error state', async () => {
+    process.env.BUILD_MODE = 'dev'
+    const gulpfile = await import('../../gulpfile.js?recoverable-dev-task')
+    const calls = []
+    const server = {
+      fail(error) {
+        calls.push(error.message)
+      },
+      ready() {
+        calls.push('ready')
+      },
+    }
+    const task = gulpfile.createRecoverableDevTask(
+      (done) => {
+        done(new Error('broken build'))
+      },
+      (done) => {
+        calls.push('success')
+        done()
+      },
+      server
+    )
+
+    await task()
+
+    assert.deepStrictEqual(calls, ['broken build'])
+
+    const recoveredTask = gulpfile.createRecoverableDevTask(
+      (done) => done(),
+      (done) => {
+        calls.push('success')
+        done()
+      },
+      server
+    )
+    await recoveredTask()
+
+    assert.deepStrictEqual(calls, ['broken build', 'ready', 'success'])
   })
 })

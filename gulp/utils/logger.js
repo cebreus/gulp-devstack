@@ -98,6 +98,13 @@ function verbose(...args) {
   dispatch('verbose', '', ...args)
 }
 
+function list(header, items) {
+  if (!isDebugEnabled()) {
+    return
+  }
+  dispatch('debug', '', formatList(header, items))
+}
+
 /**
  * Creates a category-scoped logger.
  * @param {string} categoryName - Category shown in log prefixes.
@@ -124,6 +131,7 @@ export default {
   info,
   debug,
   verbose,
+  list,
   formatList,
   createLogger,
   isDebugEnabled,
