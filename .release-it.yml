@@ -45,14 +45,3 @@ plugins:
         - type: fix
           section: Bug Fixes
         - {}
-  '@j-ulrich/release-it-regex-bumper':
-    out:
-      - file: content/pages/index.md
-        search: v\d+\.\d+\.\d+
-        replace: v{{versionWithoutPrerelease}}
-      - file: src/routes/layout-default.njk
-        search: data-version="\d+\.\d+\.\d+
-        replace: data-version="{{versionWithoutPrerelease}}
-      - file: gulpconfig.build.js
-        search: version[:] '\d+\.\d+\.\d+'
-        replace: "version: '{{versionWithoutPrerelease}}'"
