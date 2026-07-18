@@ -57,7 +57,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Run linters (fail on error)
-        run: pnpm lint:ci
+        run: pnpm lint
 
   unit-test:
     name: Unit Tests
