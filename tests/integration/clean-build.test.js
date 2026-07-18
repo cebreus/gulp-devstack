@@ -86,6 +86,34 @@ describe('Clean Build Task', () => {
     await fs.access(outsideFile)
   })
 
+  it('should reject a relative brace-expanded pattern that resolves outside the allowed root', async () => {
+    const allowedRoot = path.join(testDir, 'project')
+    const outsideFile = path.join(testDir, 'outside.txt')
+    await fs.mkdir(allowedRoot, { recursive: true })
+    await fs.writeFile(outsideFile, 'content')
+
+    const originalCwd = process.cwd()
+    process.chdir(allowedRoot)
+    // Resolve root via cwd() (not the pre-chdir path string) so a symlinked
+    // tmpdir (e.g. macOS /tmp -> /private/tmp) can't desync root vs. resolved
+    // targets and produce a false "outside root" on its own.
+    const resolvedRoot = process.cwd()
+    try {
+      // No `/` precedes `..`, so it is one literal glob-brace segment, not a
+      // resolvable path component — path.resolve() on the raw string treats
+      // it as an opaque name and never sees the traversal. Only *after* del
+      // expands the brace does `..` (the project's parent) become a real
+      // deletion target, which is why the fix must validate expanded matches.
+      await assert.rejects(
+        cleanBuild(['{to-delete.txt,..}'], resolvedRoot),
+        /Path is outside the allowed root/
+      )
+    } finally {
+      process.chdir(originalCwd)
+    }
+    await fs.access(outsideFile)
+  })
+
   it('should return empty array for empty paths', async () => {
     const deleted = await cleanBuild([])
     assert.deepStrictEqual(deleted, [])

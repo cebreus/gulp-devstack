@@ -5,20 +5,35 @@ import loggerLib, { getRelativePath, handleEmptyPaths } from '../utils/index.js'
 
 const logger = loggerLib.createLogger('Clean')
 
+function assertWithinRoot(target, root) {
+  const relative = path.relative(root, path.resolve(target))
+  if (
+    !relative ||
+    relative === '..' ||
+    relative.startsWith(`..${path.sep}`) ||
+    path.isAbsolute(relative)
+  ) {
+    throw new Error(`Path is outside the allowed root: ${target}`)
+  }
+}
+
 function assertPathsWithinRoot(paths, allowedRoot) {
   const root = path.resolve(allowedRoot)
 
   for (const target of Array.isArray(paths) ? paths : [paths]) {
-    const relative = path.relative(root, path.resolve(target))
-    if (
-      !relative ||
-      relative === '..' ||
-      relative.startsWith(`..${path.sep}`) ||
-      path.isAbsolute(relative)
-    ) {
-      throw new Error(`Path is outside the allowed root: ${target}`)
-    }
+    assertWithinRoot(target, root)
   }
+}
+
+async function resolveValidatedTargets(paths, allowedRoot) {
+  const root = path.resolve(allowedRoot)
+  const expandedPaths = await deleteAsync(paths, { dryRun: true, force: true })
+
+  for (const target of expandedPaths) {
+    assertWithinRoot(target, root)
+  }
+
+  return expandedPaths
 }
 
 /**
@@ -37,7 +52,10 @@ export default async function cleanBuild(paths, allowedRoot = process.cwd()) {
   logger.list('Cleaning paths', Array.isArray(paths) ? paths : [paths])
   try {
     assertPathsWithinRoot(paths, allowedRoot)
-    const deletedPaths = await deleteAsync(paths, { force: true })
+    const validatedTargets = await resolveValidatedTargets(paths, allowedRoot)
+    const deletedPaths = validatedTargets.length
+      ? await deleteAsync(validatedTargets, { force: true })
+      : []
 
     if (deletedPaths.length > 0) {
       const relativePaths = deletedPaths.map((p) => getRelativePath(p))
