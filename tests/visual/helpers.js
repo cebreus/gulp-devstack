@@ -22,6 +22,7 @@ const CONTENT_TYPES = {
 }
 const PIXEL_CHANNELS = 4
 const PIXEL_DIFF_THRESHOLD = 16
+const DEFAULT_WAIT_AFTER_THEME_MS = 150
 
 function normalizeRequestPath(pathname) {
   if (!pathname || pathname === '/') {
@@ -123,6 +124,64 @@ export async function startStaticServer(rootDir) {
   }
 }
 
+async function applyTheme(page, theme) {
+  await page.emulateMedia({ colorScheme: theme })
+  await page.evaluate((nextTheme) => {
+    document.documentElement.dataset.bsTheme = nextTheme
+    if (document.body) {
+      document.body.dataset.bsTheme = nextTheme
+    }
+  }, theme)
+  await page.waitForTimeout(DEFAULT_WAIT_AFTER_THEME_MS)
+}
+
+async function stabilizePage(page) {
+  await page.waitForLoadState('networkidle')
+  await page.evaluate(async () => {
+    await document.fonts.ready
+  })
+  await page.addStyleTag({
+    content: `
+      *, *::before, *::after {
+        animation: none !important;
+        transition: none !important;
+        caret-color: transparent !important;
+      }
+      html {
+        scrollbar-width: none !important;
+        -webkit-font-smoothing: antialiased !important;
+        -moz-osx-font-smoothing: grayscale !important;
+      }
+      ::-webkit-scrollbar {
+        display: none !important;
+      }
+    `,
+  })
+}
+
+export async function capturePageScreenshot(
+  browser,
+  { baseUrl, routePath, viewport, theme }
+) {
+  const context = await browser.newContext({
+    viewport: {
+      width: viewport.width,
+      height: viewport.height,
+    },
+    deviceScaleFactor: 1,
+  })
+
+  try {
+    const page = await context.newPage()
+    await page.goto(`${baseUrl}${routePath}`)
+    await stabilizePage(page)
+    await applyTheme(page, theme)
+    return await page.screenshot({ fullPage: true })
+  } finally {
+    await context.close()
+  }
+}
+
 async function readRawImage(imageBuffer) {
   const { data, info } = await sharp(imageBuffer)
     .ensureAlpha()
@@ -182,4 +241,11 @@ export async function compareScreenshots(leftImage, rightImage) {
   assert.strictEqual(left.height, right.height, 'Screenshot heights differ')
 
   return compareRawPixels(left.data, right.data)
+}
+
+export async function writeScreenshotDiff(leftImage, rightImage, diffPath) {
+  await sharp(leftImage)
+    .composite([{ input: rightImage, blend: 'difference' }])
+    .png()
+    .toFile(diffPath)
 }

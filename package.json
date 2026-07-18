@@ -33,6 +33,7 @@
 		"test:e2e": "cross-env NODE_ENV=test node --test --test-concurrency=1 \"tests/e2e/**/*.test.js\"",
 		"test:smoke": "cross-env NODE_ENV=test node --test \"tests/smoke/**/*.test.js\"",
 		"test:visual": "cross-env NODE_ENV=test node --test --test-concurrency=1 \"tests/visual/**/*.test.js\"",
+		"test:visual:update": "cross-env UPDATE_VISUAL_BASELINES=1 pnpm run test:visual",
 		"test:ci": "pnpm run test && pnpm run test:smoke && pnpm run test:e2e",
 		"test:prod": "cross-env BUILD_MODE=build pnpm run test:e2e",
 		"test:export": "cross-env BUILD_MODE=export pnpm run test:e2e",

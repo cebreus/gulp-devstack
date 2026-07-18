@@ -4,7 +4,11 @@ import path from 'node:path'
 import { after, before, describe, it } from 'node:test'
 import { chromium } from '@playwright/test'
 
-import { compareScreenshots, startStaticServer } from './helpers.js'
+import {
+  capturePageScreenshot,
+  compareScreenshots,
+  startStaticServer,
+} from './helpers.js'
 
 const ROUTES = { home: '/', notFound: '/404.html' }
 const THEMES = { light: 'light', dark: 'dark' }
@@ -18,7 +22,6 @@ const PARITY_CASES = [
   ['404 (Desktop Light)', ROUTES.notFound, THEMES.light, 'xl'],
 ]
 const MAX_DIFF_PIXEL_RATIO = 0.001
-const DEFAULT_WAIT_AFTER_THEME_MS = 150
 
 let browser = null
 let buildServer = null
@@ -43,61 +46,6 @@ async function assertArtifactsExist() {
     fs.access(path.join(rootDir, 'build-export', 'index.html')),
     fs.access(path.join(rootDir, 'build-export', '404.html')),
   ])
-}
-
-async function applyTheme(page, theme) {
-  await page.emulateMedia({ colorScheme: theme })
-  await page.evaluate((nextTheme) => {
-    document.documentElement.dataset.bsTheme = nextTheme
-    if (document.body) {
-      document.body.dataset.bsTheme = nextTheme
-    }
-  }, theme)
-  await page.waitForTimeout(DEFAULT_WAIT_AFTER_THEME_MS)
-}
-
-async function stabilizePage(page) {
-  await page.waitForLoadState('networkidle')
-  await page.evaluate(async () => {
-    await document.fonts.ready
-  })
-  await page.addStyleTag({
-    content: `
-      *, *::before, *::after {
-        animation: none !important;
-        transition: none !important;
-        caret-color: transparent !important;
-      }
-      html {
-        scrollbar-width: none !important;
-        -webkit-font-smoothing: antialiased !important;
-        -moz-osx-font-smoothing: grayscale !important;
-      }
-      ::-webkit-scrollbar {
-        display: none !important;
-      }
-    `,
-  })
-}
-
-async function capturePageScreenshot(baseUrl, routePath, viewport, theme) {
-  const context = await browser.newContext({
-    viewport: {
-      width: viewport.width,
-      height: viewport.height,
-    },
-    deviceScaleFactor: 1,
-  })
-
-  try {
-    const page = await context.newPage()
-    await page.goto(`${baseUrl}${routePath}`)
-    await stabilizePage(page)
-    await applyTheme(page, theme)
-    return await page.screenshot({ fullPage: true })
-  } finally {
-    await context.close()
-  }
 }
 
 describe('Visual Pipeline Parity', { timeout: 60000 }, () => {
@@ -130,8 +78,18 @@ describe('Visual Pipeline Parity', { timeout: 60000 }, () => {
     const testName = `${toSnapshotName(routePath)} | ${theme} | ${viewport.name}`
 
     const [buildScreenshot, exportScreenshot] = await Promise.all([
-      capturePageScreenshot(buildServer.baseUrl, routePath, viewport, theme),
-      capturePageScreenshot(exportServer.baseUrl, routePath, viewport, theme),
+      capturePageScreenshot(browser, {
+        baseUrl: buildServer.baseUrl,
+        routePath,
+        viewport,
+        theme,
+      }),
+      capturePageScreenshot(browser, {
+        baseUrl: exportServer.baseUrl,
+        routePath,
+        viewport,
+        theme,
+      }),
     ])
 
     const diff = await compareScreenshots(buildScreenshot, exportScreenshot)
