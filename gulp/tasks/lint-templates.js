@@ -31,8 +31,6 @@ export default async function lintTemplates() {
     logger.error(
       `Nunjucks linting failed. Review output above and run \`npx njklint src/**/*.{njk,md}\` locally to inspect details. Cause: ${error.message}`
     )
-    if (process.env.BUILD_MODE !== 'dev') {
-      throw error
-    }
+    throw error
   }
 }

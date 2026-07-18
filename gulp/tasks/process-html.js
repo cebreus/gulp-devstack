@@ -183,7 +183,7 @@ async function createHtmlPipeline(config, globalContext) {
     pipeline = pipeline.pipe(beautify(config.htmlBeautify))
   }
 
-  if (process.env.BUILD_MODE !== 'dev') {
+  if (config.version !== 'dev') {
     pipeline = pipeline.pipe(createPlaceholderSeoWarningTransform(Transform))
   }
 

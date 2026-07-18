@@ -81,11 +81,14 @@ export default async function generateFavicons(
     }
 
     result.images.forEach((image) => {
-      const target =
-        image.name === 'favicon.ico' && options.rootIconPath
-          ? options.rootIconPath
-          : path.join(outputDir, image.name)
-      activeWrites.push(writeGeneratedFile(target, image.contents))
+      activeWrites.push(
+        writeGeneratedFile(path.join(outputDir, image.name), image.contents)
+      )
+      if (image.name === 'favicon.ico' && options.rootIconPath) {
+        activeWrites.push(
+          writeGeneratedFile(options.rootIconPath, image.contents)
+        )
+      }
     })
 
     result.files.forEach((file) => {

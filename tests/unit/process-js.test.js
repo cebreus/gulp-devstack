@@ -11,9 +11,9 @@ describe('JS Pipeline (Unit)', () => {
 
   describe('getEsbuildConfig', () => {
     it('should return default config when no options provided', () => {
-      const esConfig = getEsbuildConfig({}, MOCK_BUILD_CONFIG)
+      const esConfig = getEsbuildConfig()
       assert.strictEqual(esConfig.bundle, false)
-      assert.strictEqual(esConfig.minify, true)
+      assert.strictEqual(esConfig.minify, false)
       assert.strictEqual(esConfig.sourcemap, false)
     })
 

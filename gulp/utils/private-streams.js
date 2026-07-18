@@ -8,10 +8,14 @@ export function createPrivateFileFilter(isPrivateFile) {
   return new Transform({
     objectMode: true,
     transform(file, _enc, cb) {
-      if (isPrivateFile(file.path)) {
-        return cb(null, null)
+      try {
+        if (isPrivateFile(file.path)) {
+          return cb(null, null)
+        }
+        cb(null, file)
+      } catch (error) {
+        cb(error)
       }
-      cb(null, file)
     },
   })
 }
@@ -25,10 +29,14 @@ export function createTrackedFileCollector(trackedFiles, getRelativePath) {
   return new Transform({
     objectMode: true,
     transform(file, _enc, cb) {
-      if (file?.path) {
-        trackedFiles.push(getRelativePath(file.path))
+      try {
+        if (file?.path) {
+          trackedFiles.push(getRelativePath(file.path))
+        }
+        cb(null, file)
+      } catch (error) {
+        cb(error)
       }
-      cb(null, file)
     },
   })
 }

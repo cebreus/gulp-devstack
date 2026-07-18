@@ -84,14 +84,77 @@ describe('Fonts Task (Integration)', () => {
 
       fs.mkdirSync(fontsOutputDir, { recursive: true })
       fs.mkdirSync(path.dirname(cssOutputPath), { recursive: true })
-      fs.writeFileSync(inputPath, 'Inter:400')
       fs.writeFileSync(
         cssOutputPath,
         '@font-face { src: url("/assets/fonts/inter.woff2"); }'
       )
-      fs.writeFileSync(path.join(fontsOutputDir, 'inter.woff2'), 'binary')
+      const fontOutputPath = path.join(fontsOutputDir, 'inter.woff2')
+      fs.writeFileSync(fontOutputPath, 'binary')
+      const outputMtime = new Date(Date.now() - 1000)
+      fs.utimesSync(cssOutputPath, outputMtime, outputMtime)
+      fs.utimesSync(fontOutputPath, outputMtime, outputMtime)
+      fs.writeFileSync(inputPath, 'Inter:400')
 
       await assert.doesNotReject(() => processFonts(inputPath, outputDir))
+    })
+  })
+
+  it('should reject relative font URLs outside the build root', async () => {
+    await runInSandbox('fonts-relative-escape', async (sandbox) => {
+      const inputPath = path.join(sandbox, 'fonts.list')
+      const outputDir = path.join(sandbox, 'dist')
+      const fontsOutputDir = path.join(outputDir, 'assets/fonts')
+      const cssOutputPath = path.join(outputDir, 'assets/css/fonts.css')
+
+      fs.mkdirSync(fontsOutputDir, { recursive: true })
+      fs.mkdirSync(path.dirname(cssOutputPath), { recursive: true })
+      fs.writeFileSync(path.join(fontsOutputDir, 'inter.woff2'), 'binary')
+      fs.writeFileSync(path.join(sandbox, 'source.woff2'), 'source binary')
+      fs.writeFileSync(
+        cssOutputPath,
+        '@font-face { src: url("../../../source.woff2"); }'
+      )
+      fs.writeFileSync(inputPath, 'Inter:400')
+
+      await assert.rejects(() => processFonts(inputPath, outputDir))
+    })
+  })
+
+  it('should reject root-relative font URLs outside the build root', async () => {
+    await runInSandbox('fonts-root-escape', async (sandbox) => {
+      const inputPath = path.join(sandbox, 'fonts.list')
+      const outputDir = path.join(sandbox, 'dist')
+      const fontsOutputDir = path.join(outputDir, 'assets/fonts')
+      const cssOutputPath = path.join(outputDir, 'assets/css/fonts.css')
+
+      fs.mkdirSync(fontsOutputDir, { recursive: true })
+      fs.mkdirSync(path.dirname(cssOutputPath), { recursive: true })
+      fs.writeFileSync(path.join(fontsOutputDir, 'inter.woff2'), 'binary')
+      fs.writeFileSync(path.join(sandbox, 'source.woff2'), 'source binary')
+      fs.writeFileSync(
+        cssOutputPath,
+        '@font-face { src: url("/../source.woff2"); }'
+      )
+      fs.writeFileSync(inputPath, 'Inter:400')
+
+      await assert.rejects(() => processFonts(inputPath, outputDir))
+    })
+  })
+
+  it('should reject font URLs that resolve to directories', async () => {
+    await runInSandbox('fonts-directory-url', async (sandbox) => {
+      const inputPath = path.join(sandbox, 'fonts.list')
+      const outputDir = path.join(sandbox, 'dist')
+      const fontsOutputDir = path.join(outputDir, 'assets/fonts')
+      const cssOutputPath = path.join(outputDir, 'assets/css/fonts.css')
+
+      fs.mkdirSync(fontsOutputDir, { recursive: true })
+      fs.mkdirSync(path.dirname(cssOutputPath), { recursive: true })
+      fs.writeFileSync(path.join(fontsOutputDir, 'inter.woff2'), 'binary')
+      fs.writeFileSync(cssOutputPath, '@font-face { src: url("../fonts"); }')
+      fs.writeFileSync(inputPath, 'Inter:400')
+
+      await assert.rejects(() => processFonts(inputPath, outputDir))
     })
   })
 })

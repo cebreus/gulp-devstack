@@ -322,6 +322,7 @@ export async function cleanupDir(dir, regex, label, loggerInstance) {
       if (entry.isDirectory()) {
         continue
       }
+      regex.lastIndex = 0
       if (regex.test(entry.name)) {
         continue
       }

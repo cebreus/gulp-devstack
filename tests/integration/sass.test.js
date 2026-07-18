@@ -175,6 +175,33 @@ describe('Sass Pipeline Integration', () => {
     })
   })
 
+  it('should read the dev Sass failure flag at task execution time', async () => {
+    await runInSandbox('sass-lazy-failure-flag', async (sandbox) => {
+      await writeFixtures(sandbox, {
+        'src/scss/bootstrap.scss': 'body { color: $missing; }',
+        'src/scss/custom.scss': '.custom-layer { color: red; }',
+        'src/scss/components.scss': '.component-layer { color: blue; }',
+        'src/routes/index.scss': '.route-layer { color: green; }',
+      })
+      const devConfig = buildSandboxSassConfig(sandbox)
+      const originalFlag = process.env.GULP_FAIL_ON_SASS_ERROR
+      process.env.GULP_FAIL_ON_SASS_ERROR = 'true'
+
+      try {
+        await assert.rejects(
+          () => processAllSass(devConfig, 'dev'),
+          /Sass compilation failed/
+        )
+      } finally {
+        if (originalFlag === undefined) {
+          delete process.env.GULP_FAIL_ON_SASS_ERROR
+        } else {
+          process.env.GULP_FAIL_ON_SASS_ERROR = originalFlag
+        }
+      }
+    })
+  })
+
   it('should recompile route styles when shared route abstracts change', async () => {
     await runInSandbox('sass-route-abstracts', async (sandbox) => {
       await writeFixtures(sandbox, {
@@ -266,6 +293,47 @@ describe('Sass Pipeline Integration', () => {
       assert.doesNotMatch(
         await fs.readFile(routeCssPath, 'utf8'),
         /sourceMappingURL/
+      )
+    })
+  })
+
+  it('should invalidate Sass cache when the caller cache key changes', async () => {
+    await runInSandbox('sass-cache-key', async (sandbox) => {
+      const sourcePath = path.join(sandbox, 'src/style.scss')
+      const outputDir = path.join(sandbox, 'dist')
+      const devConfig = resolveConfig('dev')
+      await writeFixtures(sandbox, {
+        'src/style.scss': 'body { color: red; }',
+      })
+
+      function createColorPlugin(value) {
+        return {
+          postcssPlugin: 'test-color',
+          Declaration(declaration) {
+            if (declaration.prop === 'color') {
+              declaration.value = value
+            }
+          },
+        }
+      }
+
+      await processSass(devConfig, sourcePath, outputDir, {
+        cacheKey: 'color:blue',
+        postcssPlugins: [createColorPlugin('blue')],
+        skipIntegrity: true,
+        skipNewer: true,
+      })
+      const result = await processSass(devConfig, sourcePath, outputDir, {
+        cacheKey: 'color:green',
+        postcssPlugins: [createColorPlugin('green')],
+        skipIntegrity: true,
+        skipNewer: true,
+      })
+
+      assert.deepStrictEqual(result, [path.join(outputDir, 'style.css')])
+      assert.match(
+        await fs.readFile(path.join(outputDir, 'style.css'), 'utf8'),
+        /color: green/
       )
     })
   })

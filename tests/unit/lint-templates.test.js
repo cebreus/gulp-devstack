@@ -49,7 +49,7 @@ describe('Lint Templates Task', { concurrency: false }, () => {
       })
     })
 
-    it('should not throw error to prevent Gulp watch from crashing', async () => {
+    it('should reject invalid templates in dev mode', async () => {
       await runInSandbox('lint-invalid', async (sandbox) => {
         await writeFixtures(sandbox, {
           'src/broken.njk': '{% if condition %}',
@@ -60,7 +60,7 @@ describe('Lint Templates Task', { concurrency: false }, () => {
         process.chdir(sandbox)
 
         try {
-          await assert.doesNotReject(() => lintTemplates())
+          await assert.rejects(() => lintTemplates())
           assert.ok(mockError.mock.calls.length > 0)
         } finally {
           process.chdir(originalCwd)

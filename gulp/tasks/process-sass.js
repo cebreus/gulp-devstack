@@ -1,14 +1,34 @@
+import { createRequire, findPackageJSON } from 'node:module'
 import path from 'node:path'
 import { glob } from 'glob'
 
 import loggerLib, { suppressOutdatedBootstrapWarnings } from '../utils/index.js'
 import sassPipeline from '../utils/sass-pipeline.js'
 
+const require = createRequire(import.meta.url)
 const logger = loggerLib.createLogger('Sass')
 const scssDiscoveryCache = new Map()
 const SCSS_DISCOVERY_CACHE_TTL_MS = 1000
-const SHOULD_FAIL_ON_SASS_ERROR = process.env.GULP_FAIL_ON_SASS_ERROR === 'true'
 let hasSassCompilationErrors = false
+let toolVersionCacheKey
+
+function readPackageVersion(pkg) {
+  const packageJsonPath = findPackageJSON(pkg, import.meta.url)
+  return require(packageJsonPath).version
+}
+
+function getToolVersionCacheKey() {
+  if (!toolVersionCacheKey) {
+    toolVersionCacheKey = ['autoprefixer', 'cssnano', 'postcss', 'sass']
+      .map((pkg) => `${pkg}@${readPackageVersion(pkg)}`)
+      .join(',')
+  }
+  return toolVersionCacheKey
+}
+
+function shouldFailOnSassError() {
+  return process.env.GULP_FAIL_ON_SASS_ERROR === 'true'
+}
 
 function flattenWrittenFiles(results) {
   return results.flat().filter(Boolean)
@@ -129,6 +149,7 @@ async function buildSassPipeline(
     beautify = false,
     skipNewer = false,
     skipIntegrity = false,
+    cacheKey,
   }
 ) {
   const { default: autoprefixer } = await import('autoprefixer')
@@ -140,6 +161,10 @@ async function buildSassPipeline(
     minify,
     config
   )
+  const toolVersions = getToolVersionCacheKey()
+  const resolvedCacheKey = cacheKey
+    ? `${toolVersions},${cacheKey}`
+    : toolVersions
   return sassPipeline.createSassPipeline({
     config,
     src,
@@ -152,6 +177,7 @@ async function buildSassPipeline(
     beautify,
     skipNewer,
     skipIntegrity,
+    cacheKey: resolvedCacheKey,
     sassCompilerOptions,
     logger,
     markCompilationError() {
@@ -172,6 +198,7 @@ async function buildSassPipeline(
  * @param {object} [options] - Additional options
  * @param {string|null} [options.outputFilename] - Optional output name
  * @param {import('postcss').AcceptedPlugin[]} [options.postcssPlugins] - PostCSS plugins
+ * @param {string} [options.cacheKey] - Caller-owned PostCSS cache key
  * @returns {Promise<void>}
  */
 export default async function processSass(config, src, dest, options = {}) {
@@ -189,6 +216,7 @@ export default async function processSass(config, src, dest, options = {}) {
     beautify: options.beautify ?? config.formatCode,
     skipNewer: options.skipNewer || false,
     skipIntegrity: options.skipIntegrity || false,
+    cacheKey: options.cacheKey,
   })
 }
 
@@ -315,7 +343,7 @@ export async function processAllSass(config, mode) {
 
     if (
       hasSassCompilationErrors &&
-      (mode !== 'dev' || SHOULD_FAIL_ON_SASS_ERROR)
+      (mode !== 'dev' || shouldFailOnSassError())
     ) {
       throw new Error(
         'Sass compilation failed. Enable logs to inspect root causes.'

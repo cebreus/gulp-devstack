@@ -42,16 +42,25 @@ export function stripXhtmlSlashes(html) {
   const pattern = new RegExp(`<(${voids})\\b([^>]*)/>`, 'gi')
   const closingPattern = new RegExp(`</(?:${voids})>`, 'gi')
   const protectedRanges = findProtectedCommentRanges(html)
-  return html
-    .replace(pattern, function replaceVoidTags(match, tag, attrs, offset) {
+  const withoutSelfClosingSlashes = html.replace(
+    pattern,
+    function replaceVoidTags(match, tag, attrs, offset) {
       if (isInsideRange(offset, protectedRanges)) {
         return match
       }
       return `<${tag}${attrs.trimEnd()}>`
-    })
-    .replace(closingPattern, function removeVoidClosingTag(match, offset) {
-      return isInsideRange(offset, protectedRanges) ? match : ''
-    })
+    }
+  )
+  const updatedProtectedRanges = findProtectedCommentRanges(
+    withoutSelfClosingSlashes
+  )
+
+  return withoutSelfClosingSlashes.replace(
+    closingPattern,
+    function removeVoidClosingTag(match, offset) {
+      return isInsideRange(offset, updatedProtectedRanges) ? match : ''
+    }
+  )
 }
 
 /**

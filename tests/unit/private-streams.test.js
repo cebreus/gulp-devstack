@@ -45,6 +45,20 @@ describe('Private Streams Utility', () => {
       assert.strictEqual(chunks.length, 1)
       assert.strictEqual(chunks[0].path, 'public.txt')
     })
+
+    it('should emit predicate failures as stream errors', async () => {
+      const expectedError = new Error('predicate failed')
+      const filter = createPrivateFileFilter(() => {
+        throw expectedError
+      })
+      const streamError = new Promise((resolve) => {
+        filter.once('error', resolve)
+      })
+
+      filter.end(createMockFile('file.txt'))
+
+      assert.strictEqual(await streamError, expectedError)
+    })
   })
 
   describe('createTrackedFileCollector', () => {
@@ -75,6 +89,20 @@ describe('Private Streams Utility', () => {
         'relative/file1.txt',
         'relative/file2.txt',
       ])
+    })
+
+    it('should emit path formatter failures as stream errors', async () => {
+      const expectedError = new Error('formatter failed')
+      const collector = createTrackedFileCollector([], () => {
+        throw expectedError
+      })
+      const streamError = new Promise((resolve) => {
+        collector.once('error', resolve)
+      })
+
+      collector.end(createMockFile('file.txt'))
+
+      assert.strictEqual(await streamError, expectedError)
     })
   })
 })

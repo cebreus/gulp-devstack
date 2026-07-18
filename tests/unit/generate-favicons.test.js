@@ -124,9 +124,7 @@ describe('Generate Favicons Task', () => {
 
         await fs.access(rootIconPath)
         await fs.access(manifestPath)
-        await assert.rejects(() =>
-          fs.access(path.join(outputDir, 'favicon.ico'))
-        )
+        await fs.access(path.join(outputDir, 'favicon.ico'))
         await assert.rejects(() =>
           fs.access(path.join(outputDir, 'manifest.webmanifest'))
         )

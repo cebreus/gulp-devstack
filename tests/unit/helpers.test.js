@@ -169,6 +169,25 @@ describe('Helpers Utility - handleEmptyPaths', () => {
 })
 
 describe('Helpers Utility - cleanupDir', () => {
+  it('should reset stateful regexes for every file', async () => {
+    await runInSandbox('cleanup-dir-regex', async (sandbox) => {
+      const logger = { info() {}, warn() {} }
+      await writeFixtures(sandbox, {
+        'assets/a.min.js': 'a',
+        'assets/b.min.js': 'b',
+        'assets/remove.js': 'remove',
+      })
+      const assetsDir = path.join(sandbox, 'assets')
+
+      await cleanupDir(assetsDir, /\.min\.js$/gu, 'asset', logger)
+
+      assert.deepStrictEqual((await fs.promises.readdir(assetsDir)).sort(), [
+        'a.min.js',
+        'b.min.js',
+      ])
+    })
+  })
+
   it('should propagate cleanup failures', async () => {
     await runInSandbox('cleanup-dir-failure', async (sandbox) => {
       const logger = { info() {}, warn() {} }

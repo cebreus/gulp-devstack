@@ -38,6 +38,17 @@ describe('HTML Pipeline Utilities', () => {
         '<svg viewBox="0 0 16 16"><path d="M8 2" /><circle cx="8" cy="8" r="4" /><rect x="0" y="0" width="16" height="16" /></svg>'
       assert.strictEqual(stripXhtmlSlashes(input), expected)
     })
+
+    it('should preserve void closing tags in shifted script ranges', () => {
+      const prefix = '<br />'.repeat(20)
+      const script = `<script>${'const markup = "</img>";'.padEnd(200, ' ')}</script>`
+      const expectedPrefix = '<br>'.repeat(20)
+
+      assert.strictEqual(
+        stripXhtmlSlashes(`${prefix}${script}<img></img>`),
+        `${expectedPrefix}${script}<img>`
+      )
+    })
   })
 
   describe('cleanHtmlComments', () => {

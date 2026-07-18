@@ -60,12 +60,14 @@ function buildSourceMapComment(mapPath) {
 }
 
 function buildCacheFingerprint(options) {
-  const { sourceMaps, minify, sassCompilerOptions, postcssPlugins } = options
+  const { sourceMaps, minify, sassCompilerOptions, postcssPlugins, cacheKey } =
+    options
   return JSON.stringify({
     sourceMaps,
     minify,
     sassCompilerOptions,
     postcssPlugins: postcssPlugins.map((plugin) => plugin.postcssPlugin || ''),
+    cacheKey,
   })
 }
 
@@ -201,6 +203,7 @@ async function compileSourceFile(options) {
       postcssPlugins,
       sourceMaps,
       minify,
+      cacheKey: options.cacheKey,
       sassCompilerOptions,
       autoprefixer,
       cssnano,

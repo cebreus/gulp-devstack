@@ -24,7 +24,7 @@ const logger = loggerLib.createLogger('ProcessJs')
  * @param {object} [buildConfig] - Configuration provider
  * @returns {object} Esbuild configuration object
  */
-export function getEsbuildConfig(options = {}, buildConfig) {
+export function getEsbuildConfig(options = {}, buildConfig = {}) {
   const {
     bundle = false,
     outputFormat = 'esm',
@@ -33,8 +33,8 @@ export function getEsbuildConfig(options = {}, buildConfig) {
     entryPoints,
   } = options
 
-  const shouldMinify = minify ?? buildConfig.minifyJs
-  const shouldGenerateSourceMaps = sourceMaps ?? buildConfig.sourceMaps
+  const shouldMinify = minify ?? buildConfig.minifyJs ?? false
+  const shouldGenerateSourceMaps = sourceMaps ?? buildConfig.sourceMaps ?? false
 
   const result = {
     bundle,

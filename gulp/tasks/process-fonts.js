@@ -47,24 +47,33 @@ async function verifyReferencedFontAssets(cssFile, outputDir) {
     .map((url) => url.split(/[?#]/, 1)[0])
 
   const cssBaseDir = path.dirname(cssFile)
+  const outputRoot = path.resolve(outputDir)
 
   await Promise.all(
     localUrls.map(async (url) => {
-      const errors = []
-      const candidatePaths = url.startsWith('/')
-        ? [path.resolve(outputDir, url.slice(1))]
-        : [path.resolve(cssBaseDir, url)]
-      for (const candidatePath of candidatePaths) {
-        try {
-          await fs.access(candidatePath)
-          return
-        } catch (error) {
-          errors.push(error)
-        }
+      const candidatePath = url.startsWith('/')
+        ? path.resolve(outputRoot, url.slice(1))
+        : path.resolve(cssBaseDir, url)
+      const isInsideOutput =
+        candidatePath === outputRoot ||
+        candidatePath.startsWith(`${outputRoot}${path.sep}`)
+
+      if (!isInsideOutput) {
+        throw new Error(`Referenced font asset not found: ${url}`)
       }
-      throw new Error(`Referenced font asset not found: ${url}`, {
-        cause: errors[0],
-      })
+
+      try {
+        const stats = await fs.stat(candidatePath)
+        if (stats.isFile()) {
+          return
+        }
+      } catch (error) {
+        throw new Error(`Referenced font asset not found: ${url}`, {
+          cause: error,
+        })
+      }
+
+      throw new Error(`Referenced font asset not found: ${url}`)
     })
   )
 }
