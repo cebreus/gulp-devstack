@@ -76,6 +76,7 @@ function createNunjucksOptions(config, templatesPath, markdown) {
     },
     manageEnv: (env) => {
       const md = markdown({ html: true })
+      const mdSafe = markdown({ html: false })
 
       env.addFilter('md', (str, inline = false) => {
         if (!str) {
@@ -88,7 +89,7 @@ function createNunjucksOptions(config, templatesPath, markdown) {
         if (!str) {
           return ''
         }
-        return md.renderInline(str)
+        return mdSafe.renderInline(str)
       })
 
       env.addFilter('date', formatTemplateDate)
