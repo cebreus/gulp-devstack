@@ -5,15 +5,12 @@ import loggerLib, { getRelativePath } from '../utils/index.js'
 
 const logger = loggerLib.createLogger('ProcessFonts')
 
-function resolveFontTargets(outputDir, pluginConfig, minify) {
+function resolveFontTargets(outputDir, pluginConfig) {
   const fontsDir = path.join(
     outputDir,
     pluginConfig.fontsDir || 'assets/fonts/'
   )
-  let cssTargetName = pluginConfig.cssFilename || 'fonts.css'
-  if (minify && !cssTargetName.includes('.min.')) {
-    cssTargetName = cssTargetName.replace('.css', '.min.css')
-  }
+  const cssTargetName = pluginConfig.cssFilename || 'fonts.css'
 
   return {
     fontsDir,
@@ -144,12 +141,8 @@ export default async function processFonts(input, outputDir, options = {}) {
       return
     }
 
-    const { config: pluginConfig = {}, minify = false } = options
-    const { fontsDir, cssFile } = resolveFontTargets(
-      outputDir,
-      pluginConfig,
-      minify
-    )
+    const { config: pluginConfig = {} } = options
+    const { fontsDir, cssFile } = resolveFontTargets(outputDir, pluginConfig)
 
     if (
       await shouldSkipCachedFonts(
