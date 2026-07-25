@@ -29,3 +29,7 @@ pnpm-lock.yaml
 
 # Ignore Markdown files, Remark handles formatting for them
 **/*.md
+
+# Ignore Handlebars template files
+**/*.hbs
+
