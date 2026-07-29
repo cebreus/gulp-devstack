@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import { execSync } from 'node:child_process'
+import { existsSync } from 'node:fs'
 import path from 'node:path'
 import { after, afterEach, before, beforeEach, describe, it } from 'node:test'
 import AxeBuilder from '@axe-core/playwright'
@@ -33,12 +34,18 @@ before(async () => {
     const config = resolveConfig(mode)
     const buildDir = path.resolve(config.paths.build)
 
-    console.log(`[E2E] Building current ${mode} artefacts...`)
-    const buildScript = mode === 'export' ? 'export' : 'build'
-    execSync(`pnpm run ${buildScript}`, {
-      stdio: 'inherit',
-      env: { ...process.env, BUILD_MODE: mode },
-    })
+    if (process.env.E2E_SKIP_BUILD !== 'true') {
+      console.log(`[E2E] Building current ${mode} artefacts...`)
+      const buildScript = mode === 'export' ? 'export' : 'build'
+      execSync(`pnpm run ${buildScript}`, {
+        stdio: 'inherit',
+        env: { ...process.env, BUILD_MODE: mode },
+      })
+    } else if (!existsSync(path.join(buildDir, 'index.html'))) {
+      throw new Error(
+        `[E2E] Missing ${mode} artifact. Run pnpm ${mode === 'export' ? 'export' : 'build'} first.`
+      )
+    }
 
     console.log(`[E2E] Starting test server for ${mode} artifacts...`)
     localServer = bs.create()
@@ -52,6 +59,7 @@ before(async () => {
           port: 3000,
           open: false,
           notify: false,
+          snippet: false,
           ui: false,
           logLevel: 'silent',
         },
@@ -192,7 +200,9 @@ describe('E2E: Project Variant', { timeout: 120000 }, () => {
     const page = await context.newPage()
     await page.goto(`${BASE_URL}/`)
 
-    const h1 = await page.locator('h1').textContent()
+    const headings = page.locator('h1')
+    assert.ok((await headings.count()) > 0, 'Homepage H1 is missing')
+    const h1 = (await headings.first().textContent()) || ''
     const bentoCount = await page.locator('.u-bento-grid').count()
     const headerCount = await page.locator('.o-header').count()
 

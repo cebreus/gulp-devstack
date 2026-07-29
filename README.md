@@ -56,10 +56,13 @@ To prevent bundle bloat, the pipeline supports **Asset Autodiscovery**. If you c
 The `verify:pipeline` command ensures the project never regresses:
 
 - **WCAG Audits**: Automated accessibility checks via Playwright and Axe-core.
+
 - **Link Integrity**: Exhaustive validation of all internal links and anchors.
 
 - **Visual Parity**: Automated screenshot comparison between Build and Export modes to ensure visual consistency across pipelines.
+
 - **Strict Validation**: HTML5 structure verification via `html-validate`.
+
 - **Graph Awareness**: `graphify update .` refreshes `graphify-out/graph.json`, `graphify-out/graph.html`, and `graphify-out/GRAPH_REPORT.md` after code changes.
 
 ### Local Bitmap Placeholders
@@ -93,7 +96,7 @@ The image task catalogs the bitmap files it actually emitted, including their or
 ## Advanced Commands
 
 - `pnpm verify:pipeline` - The canonical CI/CD check.
-- `pnpm test:ci` - Runs `test`, `test:smoke`, and `test:e2e`; requires a build artifact first.
+- `pnpm test:ci` - Runs lint, `test`, `test:docs`, `build`, `test:smoke`, `build:validate:html`, and `test:prod`/`test:e2e`; creates the required build artifact itself.
 - `pnpm test:visual` - Run visual regression tests.
 - `pnpm run component` - Scaffold new Nunjucks/SCSS components via Plop.
 - `graphify update .` - Refresh the local code graph after code changes.

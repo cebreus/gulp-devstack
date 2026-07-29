@@ -60,7 +60,10 @@ Gulp DevStack follows a **"Zero-Trust" Continuous Validation** model. We treat o
   - **Visual/UX**: Routing, meta tags, console errors, and resource 404 checks.
   - **Adaptive**: Automatically detects Showcase vs. Blank template mode.
 - **Flaky Test Management**: Playwright tests are inherently prone to race conditions. Write robust locators (`waitFor()`) and utilize CI retries if necessary.
-- **Command**: `pnpm test:e2e`
+- **Local prerequisites**: Run `pnpm exec playwright install chromium` once and configure `SITE_BASE_URL` in `.env.local` (copy `.env.example`).
+- **Fresh local build**: `pnpm test:e2e`
+- **Existing production artifact**: `pnpm test:prod` (requires `build-prod`)
+- **Existing export artifact**: `pnpm test:export` (requires `build-export`)
 
 ### Visual Parity (`tests/visual/`)
 
@@ -96,7 +99,9 @@ For a professional release, always follow this **deterministic order** — from 
 
 **Shortcut**: `pnpm verify:pipeline` executes this entire sequence automatically.
 
-**CI sequence**: `pnpm test:ci` runs `test → test:smoke → test:e2e` in series. It requires a pre-existing build artifact because smoke and E2E checks do not run `pnpm build` first.
+**CI sequence**: `pnpm test:ci` runs linting, unit/integration tests, the documentation contract, one production build, smoke tests, HTML validation, and browser/accessibility checks against that same artifact.
+
+**Development loop**: `pnpm test:dev-watch` verifies rebuild/reload behaviour separately. It is not part of production E2E or CI.
 
 ---
 
