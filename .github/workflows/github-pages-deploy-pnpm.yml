@@ -1,10 +1,9 @@
-name: Build and Deploy
+name: Deploy Pages (pnpm)
 
-on:
+'on':
   push:
     branches: ['master']
   workflow_dispatch:
-    branches: ['master', 'develop']
 
 permissions:
   contents: read
@@ -12,51 +11,79 @@ permissions:
   id-token: write
 
 concurrency:
-  group: 'pages'
-  cancel-in-progress: false
+  group: pages-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '24.11.0'
+  PNPM_VERSION: '10'
+  SITE_BASE_URL: ${{ vars.SITE_BASE_URL }}
 
 jobs:
-  build-and-deploy:
+  deploy:
+    name: Build, verify and deploy
+    if: github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
 
     steps:
-      - name: Checkout 🔄
-        uses: actions/checkout@v4
-      - name: Setup PNPM 📦
-        uses: pnpm/action-setup@v4
+      - name: Check deployment configuration
+        run: |
+          if [ -z "$SITE_BASE_URL" ]; then
+            echo "::error::Repository variable SITE_BASE_URL is not configured."
+            exit 1
+          fi
+
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          version: 9
-      - name: Setup Node.js ${{ matrix.node-version }} 🟢
-        uses: actions/setup-node@v4
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
         with:
-          node-version: ${{ matrix.node-version }}
-          cache: 'pnpm'
-      - name: Cache dependencies 🗄️
-        uses: actions/cache@v4
+          version: ${{ env.PNPM_VERSION }}
+          run_install: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          path: ~/.pnpm-store
-          key: ${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-
-      - name: Install dependencies ⬇️
-        run: pnpm install --ignore-scripts
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --prefer-offline
         env:
           CI: true
-      - name: Build project 🔨
+
+      - name: Install Playwright
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Build production artifact
         run: pnpm build
-      - name: Inspect build output 🔍
-        run: |
-          ls -lah ./build
-          du -sh ./build
-      - name: Setup Pages ⚙️
-        uses: actions/configure-pages@v5
-      - name: Upload artifact 📤
-        uses: actions/upload-pages-artifact@v3
+
+      - name: Verify production artifact
+        run: pnpm test:smoke
+
+      - name: Validate built HTML
+        run: pnpm build:validate:html
+
+      - name: Browser and accessibility tests
+        run: pnpm test:prod
+
+      - name: Setup Pages
+        uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
+
+      - name: Upload verified artifact
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with:
-          path: 'build'
-      - name: Deploy to GitHub Pages 🚀
+          path: build-prod
+
+      - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@cd2ce8fcbc39b97be8ca5fce6e763baed58fa128 # v5.0.0

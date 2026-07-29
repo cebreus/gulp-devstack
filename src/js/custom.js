@@ -1,1 +1,3 @@
-console.log('Source file `custom.js` processed.');
+function initCustomJs() {}
+
+initCustomJs()

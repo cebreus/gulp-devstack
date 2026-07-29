@@ -1,0 +1,15 @@
+{% if page.seo.description or page.description %}
+  <meta name="description" content="{{ (page.seo.description or page.description) | striptags }}" />
+{% endif %}
+{% if page.seo.keywords %}
+  <meta name="keywords" content="{{ page.seo.keywords }}" />
+{% endif %}
+{% if site.author %}
+  <meta name="author" content="{{ site.author | striptags }}" />
+{% endif %}
+{% if page.seo.robots %}
+  <meta name="robots" content="{{ page.seo.robots }}" />
+{% endif %}
+{% if page.seo.canonicalSelf %}
+  <link rel="canonical" href="{{ page.seo.canonicalSelf }}" />
+{% endif %}

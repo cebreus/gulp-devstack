@@ -1,0 +1,26 @@
+# Lefthook configuration
+# https://github.com/evilmartians/lefthook
+
+pre-commit:
+  commands:
+    lint-staged:
+      run: npx lint-staged
+
+commit-msg:
+  commands:
+    fix-blank-line:
+      run: node scripts/hooks/fix-blank-line.js "{1}"
+    remark:
+      run: npx remark "{1}" --output --silent
+    commitlint:
+      run: npx commitlint --edit "{1}"
+
+pre-push:
+  commands:
+    checks:
+      run: pnpm lint && pnpm test
+
+prepare-commit-msg:
+  commands:
+    fold-lines:
+      run: node scripts/hooks/fold-lines.js "{1}"

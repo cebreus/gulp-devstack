@@ -1,0 +1,219 @@
+@use 'sass:map';
+@use 'sass:math';
+/* stylelint-disable */
+
+// @import '../../node_modules/bootstrap/scss/functions';
+// @import '../../node_modules/bootstrap/scss/mixins';
+@import './variables';
+
+// --- DevStack Debugger ---
+$pink1: #880e4f !default;
+$pink2: #c51162 !default;
+$green1: #1b5e20 !default;
+$green2: #00c853 !default;
+$amber1: #ff6f00 !default;
+$amber2: #ffab00 !default;
+
+@mixin viz($color-dark: #263238, $color-light: #607d8b) {
+  box-shadow: inset 0 0 0 4px rgba($color-dark, 0.5);
+
+  &:hover {
+    box-shadow: inset 0 0 0 5px rgba($color-dark, 0.9);
+  }
+
+  &::before {
+    border-top-width: 0;
+    border-left-width: 0;
+    background: $color-dark;
+  }
+
+  &[class*='__'] {
+    box-shadow: inset 0 0 0 4px rgba($color-light, 0.5);
+
+    &:hover {
+      border-radius: 8px 0 8px 8px;
+      box-shadow: inset 0 0 0 5px rgba($color-light, 0.9);
+    }
+
+    &::before {
+      right: 0;
+      left: auto;
+      border-radius: 0 0 0 0.5rem;
+      background: $color-light;
+    }
+  }
+}
+
+@if $devstack-debugger-mode == 'active' {
+  @media screen {
+    img:not([alt]) {
+      border: dashed $red 5px;
+    }
+
+    [class^='o-'],
+    [class^='c-'],
+    [class^='u-'] {
+      position: relative;
+      transition:
+        box-shadow 0.2s ease-in-out,
+        border-radius 0.2s ease-in-out;
+
+      &::before {
+        content: attr(class);
+        position: absolute;
+        top: 0;
+        left: 0;
+        z-index: 100;
+        padding: 0.2rem 0.5rem;
+        font-weight: normal;
+        font-size: 10px;
+        line-height: 1;
+        text-transform: initial;
+        white-space: nowrap;
+        color: white;
+        border-radius: 0 0 0.5rem;
+      }
+    }
+
+    [class^='c-'] {
+      @include viz($green1, $green2);
+    }
+
+    [class^='o-'] {
+      box-shadow: inset 0 0 0 4px rgba($pink1, 0.5);
+
+      &:hover {
+        box-shadow: inset 0 0 0 5px rgba($pink1, 0.9);
+      }
+
+      &::before {
+        background: $pink1;
+      }
+
+      [class^='c-'] {
+        transform: translateY(4px) translateX(4px);
+      }
+    }
+
+    [class^='u-'] {
+      @include viz($amber1, $amber2);
+    }
+  }
+}
+
+// --- DevStack Grid ---
+$row-col-widths: () !default;
+$form-row-col-widths: () !default;
+$grid-gutter-width: 1.5rem !default;
+$form-grid-gutter-width: 10px !default;
+$gutter-color: rgb(255 0 255 / 30%);
+$snippet-color: #fff;
+$snippet-bg: rgb(255 0 255 / 90%);
+
+$row-col-widths: map.merge(
+  (
+    xs: 7.9%,
+    sm: 7.9%,
+    md: 8%,
+    lg: 8.08%,
+    xl: 8.12%,
+  ),
+  $row-col-widths
+);
+
+$form-row-col-widths: map.merge(
+  (
+    xs: 8.18%,
+    sm: 8.18%,
+    md: 8.22%,
+    lg: 8.245%,
+    xl: 8.26%,
+  ),
+  $form-row-col-widths
+);
+
+@media screen {
+  @if $devstack-grid-mode == 'full' {
+    .row,
+    .form-row {
+      position: relative;
+
+      &::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        z-index: 1001;
+        display: block;
+        height: 1rem;
+      }
+
+      & > div {
+        position: relative;
+        z-index: 1;
+      }
+    }
+
+    .row {
+      &::after {
+        right: math.div(-$grid-gutter-width, 2);
+        left: math.div(-$grid-gutter-width, 2);
+
+        @each $breakpoint in map.keys($grid-breakpoints) {
+          @include media-breakpoint-up($breakpoint) {
+            background: repeating-linear-gradient(
+              to right,
+              transparent,
+              transparent $grid-gutter-width,
+              $gutter-color $grid-gutter-width,
+              $gutter-color #{map.get($row-col-widths, $breakpoint)}
+            );
+          }
+        }
+      }
+    }
+
+    .form-row {
+      &::after {
+        right: -5px;
+        left: -5px;
+
+        @each $breakpoint in map.keys($grid-breakpoints) {
+          @include media-breakpoint-up($breakpoint) {
+            background: repeating-linear-gradient(
+              to right,
+              transparent,
+              transparent $form-grid-gutter-width,
+              $gutter-color $form-grid-gutter-width,
+              $gutter-color #{map.get($form-row-col-widths, $breakpoint)}
+            );
+          }
+        }
+      }
+    }
+  }
+
+  @if $devstack-grid-mode == 'info' or $devstack-grid-mode == 'full' {
+    body::before {
+      position: fixed;
+      right: 0;
+      bottom: 0;
+      z-index: 1002003004005;
+      padding: $input-btn-padding-y-sm $input-btn-padding-x-sm;
+      font-weight: $font-weight-semibold;
+      font-size: 12px;
+      line-height: 1;
+      font-family: monospace;
+      white-space: pre;
+      color: $snippet-color;
+      background: $snippet-bg;
+
+      @each $breakpoint in map.keys($grid-breakpoints) {
+        @include media-breakpoint-up($breakpoint) {
+          content: '#{to-upper-case(#{$breakpoint})} #{map.get($grid-breakpoints, $breakpoint)} \Amaska: '
+            attr(data-template);
+        }
+      }
+    }
+  }
+}

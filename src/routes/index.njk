@@ -1,0 +1,26 @@
+{% extends "layout-default.njk" %}
+
+{% block content %}
+  {# Flattened structure: container handles flex centering directly #}
+  <main id="main" class="container py-5 min-vh-100 d-flex align-items-center justify-content-center">
+    {% if page.hero %}
+      <div class="p-5 bg-body-tertiary rounded-3 text-center">
+        <h1 class="display-5 fw-bold">{{ page.hero.title }}</h1>
+        <p class="lead text-muted">{{ page.hero.description }}</p>
+        {% if page.hero.buttons %}
+          <div class="d-flex justify-content-center gap-3 mt-4">
+            {% for btn in page.hero.buttons %}
+              <a
+                href="{{ btn.url }}"
+                class="btn {{ btn.class or 'btn-primary' }} btn-lg px-4"
+                {% if btn.external %}target="_blank" rel="noopener"{% endif %}
+              >
+                {{ btn.text }}
+              </a>
+            {% endfor %}
+          </div>
+        {% endif %}
+      </div>
+    {% endif %}
+  </main>
+{% endblock %}

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="{{ site.meta.lang | default('en') }}">
+  {% block head_tag %}
+    <head>
+      <meta charset="{{ site.meta.charset | default('utf-8') }}" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <title>{{ (page.seo.title or page.title or site.title) | striptags }}</title>
+
+      <script>
+        ;(() => {
+          const getPreferredTheme = () => (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+          const setTheme = (theme) => document.documentElement.setAttribute('data-bs-theme', theme)
+
+          setTheme(getPreferredTheme())
+
+          window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+            setTheme(getPreferredTheme())
+          })
+        })()
+      </script>
+
+      {% block css %}
+        <!-- inject:css --><!-- endinject -->
+
+        {% for style in pageStyles or [] %}
+          <link rel="stylesheet" href="{{ style }}" />
+        {% endfor %}
+      {% endblock %}
+
+      {% block head_custom %}
+      {% endblock %}
+
+      {% block meta_seo %}
+        {% include "components/meta-rich-snippets/seo.njk" %}
+      {% endblock %}
+
+      {% block favicons %}
+        {% include "favicons.html" %}
+      {% endblock %}
+    </head>
+  {% endblock %}
+  <body>
+    <a class="visually-hidden-focusable" href="#main">Skip to main content</a>
+
+    {% block header %}
+    {% endblock %}
+
+    {% block main %}
+
+      {% block content %}
+        {{ page.content | md | safe }}
+      {% endblock %}
+    {% endblock %}
+
+    {% block footer %}
+    {% endblock %}
+
+    {% block js %}
+      <!-- inject:js --><!-- endinject -->
+      <!-- inject:cdn:js --><!-- endinject -->
+
+      {% for script in pageScripts or [] %}
+        <script src="{{ script }}" type="module"></script>
+      {% endfor %}
+    {% endblock %}
+
+    {% block scripts %}
+    {% endblock %}
+  </body>
+</html>

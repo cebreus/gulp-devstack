@@ -7,9 +7,13 @@
 .temp
 .tmp
 build
+build-export
+build-prod
 dist
 nbproject
 node_modules
 ssl
 static
 temp
+tests/.sandboxes
+graphify-out

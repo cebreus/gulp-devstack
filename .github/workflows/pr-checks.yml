@@ -1,0 +1,80 @@
+name: PR Checks
+
+'on':
+  pull_request:
+    branches: ['master']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pr-checks-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '24.11.0'
+  PNPM_VERSION: '10'
+  SITE_BASE_URL: ${{ vars.SITE_BASE_URL }}
+
+jobs:
+  verify:
+    name: Verify production candidate
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - name: Check build configuration
+        run: |
+          if [ -z "$SITE_BASE_URL" ]; then
+            echo "::error::Repository variable SITE_BASE_URL is not configured."
+            exit 1
+          fi
+
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
+        with:
+          version: ${{ env.PNPM_VERSION }}
+          run_install: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --prefer-offline
+        env:
+          CI: true
+
+      - name: Install Playwright
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Unit and integration tests
+        run: pnpm test
+
+      - name: Documentation contract
+        run: pnpm test:docs
+
+      - name: Build production artifact
+        run: pnpm build
+
+      - name: Verify production artifact
+        run: pnpm test:smoke
+
+      - name: Validate built HTML
+        run: pnpm build:validate:html
+
+      - name: Browser and accessibility tests
+        run: pnpm test:prod

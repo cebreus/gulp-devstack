@@ -1,0 +1,12 @@
+allowBuilds:
+  '@parcel/watcher': true
+  es5-ext: true
+  esbuild: true
+  gifsicle: true
+  lefthook: true
+  mozjpeg: true
+  optipng-bin: true
+  sharp: true
+overrides:
+  favicons>sharp: 0.35.2
+  ws@>=8.0.0 <8.21.0: ^8.21.0
