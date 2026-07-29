@@ -95,10 +95,10 @@ function createExpressionContext(frontmatter) {
 }
 
 async function processContentFile(file, routesRoot, dest, usedPageIds) {
-  const rawContent = file.contents.toString().trim()
+  const rawContent = file.contents.toString()
   const fileName = path.basename(file.path, path.extname(file.path))
 
-  if (!rawContent) {
+  if (!rawContent.trim()) {
     logger.warn(`Skipping empty data file: ${path.basename(file.path)}`)
     return null
   }
@@ -125,12 +125,14 @@ async function processContentFile(file, routesRoot, dest, usedPageIds) {
 
   return {
     jsonData,
-    menuEntry: buildMenuEntry(
-      renderedFrontmatter,
-      fileName,
-      pagePath,
-      jsonData.pageId
-    ),
+    menuEntry: jsonData.isDraft
+      ? null
+      : buildMenuEntry(
+          renderedFrontmatter,
+          fileName,
+          pagePath,
+          jsonData.pageId
+        ),
     outputFilePath: await writePageDataArtifact({
       pageData: jsonData,
       filePath: file.path,

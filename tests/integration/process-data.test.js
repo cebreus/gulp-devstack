@@ -79,4 +79,27 @@ describe('processData Integration', () => {
       }
     })
   })
+
+  it('should exclude drafts from the menu', async () => {
+    await runInSandbox('process-data-draft', async (sandboxPath) => {
+      const routesRoot = path.join(sandboxPath, 'src')
+      const outputDir = path.join(sandboxPath, 'output')
+
+      await writeFixtures(sandboxPath, {
+        'src/index.md':
+          '---\ntitle: Draft\nisDraft: true\nmenuMain:\n  order: 1\n---\nDraft content',
+      })
+
+      await waitForStream(
+        processData(path.join(routesRoot, 'index.md'), outputDir, {
+          routesRoot,
+        })
+      )
+
+      const menu = JSON.parse(
+        await fs.readFile(path.join(outputDir, 'menu.json'))
+      )
+      assert.deepStrictEqual(menu.menu, [])
+    })
+  })
 })

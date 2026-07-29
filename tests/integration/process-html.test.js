@@ -146,4 +146,32 @@ describe('Process HTML Task (Integration)', () => {
       )
     })
   })
+
+  it('should not render draft routes', async () => {
+    await runInSandbox('process-html-draft', async (sandbox) => {
+      const config = {
+        routesBase: path.join(sandbox, 'src/routes'),
+        srcBase: path.join(sandbox, 'src'),
+        imagesBase: path.join(sandbox, 'src/assets/images'),
+        iconsBase: path.join(sandbox, 'src/assets/icons'),
+        tempBase: path.join(sandbox, '.tmp'),
+        paths: { build: path.join(sandbox, 'build') },
+        globalInjectAssets: [],
+        formatCode: false,
+      }
+
+      await writeFixtures(sandbox, {
+        'src/routes/index.njk':
+          '<!DOCTYPE html><html><body>Draft</body></html>',
+        '.tmp/pages/index.json': JSON.stringify({ isDraft: true }),
+      })
+
+      await processHtml(config)
+
+      await assert.rejects(
+        fs.access(path.join(config.paths.build, 'index.html')),
+        (error) => error?.code === 'ENOENT'
+      )
+    })
+  })
 })

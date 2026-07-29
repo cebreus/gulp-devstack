@@ -108,6 +108,20 @@ function createGlobalAssetsStream(config, assetPaths) {
   })
 }
 
+function createDraftRouteFilter(TransformCtor) {
+  return new TransformCtor({
+    objectMode: true,
+    transform(file, _enc, callback) {
+      if (file.data?.page?.isDraft === true) {
+        logger.verbose(`Skipping draft route: ${file.path}`)
+        callback()
+        return
+      }
+      callback(null, file)
+    },
+  })
+}
+
 async function loadTemplateData(file, config, globalContext) {
   const relativePath = path.relative(config.routesBase, file.path)
   const pageRelativeDir = path.dirname(relativePath)
@@ -164,6 +178,7 @@ async function createHtmlPipeline(config, globalContext) {
       })
     )
     .pipe(data((file) => loadTemplateData(file, config, globalContext)))
+    .pipe(createDraftRouteFilter(Transform))
     .pipe(
       nunjucksRender(
         htmlRendering.createNunjucksOptions(config, templatesPath, markdown)
